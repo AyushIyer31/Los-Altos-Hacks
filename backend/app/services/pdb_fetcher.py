@@ -77,19 +77,33 @@ def search_petase_structures(max_results: int = 150) -> list[str]:
         return list(KNOWN_PETASE_IDS)
 
 
+def _fetch_organism(pdb_id: str) -> str:
+    """Fetch organism from polymer entity endpoint."""
+    try:
+        resp = requests.get(
+            f"https://data.rcsb.org/rest/v1/core/polymer_entity/{pdb_id}/1",
+            timeout=8,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        sources = data.get("rcsb_entity_source_organism", [])
+        if sources:
+            return sources[0].get("ncbi_scientific_name", "Unknown")
+    except Exception:
+        pass
+    return "Unknown"
+
+
 def fetch_entry_metadata(pdb_id: str) -> dict:
     try:
         resp = requests.get(f"{RCSB_DATA_URL}/{pdb_id}", timeout=10)
         resp.raise_for_status()
         data = resp.json()
+        organism = _fetch_organism(pdb_id)
         return {
             "pdb_id": pdb_id,
             "title": data.get("struct", {}).get("title", "Unknown"),
-            "organism": (
-                data.get("rcsb_entry_info", {}).get("deposited_organism", ["Unknown"])[0]
-                if data.get("rcsb_entry_info", {}).get("deposited_organism")
-                else "Unknown"
-            ),
+            "organism": organism,
             "resolution": data.get("rcsb_entry_info", {}).get("resolution_combined", [None])[0],
             "family": _classify_enzyme(pdb_id),
         }

@@ -87,16 +87,35 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: AppColors.primary,
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF0D6B4B), Color(0xFF094D36)],
+                  ),
                   borderRadius: BorderRadius.circular(18),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text('AI-Powered Enzyme Engineering',
+                          style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white70,
+                              letterSpacing: 0.5)),
+                    ),
+                    const SizedBox(height: 14),
                     const Text(
                       'Designing enzymes\nthat eat plastic.',
                       style: TextStyle(
-                        fontSize: 24,
+                        fontSize: 26,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
                         height: 1.15,
@@ -105,35 +124,41 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'Using AI to engineer heat-resistant PETase enzymes '
-                      'for industrial-scale plastic recycling.',
+                      'Using ESM-2 and a trained Gradient Boosting classifier '
+                      'to engineer thermostable PETase enzymes for '
+                      'industrial-scale plastic recycling.',
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 13.5,
                         color: Colors.white.withValues(alpha: 0.8),
-                        height: 1.4,
+                        height: 1.45,
                       ),
                     ),
                     const SizedBox(height: 20),
                     // Stats row
                     Container(
+                      width: double.infinity,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
+                          horizontal: 12, vertical: 14),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.12),
+                        color: Colors.white.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _StatColumn(value: '400M+', unit: 'tons/yr', label: 'plastic produced'),
-                          _StatDivider(),
-                          _StatColumn(value: '<10%', unit: '', label: 'gets recycled'),
-                          _StatDivider(),
-                          _StatColumn(value: '1000+', unit: 'years', label: 'to decompose'),
-                        ],
-                      ),
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _StatColumn(value: '400M+', unit: 'tons/yr', label: 'plastic produced'),
+                            SizedBox(width: 16),
+                            _StatDivider(),
+                            SizedBox(width: 16),
+                            _StatColumn(value: '<10%', unit: '', label: 'gets recycled'),
+                            SizedBox(width: 16),
+                            _StatDivider(),
+                            SizedBox(width: 16),
+                            _StatColumn(value: '1000+', unit: 'years', label: 'to decompose'),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -156,7 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icons.biotech,
                 title: 'Browse Enzyme Database',
                 description: 'Explore plastic-degrading enzymes from the Protein Data Bank',
-                trailing: '54 structures',
+                trailing: '107 structures',
                 onTap: () => Navigator.push(context,
                     MaterialPageRoute(builder: (_) => const PDBBrowserScreen())),
               ),

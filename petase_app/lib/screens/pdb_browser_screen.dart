@@ -359,6 +359,8 @@ class _PDBBrowserScreenState extends State<PDBBrowserScreen> {
 
   Widget _buildPDBCard(PDBResult result) {
     final familyColor = _familyColor(result.family);
+    final hasOrganism =
+        result.organism != 'Unknown' && result.organism.isNotEmpty;
 
     return Material(
       color: Colors.white,
@@ -412,6 +414,18 @@ class _PDBBrowserScreenState extends State<PDBBrowserScreen> {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
+                        if (hasOrganism) ...[
+                          const SizedBox(height: 3),
+                          Text(
+                            result.organism,
+                            style: const TextStyle(
+                                fontSize: 12,
+                                fontStyle: FontStyle.italic,
+                                color: AppColors.textSecondary),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                         const SizedBox(height: 6),
                         Wrap(
                           spacing: 6,
@@ -549,6 +563,14 @@ class _PDBBrowserScreenState extends State<PDBBrowserScreen> {
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
                     height: 1.3)),
+            if (result.organism != 'Unknown' && result.organism.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text(result.organism,
+                  style: const TextStyle(
+                      fontSize: 14,
+                      fontStyle: FontStyle.italic,
+                      color: AppColors.textSecondary)),
+            ],
             const SizedBox(height: 12),
 
             // Stats row
@@ -559,21 +581,27 @@ class _PDBBrowserScreenState extends State<PDBBrowserScreen> {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppColors.border),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _detailStat(
-                      '${result.sequence.length}', 'Amino Acids', Icons.linear_scale),
-                  if (result.resolution != null)
-                    _detailStat('${result.resolution!.toStringAsFixed(2)} \u00C5',
-                        'Resolution', Icons.center_focus_strong),
-                  _detailStat(
-                      result.organism == 'Unknown'
-                          ? 'N/A'
-                          : result.organism.split(' ').first,
-                      'Source',
-                      Icons.biotech),
-                ],
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _detailStat(
+                        '${result.sequence.length}', 'Amino Acids', Icons.linear_scale),
+                    const SizedBox(width: 24),
+                    if (result.resolution != null) ...[
+                      _detailStat('${result.resolution!.toStringAsFixed(2)} \u00C5',
+                          'Resolution', Icons.center_focus_strong),
+                      const SizedBox(width: 24),
+                    ],
+                    _detailStat(
+                        result.organism == 'Unknown'
+                            ? 'N/A'
+                            : result.organism.split(' ').first,
+                        'Source',
+                        Icons.biotech),
+                  ],
+                ),
               ),
             ),
 

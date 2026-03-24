@@ -362,24 +362,10 @@ class ResultsScreen extends StatelessWidget {
   }
 
   Widget _buildLatentPlot() {
-    final coords = result.latentSpaceSummary['latent_coordinates'] as List?;
-    if (coords == null || coords.length < 2) return const SizedBox.shrink();
+    if (result.candidates.isEmpty) return const SizedBox.shrink();
 
-    final spots = <ScatterSpot>[];
-    for (int i = 0; i < coords.length; i++) {
-      final point = coords[i] as List;
-      spots.add(ScatterSpot(
-        (point[0] as num).toDouble(),
-        (point[1] as num).toDouble(),
-        dotPainter: FlDotCirclePainter(
-          radius: i == 0 ? 9 : 6,
-          color: i == 0 ? AppColors.error : AppColors.primary,
-          strokeWidth: 2,
-          strokeColor:
-              i == 0 ? const Color(0xFF9B2D30) : const Color(0xFF094D36),
-        ),
-      ));
-    }
+    // Wild-type baseline score (approximate from latent summary or use 0.90)
+    final wtScore = (result.latentSpaceSummary['wild_type_score'] as num?)?.toDouble() ?? 0.90;
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -391,69 +377,146 @@ class ResultsScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Protein Latent Space',
+          const Text('Candidate Comparison',
               style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary)),
           const SizedBox(height: 4),
           const Text(
-            'Each dot is an enzyme. Nearby = structurally similar. Green variants improve on the red original.',
+            'Combined fitness score for each AI-designed variant vs. the original wild-type enzyme.',
             style: TextStyle(
                 fontSize: 12.5, color: AppColors.textSecondary, height: 1.3),
           ),
-          const SizedBox(height: 10),
-          Row(
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 16,
+            runSpacing: 4,
             children: [
-              Container(
-                  width: 10,
-                  height: 10,
-                  decoration: const BoxDecoration(
-                      color: AppColors.error, shape: BoxShape.circle)),
-              const SizedBox(width: 6),
-              const Text('Original',
-                  style:
-                      TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-              const SizedBox(width: 16),
-              Container(
-                  width: 10,
-                  height: 10,
-                  decoration: const BoxDecoration(
-                      color: AppColors.primary, shape: BoxShape.circle)),
-              const SizedBox(width: 6),
-              const Text('AI-designed',
-                  style:
-                      TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(width: 12, height: 12, color: AppColors.primary),
+                  const SizedBox(width: 6),
+                  const Text('AI variant',
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+                ],
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(width: 12, height: 2, color: AppColors.error),
+                  const SizedBox(width: 6),
+                  Text('Wild-type baseline (${(wtScore * 100).toStringAsFixed(1)}%)',
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+                ],
+              ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 14),
           SizedBox(
-            height: 200,
-            child: ScatterChart(
-              ScatterChartData(
-                scatterSpots: spots,
-                borderData: FlBorderData(
-                    show: true,
-                    border: Border.all(color: AppColors.border)),
+            height: 30.0 * result.candidates.length + 20,
+            child: BarChart(
+              BarChartData(
+                alignment: BarChartAlignment.spaceAround,
+                maxY: 1.0,
+                minY: (wtScore - 0.02).clamp(0.0, 1.0),
+                barTouchData: BarTouchData(
+                  enabled: true,
+                  touchTooltipData: BarTouchTooltipData(
+                    tooltipBorderRadius: BorderRadius.circular(8),
+                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                      final c = result.candidates[group.x.toInt()];
+                      return BarTooltipItem(
+                        '#${c.rank}  ${(c.combinedScore * 100).toStringAsFixed(2)}%',
+                        const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700),
+                      );
+                    },
+                  ),
+                ),
+                titlesData: FlTitlesData(
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, meta) {
+                        final idx = value.toInt();
+                        if (idx < 0 || idx >= result.candidates.length) {
+                          return const SizedBox.shrink();
+                        }
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Text('#${result.candidates[idx].rank}',
+                              style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textTertiary)),
+                        );
+                      },
+                      reservedSize: 24,
+                    ),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 44,
+                      getTitlesWidget: (value, meta) {
+                        return Text('${(value * 100).toStringAsFixed(1)}%',
+                            style: const TextStyle(
+                                fontSize: 9, color: AppColors.textTertiary));
+                      },
+                    ),
+                  ),
+                  topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                ),
                 gridData: FlGridData(
                   show: true,
-                  drawHorizontalLine: true,
-                  drawVerticalLine: true,
+                  drawVerticalLine: false,
                   getDrawingHorizontalLine: (_) =>
                       const FlLine(color: AppColors.border, strokeWidth: 0.5),
-                  getDrawingVerticalLine: (_) =>
-                      const FlLine(color: AppColors.border, strokeWidth: 0.5),
                 ),
-                titlesData: const FlTitlesData(
-                  bottomTitles:
-                      AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  leftTitles:
-                      AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles:
-                      AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles:
-                      AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                borderData: FlBorderData(show: false),
+                extraLinesData: ExtraLinesData(
+                  horizontalLines: [
+                    HorizontalLine(
+                      y: wtScore,
+                      color: AppColors.error,
+                      strokeWidth: 2,
+                      dashArray: [6, 4],
+                      label: HorizontalLineLabel(
+                        show: true,
+                        alignment: Alignment.topRight,
+                        style: const TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.error),
+                        labelResolver: (_) => 'Wild-type',
+                      ),
+                    ),
+                  ],
                 ),
+                barGroups: List.generate(result.candidates.length, (i) {
+                  final c = result.candidates[i];
+                  return BarChartGroupData(
+                    x: i,
+                    barRods: [
+                      BarChartRodData(
+                        toY: c.combinedScore,
+                        width: 18,
+                        color: i == 0
+                            ? AppColors.primary
+                            : AppColors.primary.withValues(alpha: 0.7),
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(4)),
+                      ),
+                    ],
+                  );
+                }),
               ),
             ),
           ),
