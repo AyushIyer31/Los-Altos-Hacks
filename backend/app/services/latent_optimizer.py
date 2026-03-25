@@ -10,9 +10,34 @@ from typing import Optional
 from . import esm_engine
 from .amino_acid_props import CATALYTIC_RESIDUES, THERMOSTABILITY_HOTSPOTS
 
-# Weights for the combined fitness score
-STABILITY_WEIGHT = 0.5
-ACTIVITY_WEIGHT = 0.5
+# Base weights for the combined fitness score
+BASE_STABILITY_WEIGHT = 0.5
+BASE_ACTIVITY_WEIGHT = 0.5
+
+# Temperature scaling: how much to shift weights toward stability at high temps
+# At 40°C (natural), weights are 0.35 stability / 0.65 activity
+# At 65°C (industrial), weights are 0.60 stability / 0.40 activity
+# At 90°C (extreme), weights are 0.80 stability / 0.20 activity
+TEMP_BASELINE = 40.0  # natural PETase operating temp
+TEMP_SCALE = 0.006    # weight shift per degree C above baseline
+
+
+def _get_temp_weights(target_temp: float) -> tuple[float, float]:
+    """Calculate stability/activity weights based on target temperature."""
+    temp_shift = max(0.0, target_temp - TEMP_BASELINE) * TEMP_SCALE
+    stability_w = min(0.85, BASE_STABILITY_WEIGHT + temp_shift)
+    activity_w = max(0.15, BASE_ACTIVITY_WEIGHT - temp_shift)
+    return stability_w, activity_w
+
+
+def _get_hotspot_bonus(target_temp: float) -> float:
+    """Higher temps give bigger bonus for thermostability hotspot mutations."""
+    if target_temp <= 50:
+        return 0.01
+    elif target_temp <= 65:
+        return 0.03
+    else:
+        return 0.05
 
 
 def _score_candidate(sequence: str) -> tuple[float, float]:
@@ -171,9 +196,10 @@ def optimize(
             m["score"] for m in beneficial
             if any(m["label"] == mut for mut in cand["mutations"])
         )
-        # Hotspot bonus for pre-ranking
+        # Hotspot bonus for pre-ranking (scales with temperature)
+        pre_rank_hotspot = 0.5 if target_temp >= 60 else 0.2
         hotspot_bonus = sum(
-            0.5 for m in cand["mutations"]
+            pre_rank_hotspot for m in cand["mutations"]
             if int(m[1:-1]) - 1 in THERMOSTABILITY_HOTSPOTS
         )
         cand["mutation_score_sum"] += hotspot_bonus
@@ -181,13 +207,17 @@ def optimize(
     candidates.sort(key=lambda x: x["mutation_score_sum"], reverse=True)
     top_to_score = candidates[:num_candidates + 5]  # score a few extra for safety
 
+    # Get temperature-adjusted weights
+    stability_w, activity_w = _get_temp_weights(target_temp)
+    hotspot_per_mut = _get_hotspot_bonus(target_temp)
+
     scored = []
     for cand in top_to_score:
         stability, activity = _score_candidate(cand["sequence"])  # single ESM-2 pass
-        combined = STABILITY_WEIGHT * stability + ACTIVITY_WEIGHT * activity
+        combined = stability_w * stability + activity_w * activity
 
         hotspot_bonus = sum(
-            0.02 for m in cand["mutations"]
+            hotspot_per_mut for m in cand["mutations"]
             if int(m[1:-1]) - 1 in THERMOSTABILITY_HOTSPOTS
         )
         combined += hotspot_bonus
