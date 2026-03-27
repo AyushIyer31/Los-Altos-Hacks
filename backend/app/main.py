@@ -317,33 +317,63 @@ async def structure_viewer(req: StructureRequest):
         # Cache for future requests
         _STRUCTURE_CACHE[original] = pdb_data
 
+    # Amino acid name lookup
+    _AA_NAMES = {
+        'A': 'Alanine', 'R': 'Arginine', 'N': 'Asparagine', 'D': 'Aspartic Acid',
+        'C': 'Cysteine', 'E': 'Glutamic Acid', 'Q': 'Glutamine', 'G': 'Glycine',
+        'H': 'Histidine', 'I': 'Isoleucine', 'L': 'Leucine', 'K': 'Lysine',
+        'M': 'Methionine', 'F': 'Phenylalanine', 'P': 'Proline', 'S': 'Serine',
+        'T': 'Threonine', 'W': 'Tryptophan', 'Y': 'Tyrosine', 'V': 'Valine',
+    }
+
     # Parse mutations like "S121E,D186H,R280A"
     mut_list = [m.strip() for m in req.mutations.split(",") if m.strip()]
     mut_positions = []
     mut_labels = []
+    mut_details = []  # (label, wt_name, mut_name, position)
     for m in mut_list:
         try:
             pos = int(m[1:-1])
+            wt_aa = m[0]
+            mut_aa = m[-1]
             mut_positions.append(pos)
             mut_labels.append(m)
+            mut_details.append({
+                "label": m,
+                "position": pos,
+                "from_code": wt_aa,
+                "to_code": mut_aa,
+                "from_name": _AA_NAMES.get(wt_aa, wt_aa),
+                "to_name": _AA_NAMES.get(mut_aa, mut_aa),
+            })
         except (ValueError, IndexError):
             pass
 
     # Catalytic residues for IsPETase-like enzymes
     catalytic = [160, 206, 237]
 
-    # Build JS for highlighting
+    # Build JS for highlighting — make mutations very prominent
     mut_selections_js = ""
     for i, pos in enumerate(mut_positions):
+        wt_aa = mut_labels[i][0]
+        mut_aa = mut_labels[i][-1]
         mut_selections_js += f"""
-        viewer.addStyle({{resi: {pos}, chain: 'A'}}, {{stick: {{color: '#FF6B35', radius: 0.2}}}});
-        viewer.addLabel("{mut_labels[i]}", {{
-            position: {{resi: {pos}, chain: 'A'}},
+        // Mutation {mut_labels[i]}: big sphere + thick stick + pulsing glow
+        viewer.addStyle({{resi: {pos}}}, {{
+            stick: {{color: '#FF6B35', radius: 0.25}},
+            sphere: {{color: '#FF6B35', opacity: 0.55, radius: 1.2}}
+        }});
+        // Bright label with mutation detail
+        viewer.addLabel("{mut_labels[i]}  ({wt_aa}\u2192{mut_aa})", {{
+            position: {{resi: {pos}}},
             backgroundColor: '#FF6B35',
             fontColor: 'white',
-            fontSize: 13,
-            padding: 3,
+            fontSize: 14,
+            fontWeight: 'bold',
+            padding: 4,
             borderRadius: 6,
+            borderColor: '#FF8855',
+            borderThickness: 1.5,
             showBackground: true
         }});
         """
@@ -351,21 +381,45 @@ async def structure_viewer(req: StructureRequest):
     catalytic_js = ""
     for pos in catalytic:
         catalytic_js += f"""
-        viewer.addStyle({{resi: {pos}, chain: 'A'}}, {{stick: {{color: '#0FB5A2', radius: 0.18}}}});
-        viewer.addLabel("Cat {pos}", {{
-            position: {{resi: {pos}, chain: 'A'}},
+        viewer.addStyle({{resi: {pos}}}, {{
+            stick: {{color: '#0FB5A2', radius: 0.2}},
+            sphere: {{color: '#0FB5A2', opacity: 0.35, radius: 0.9}}
+        }});
+        viewer.addLabel("Catalytic {pos}", {{
+            position: {{resi: {pos}}},
             backgroundColor: '#0FB5A2',
             fontColor: 'white',
-            fontSize: 10,
-            padding: 2,
-            borderRadius: 4,
+            fontSize: 11,
+            padding: 3,
+            borderRadius: 5,
             showBackground: true
         }});
         """
 
     display_title = req.title if req.title else "3D Structure"
-    if mut_labels:
-        display_title += f" — {', '.join(mut_labels)}"
+
+    # Build mutation details HTML
+    mut_detail_html = ""
+    if mut_details:
+        rows = ""
+        for md in mut_details:
+            rows += f"""<div class="mut-row">
+              <span class="mut-badge">{md['label']}</span>
+              <span class="mut-desc">
+                <span class="aa-from">{md['from_name']}</span>
+                <span class="mut-arrow">&rarr;</span>
+                <span class="aa-to">{md['to_name']}</span>
+                <span class="mut-pos">Position {md['position']}</span>
+              </span>
+            </div>"""
+        mut_detail_html = f"""<div id="mutations-panel">
+          <div class="panel-title">Mutations vs. Wild-Type ({len(mut_details)} change{'s' if len(mut_details) != 1 else ''})</div>
+          {rows}
+        </div>"""
+    else:
+        mut_detail_html = """<div id="mutations-panel">
+          <div class="panel-title">No mutations — Wild-type structure</div>
+        </div>"""
 
     # Escape PDB data for JS
     pdb_escaped = pdb_data.replace("\\", "\\\\").replace("`", "\\`").replace("$", "\\$")
@@ -381,45 +435,157 @@ async def structure_viewer(req: StructureRequest):
     background: #1A1A2E;
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     color: white;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
   }}
   #header {{
-    padding: 12px 16px;
+    padding: 12px 16px 8px;
     background: rgba(255,255,255,0.05);
     border-bottom: 1px solid rgba(255,255,255,0.1);
   }}
   #header h2 {{
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 600;
     color: #E0E8F0;
-    margin-bottom: 4px;
+    margin-bottom: 8px;
   }}
-  #legend {{
+
+  #source-tag {{
+    font-size: 10px;
+    color: #6B8AB5;
+    font-style: italic;
+    margin-top: 4px;
+  }}
+
+  /* --- Color Key (below viewer) --- */
+  #color-key {{
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.05);
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }}
+  .key-title {{
+    font-size: 13px;
+    font-weight: 600;
+    color: #C0D0E0;
+    margin-bottom: 10px;
+    letter-spacing: 0.3px;
+  }}
+  .key-grid {{
     display: flex;
-    gap: 14px;
-    font-size: 11px;
-    color: #8899AA;
+    flex-direction: column;
+    gap: 8px;
   }}
-  .legend-dot {{
-    width: 8px;
-    height: 8px;
+  .key-item {{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+  }}
+  .key-swatch {{
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }}
+  .key-swatch-sphere {{
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
-    display: inline-block;
-    margin-right: 4px;
-    vertical-align: middle;
+    flex-shrink: 0;
   }}
+  .key-spectrum {{
+    width: 48px;
+    height: 16px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #0000FF, #00FFFF, #00FF00, #FFFF00, #FF0000);
+    flex-shrink: 0;
+  }}
+  .key-label {{
+    font-size: 13px;
+    color: #AAB8C8;
+    font-weight: 500;
+  }}
+  .key-desc {{
+    font-size: 11px;
+    color: #667788;
+  }}
+
+  /* --- Viewer --- */
   #viewer-container {{
     width: 100vw;
-    height: calc(100vh - 70px);
+    height: 55vh;
+    min-height: 320px;
   }}
-  #tip {{
-    position: fixed;
-    bottom: 12px;
-    left: 50%;
-    transform: translateX(-50%);
+
+  /* --- Mutations Panel --- */
+  #mutations-panel {{
+    padding: 12px 16px 16px;
+    background: rgba(255,255,255,0.03);
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }}
+  .panel-title {{
+    font-size: 13px;
+    font-weight: 600;
+    color: #C0D0E0;
+    margin-bottom: 10px;
+    letter-spacing: 0.3px;
+  }}
+  .mut-row {{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    background: rgba(255,107,53,0.08);
+    border: 1px solid rgba(255,107,53,0.2);
+    border-radius: 8px;
+  }}
+  .mut-badge {{
+    background: #FF6B35;
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-family: 'SF Mono', Menlo, monospace;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }}
+  .mut-desc {{
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+    font-size: 12px;
+  }}
+  .aa-from {{
+    color: #FF8888;
+    font-weight: 500;
+    text-decoration: line-through;
+    text-decoration-color: rgba(255,136,136,0.4);
+  }}
+  .mut-arrow {{
+    color: #556677;
+    font-size: 14px;
+  }}
+  .aa-to {{
+    color: #88DD88;
+    font-weight: 600;
+  }}
+  .mut-pos {{
+    color: #667788;
     font-size: 11px;
-    color: rgba(255,255,255,0.35);
-    pointer-events: none;
+    margin-left: 4px;
+  }}
+
+  #tip {{
+    text-align: center;
+    padding: 8px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.3);
   }}
 </style>
 <script src="https://3Dmol.org/build/3Dmol-min.js"></script>
@@ -427,15 +593,28 @@ async def structure_viewer(req: StructureRequest):
 <body>
 <div id="header">
   <h2>{display_title}</h2>
-  <div id="legend">
-    <span><span class="legend-dot" style="background:#4488CC"></span>Protein backbone</span>
-    <span><span class="legend-dot" style="background:#FF6B35"></span>AI Mutations</span>
-    <span><span class="legend-dot" style="background:#0FB5A2"></span>Catalytic triad</span>
-    <span style="margin-left:auto; color:#6B8AB5; font-style:italic;">{source}</span>
-  </div>
+  <div id="source-tag">{source}</div>
 </div>
 <div id="viewer-container"></div>
-<div id="tip">Pinch to zoom &bull; Drag to rotate &bull; Two-finger drag to pan</div>
+{mut_detail_html}
+<div id="color-key">
+  <div class="key-title">Color Key</div>
+  <div class="key-grid">
+    <div class="key-item">
+      <span class="key-spectrum"></span>
+      <span><span class="key-label">Protein Backbone</span><br><span class="key-desc">Rainbow spectrum from N-terminus (blue) to C-terminus (red)</span></span>
+    </div>
+    <div class="key-item">
+      <span class="key-swatch-sphere" style="background:#FF6B35"></span>
+      <span><span class="key-label">AI-Predicted Mutations</span><br><span class="key-desc">Orange spheres &amp; sticks — positions modified by the optimizer</span></span>
+    </div>
+    <div class="key-item">
+      <span class="key-swatch-sphere" style="background:#0FB5A2"></span>
+      <span><span class="key-label">Catalytic Triad</span><br><span class="key-desc">Aqua spheres — active site residues (Ser160, His206, Asp237)</span></span>
+    </div>
+  </div>
+</div>
+<div id="tip">Pinch to zoom &middot; Drag to rotate &middot; Two-finger drag to pan</div>
 <script>
 let viewer = $3Dmol.createViewer("viewer-container", {{
   backgroundColor: "0x1A1A2E",
@@ -446,7 +625,7 @@ let viewer = $3Dmol.createViewer("viewer-container", {{
 let pdbData = `{pdb_escaped}`;
 viewer.addModel(pdbData, "pdb");
 
-// Base style: cartoon with color by chain
+// Base style: rainbow spectrum cartoon (blue=N-terminus → red=C-terminus)
 viewer.setStyle({{}}, {{
   cartoon: {{
     color: "spectrum",
@@ -455,17 +634,17 @@ viewer.setStyle({{}}, {{
   }}
 }});
 
-// Highlight mutations
+// Highlight mutations (orange sticks)
 {mut_selections_js}
 
-// Highlight catalytic residues
+// Highlight catalytic residues (aqua sticks)
 {catalytic_js}
 
 viewer.zoomTo();
 viewer.spin(false);
 viewer.render();
 
-// Auto-spin slowly on load, stop on touch
+// Auto-spin slowly on load, stop on interaction
 let spinning = true;
 viewer.spin("y", 0.5);
 document.getElementById("viewer-container").addEventListener("touchstart", function() {{

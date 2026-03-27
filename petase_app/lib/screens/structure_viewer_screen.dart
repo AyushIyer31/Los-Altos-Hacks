@@ -94,9 +94,11 @@ class _StructureViewerScreenState extends State<StructureViewerScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF1A1A2E),
         foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 0,
         title: Text(
           'Candidate #${widget.rank} — 3D Structure',
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
         ),
       ),
       body: _error != null
