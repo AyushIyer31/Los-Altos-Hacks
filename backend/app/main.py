@@ -90,6 +90,28 @@ async def get_pdb_sequence(pdb_id: str):
     return {"pdb_id": pdb_id.upper(), "sequence": sequence, **meta}
 
 
+@app.get("/pdb/live-search")
+async def live_search_pdb(q: str):
+    """Search RCSB PDB live for any query string."""
+    if not q or len(q) < 2:
+        raise HTTPException(status_code=400, detail="Query must be at least 2 characters")
+    try:
+        results = pdb_fetcher.search_rcsb_live(q)
+        return [
+            {
+                "pdb_id": r["pdb_id"],
+                "title": r.get("title", "Unknown"),
+                "organism": r.get("organism", "Unknown"),
+                "resolution": r.get("resolution"),
+                "sequence": r.get("sequence", ""),
+                "family": r.get("family", "Related Hydrolase"),
+            }
+            for r in results
+        ]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/esm/embedding", response_model=EmbeddingResponse)
 async def compute_embedding(req: SequenceInput):
     """Compute ESM-2 embedding for a protein sequence."""

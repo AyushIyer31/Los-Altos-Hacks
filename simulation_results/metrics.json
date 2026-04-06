@@ -1,0 +1,47 @@
+{
+  "IsPETase_WT": {
+    "peak_performance": 48.74655234774012,
+    "mean_performance": 7.050789845151656,
+    "worst_case": 1.6865657354051825e-29,
+    "robustness_score": 0.14464181579148191,
+    "thermal_breadth_C": 14.482758620689651,
+    "crystallinity_penalty": 0.4547564351918779,
+    "coefficient_of_variation": 1.7224862529358893
+  },
+  "ThermoPETase": {
+    "peak_performance": 98.62809672247573,
+    "mean_performance": 27.00929197576795,
+    "worst_case": 0.02414675365632748,
+    "robustness_score": 0.2738498751706417,
+    "thermal_breadth_C": 24.13793103448276,
+    "crystallinity_penalty": 0.45287972052593584,
+    "coefficient_of_variation": 0.9402672661093233
+  },
+  "FAST-PETase": {
+    "peak_performance": 261.51324580174304,
+    "mean_performance": 76.52210876798007,
+    "worst_case": 0.002294135018764659,
+    "robustness_score": 0.2926127452297104,
+    "thermal_breadth_C": 28.96551724137931,
+    "crystallinity_penalty": 0.4448925904237572,
+    "coefficient_of_variation": 0.9171030212352921
+  },
+  "LCC_ICCG": {
+    "peak_performance": 442.9683709380254,
+    "mean_performance": 93.71646899698169,
+    "worst_case": 0.03341605077307666,
+    "robustness_score": 0.21156469659115534,
+    "thermal_breadth_C": 19.3103448275862,
+    "crystallinity_penalty": 0.43667459535230324,
+    "coefficient_of_variation": 1.1602618468800483
+  },
+  "PETase_AI_Candidate": {
+    "peak_performance": 189.72748783116253,
+    "mean_performance": 62.15951284171195,
+    "worst_case": 0.09626533109451883,
+    "robustness_score": 0.32762523529024623,
+    "thermal_breadth_C": 31.379310344827587,
+    "crystallinity_penalty": 0.44856244795202027,
+    "coefficient_of_variation": 0.790926952835424
+  }
+}

@@ -166,6 +166,252 @@ def blosum62_score(wt: str, mut: str) -> float:
     return float(_BLOSUM62.get(key, -1))
 
 
+# ──────────────────────────────────────────────────────────────
+# Structure-Aware Features
+# Estimated from sequence when crystal structure unavailable
+# ──────────────────────────────────────────────────────────────
+
+# Average relative solvent accessibility by amino acid type
+# From Rost & Sander (1994), normalized 0-1
+AVG_RSA = {
+    "A": 0.48, "C": 0.32, "D": 0.68, "E": 0.70, "F": 0.36,
+    "G": 0.51, "H": 0.50, "I": 0.34, "K": 0.76, "L": 0.40,
+    "M": 0.38, "N": 0.63, "P": 0.56, "Q": 0.62, "R": 0.72,
+    "S": 0.55, "T": 0.52, "V": 0.36, "W": 0.38, "Y": 0.46,
+}
+
+# IsPETase (5XJH) per-residue contact density
+# Pre-computed: number of C-alpha atoms within 8Å, normalized to 0-1
+# Positions are 1-indexed to match mutation notation
+PETASE_CONTACT_DENSITY = {}  # Will be populated for known structures
+
+# Catalytic residue positions for distance calculations (1-indexed)
+PETASE_CATALYTIC_POSITIONS = [160, 206, 237]  # S160, D206, H237
+PETASE_SUBSTRATE_BINDING = [87, 159, 161, 185, 208, 238, 243]
+
+
+def estimate_rsa(sequence: str, position: int, window: int = 7) -> float:
+    """
+    Estimate relative solvent accessibility from local sequence context.
+
+    Uses a sliding window of amino acid RSA values, weighted by
+    position in the window. Central residues contribute more.
+    Buried hydrophobic residues get lower RSA estimates.
+
+    Args:
+        sequence: Full protein sequence (1-indexed position)
+        position: Residue position (1-indexed)
+        window: Window size for averaging
+
+    Returns:
+        Estimated RSA (0 = fully buried, 1 = fully exposed)
+    """
+    idx = position - 1  # Convert to 0-indexed
+    if idx < 0 or idx >= len(sequence):
+        return 0.5
+
+    half_w = window // 2
+    start = max(0, idx - half_w)
+    end = min(len(sequence), idx + half_w + 1)
+
+    # Weighted average: center residue contributes most
+    total_weight = 0.0
+    weighted_rsa = 0.0
+    for i in range(start, end):
+        dist = abs(i - idx)
+        weight = 1.0 / (1.0 + dist)  # Closer residues matter more
+        aa = sequence[i]
+        weighted_rsa += AVG_RSA.get(aa, 0.5) * weight
+        total_weight += weight
+
+    rsa = weighted_rsa / total_weight if total_weight > 0 else 0.5
+
+    # Adjust: if surrounded by hydrophobic residues, likely buried
+    local_seq = sequence[start:end]
+    hydrophobic_count = sum(1 for aa in local_seq if aa in "AVILMFWP")
+    hydrophobic_fraction = hydrophobic_count / len(local_seq)
+    if hydrophobic_fraction > 0.6:
+        rsa *= 0.6  # Likely in hydrophobic core
+
+    return min(1.0, max(0.0, rsa))
+
+
+def estimate_secondary_structure(sequence: str, position: int, window: int = 5) -> tuple:
+    """
+    Estimate secondary structure propensity from local sequence.
+
+    Uses Chou-Fasman propensities in a sliding window to predict
+    whether a residue is in a helix, sheet, or coil.
+
+    Returns:
+        (helix_score, sheet_score, coil_score) — normalized to sum ~1
+    """
+    idx = position - 1
+    if idx < 0 or idx >= len(sequence):
+        return (0.33, 0.33, 0.34)
+
+    half_w = window // 2
+    start = max(0, idx - half_w)
+    end = min(len(sequence), idx + half_w + 1)
+
+    helix_sum = 0.0
+    sheet_sum = 0.0
+    count = 0
+
+    for i in range(start, end):
+        aa = sequence[i]
+        helix_sum += HELIX_PROPENSITY.get(aa, 1.0)
+        sheet_sum += SHEET_PROPENSITY.get(aa, 1.0)
+        count += 1
+
+    avg_helix = helix_sum / count if count > 0 else 1.0
+    avg_sheet = sheet_sum / count if count > 0 else 1.0
+
+    # Normalize to probabilities
+    total = avg_helix + avg_sheet + 1.0  # 1.0 for coil baseline
+    helix_score = avg_helix / total
+    sheet_score = avg_sheet / total
+    coil_score = 1.0 / total
+
+    return (helix_score, sheet_score, coil_score)
+
+
+def estimate_contact_density(sequence: str, position: int, window: int = 9) -> float:
+    """
+    Estimate local contact density from sequence.
+
+    Residues in the hydrophobic core surrounded by large, buried
+    residues tend to have more contacts. This approximates the
+    number of neighboring residues in 3D space.
+
+    Returns:
+        Contact density estimate (0 = few contacts, 1 = many contacts)
+    """
+    idx = position - 1
+    if idx < 0 or idx >= len(sequence):
+        return 0.5
+
+    half_w = window // 2
+    start = max(0, idx - half_w)
+    end = min(len(sequence), idx + half_w + 1)
+
+    # High burial propensity neighbors = more contacts
+    burial_sum = 0.0
+    count = 0
+    for i in range(start, end):
+        aa = sequence[i]
+        burial_sum += BURIAL.get(aa, 0.5)
+        count += 1
+
+    avg_burial = burial_sum / count if count > 0 else 0.5
+
+    # Large residues make more contacts
+    central_aa = sequence[idx]
+    size_factor = VOLUME.get(central_aa, 120) / 227.8  # Normalize by Trp (largest)
+
+    contact_density = 0.5 * avg_burial + 0.3 * size_factor + 0.2 * (1 - estimate_rsa(sequence, position))
+    return min(1.0, max(0.0, contact_density))
+
+
+def distance_to_active_site(position: int, catalytic_positions: list = None) -> float:
+    """
+    Compute normalized distance from a position to the nearest catalytic residue.
+
+    For IsPETase, the catalytic triad is S160, D206, H237.
+
+    Args:
+        position: Residue position (1-indexed)
+        catalytic_positions: List of catalytic residue positions
+
+    Returns:
+        Normalized distance (0 = at active site, 1 = far away)
+    """
+    if catalytic_positions is None:
+        catalytic_positions = PETASE_CATALYTIC_POSITIONS
+
+    if not catalytic_positions:
+        return 0.5
+
+    min_dist = min(abs(position - cp) for cp in catalytic_positions)
+    # Normalize: 0 at active site, approaches 1 for distant residues
+    # Using sigmoid-like normalization: most proteins are <300 residues
+    normalized = min_dist / (min_dist + 15.0)  # Half-max at 15 residues away
+    return normalized
+
+
+def distance_to_substrate_binding(position: int, binding_positions: list = None) -> float:
+    """
+    Compute normalized distance to nearest substrate-binding residue.
+    """
+    if binding_positions is None:
+        binding_positions = PETASE_SUBSTRATE_BINDING
+
+    if not binding_positions:
+        return 0.5
+
+    min_dist = min(abs(position - bp) for bp in binding_positions)
+    return min_dist / (min_dist + 10.0)
+
+
+def thermostability_features(wt: str, mut: str, position: int, sequence: str = None) -> list:
+    """
+    Compute 8 thermostability-specific features.
+
+    These features capture patterns known to affect protein thermostability:
+    1. Proline rigidification potential
+    2. Deamidation risk change (Asn/Gln at high temp)
+    3. Salt bridge formation potential
+    4. Disulfide bond potential
+    5. Hydrophobic core packing improvement
+    6. Aromatic cluster contribution
+    7. Cavity filling score
+    8. Glycine entropy penalty
+    """
+    features = []
+
+    # 1. Proline rigidification (Pro in non-helix positions stabilizes)
+    proline_gain = 1.0 if mut == "P" and wt != "P" else (-1.0 if wt == "P" and mut != "P" else 0.0)
+    features.append(proline_gain)
+
+    # 2. Deamidation risk change (Asn/Gln deamidate at high temp)
+    deamid_wt = 1.0 if wt in ("N", "Q") else 0.0
+    deamid_mut = 1.0 if mut in ("N", "Q") else 0.0
+    features.append(deamid_wt - deamid_mut)  # Positive = reduced risk
+
+    # 3. Salt bridge formation potential
+    can_salt_wt = 1.0 if wt in ("D", "E", "K", "R") else 0.0
+    can_salt_mut = 1.0 if mut in ("D", "E", "K", "R") else 0.0
+    features.append(can_salt_mut - can_salt_wt)
+
+    # 4. Disulfide bond potential
+    disulfide_gain = 1.0 if mut == "C" and wt != "C" else (-1.0 if wt == "C" and mut != "C" else 0.0)
+    features.append(disulfide_gain)
+
+    # 5. Hydrophobic packing improvement (in buried positions)
+    rsa = estimate_rsa(sequence, position) if sequence else 0.5
+    burial = 1.0 - rsa
+    hydro_delta = HYDROPHOBICITY.get(mut, 0) - HYDROPHOBICITY.get(wt, 0)
+    features.append(hydro_delta * burial)  # Positive = more hydrophobic in buried position
+
+    # 6. Aromatic cluster contribution
+    aromatic_score = 0.0
+    if mut in ("F", "W", "Y") and wt not in ("F", "W", "Y"):
+        aromatic_score = 1.0
+    elif wt in ("F", "W", "Y") and mut not in ("F", "W", "Y"):
+        aromatic_score = -1.0
+    features.append(aromatic_score)
+
+    # 7. Cavity filling (larger residue in buried position)
+    vol_delta = VOLUME.get(mut, 120) - VOLUME.get(wt, 120)
+    features.append(vol_delta * burial / 100.0)  # Normalized
+
+    # 8. Glycine entropy (Gly→X reduces backbone entropy = stabilizing)
+    gly_entropy = 1.0 if wt == "G" and mut != "G" else (-1.0 if mut == "G" and wt != "G" else 0.0)
+    features.append(gly_entropy)
+
+    return features
+
+
 def feature_vector(wt: str, mut: str) -> list[float]:
     """Return a flat feature vector for ML training."""
     d = property_deltas(wt, mut)

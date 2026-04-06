@@ -26,3 +26,13 @@ petase_app/.metadata
 # ESM-2 model cache (too large for git)
 *.pt
 *.pth
+backend/app/trained_models/esm2_embeddings.pkl
+
+# Large data files
+fireprotdb.zip
+megascale_processed.zip
+fireprotdb_data/fireprot_upload/pdbs/
+Processed_K50_dG_datasets/
+
+# Claude
+.claude/
