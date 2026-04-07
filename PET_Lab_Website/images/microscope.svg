@@ -1,0 +1,49 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(16, 10) scale(0.95)">
+    <!-- === Base plate === -->
+    <rect x="100" y="420" width="312" height="32" rx="8" fill="#8ac4d6" stroke="#1a1a1a" stroke-width="16" stroke-linejoin="round"/>
+    <rect x="112" y="446" width="288" height="18" rx="6" fill="#3d6070" stroke="#1a1a1a" stroke-width="12"/>
+
+    <!-- === Arm — one continuous outlined shape === -->
+    <path d="M330 420 L330 150 C330 110 310 85 270 70 L230 58"
+          stroke="#1a1a1a" stroke-width="58" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+    <path d="M330 420 L330 150 C330 110 310 85 270 70 L230 58"
+          stroke="#8ac4d6" stroke-width="38" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+
+    <!-- === Arm lower block (covers base joint) === -->
+    <rect x="298" y="355" width="64" height="70" rx="8" fill="#d8d8d8" stroke="#1a1a1a" stroke-width="14"/>
+    <circle cx="330" cy="395" r="9" fill="#3d6070" stroke="#1a1a1a" stroke-width="6"/>
+
+    <!-- === Focus knob === -->
+    <circle cx="346" cy="210" r="24" fill="#f5c542" stroke="#1a1a1a" stroke-width="14"/>
+    <circle cx="346" cy="210" r="10" fill="#3d6070"/>
+
+    <!-- === Stage platform === -->
+    <rect x="140" y="315" width="175" height="22" rx="5" fill="#e8e8e8" stroke="#1a1a1a" stroke-width="13"/>
+
+    <!-- === Stage pillar === -->
+    <rect x="212" y="335" width="28" height="86" rx="4" fill="#f5c542" stroke="#1a1a1a" stroke-width="12"/>
+    <circle cx="226" cy="375" r="5.5" fill="#8ac4d6" stroke="#1a1a1a" stroke-width="4"/>
+
+    <!-- === Body tube — tilted === -->
+    <g transform="rotate(-28, 215, 195)">
+      <rect x="190" y="72" width="50" height="200" rx="8" fill="#8ac4d6" stroke="#1a1a1a" stroke-width="14"/>
+      <rect x="198" y="105" width="34" height="128" rx="4" fill="#62a8b8"/>
+      <rect x="184" y="98" width="62" height="16" rx="4" fill="#d8d8d8" stroke="#1a1a1a" stroke-width="8"/>
+      <rect x="184" y="248" width="62" height="14" rx="4" fill="#d8d8d8" stroke="#1a1a1a" stroke-width="8"/>
+    </g>
+
+    <!-- === Eyepiece === -->
+    <g transform="rotate(-28, 215, 195)">
+      <rect x="198" y="46" width="34" height="30" rx="5" fill="#3d6070" stroke="#1a1a1a" stroke-width="12"/>
+      <rect x="202" y="36" width="26" height="15" rx="4" fill="#4a7080" stroke="#1a1a1a" stroke-width="8"/>
+    </g>
+
+    <!-- === Objective lenses === -->
+    <g transform="rotate(-28, 215, 195)">
+      <rect x="186" y="264" width="58" height="12" rx="3" fill="#d8d8d8" stroke="#1a1a1a" stroke-width="8"/>
+      <rect x="198" y="274" width="9" height="20" rx="3" fill="#3d6070" stroke="#1a1a1a" stroke-width="6"/>
+      <rect x="213" y="274" width="9" height="24" rx="3" fill="#3d6070" stroke="#1a1a1a" stroke-width="6"/>
+    </g>
+  </g>
+</svg>

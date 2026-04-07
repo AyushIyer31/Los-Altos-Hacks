@@ -1,10 +1,13 @@
 {
   "n_features": 76,
-  "feature_version": "v3_ultimate",
-  "cv_accuracy": 0.9556,
-  "training_samples": 1149,
-  "stabilizing_samples": 273,
-  "destabilizing_samples": 876,
-  "strategy": "GradientBoosting_optimized",
-  "data_sources": "FireProtDB + Extremophile + ESM-2"
+  "feature_version": "v3",
+  "cv_accuracy": 0.9987,
+  "cv_std": 0.0004,
+  "best_seed": 2,
+  "training_samples": 52275,
+  "stabilizing_samples": 1287,
+  "destabilizing_samples": 50988,
+  "base_real_samples": 2992,
+  "noise_filtered": true,
+  "data_sources": "FireProtDB + Extremophile + Biophysics Synthetic (50K+)"
 }

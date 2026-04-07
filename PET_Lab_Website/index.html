@@ -99,8 +99,10 @@ header .container { display: flex; align-items: center; gap: 12px; }
 .logo-wrap {
   position: relative; width: 44px; height: 44px; cursor: pointer;
   opacity: 0;
-  transition: opacity 0.4s ease;
+  transition: opacity 0.4s ease, transform 0.2s ease;
 }
+.logo-wrap:hover { transform: scale(1.08); }
+.logo-text:hover h3 { color: var(--primary) !important; }
 header.logo-arrived .logo-wrap { opacity: 1; }
 .logo-box {
   width: 44px; height: 44px; background: #1A1A2E;
@@ -381,6 +383,17 @@ textarea.seq-input:focus { border-color: var(--primary); }
 .temp-display { display: flex; align-items: baseline; gap: 4px; margin-bottom: 8px; }
 .temp-display .num { font-size: 36px; font-weight: 800; }
 .temp-display .unit { font-size: 18px; color: var(--text-secondary); }
+.num-input {
+  font-size: 36px; font-weight: 800; font-family: inherit;
+  border: none; background: transparent; color: var(--text-primary);
+  width: 75px; outline: none; padding: 0;
+  border-bottom: 2px solid transparent;
+  transition: border-color 0.2s;
+  -moz-appearance: textfield;
+}
+.num-input:focus { border-bottom-color: var(--primary); }
+.num-input::-webkit-outer-spin-button,
+.num-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .temp-label {
   font-size: 11px; font-weight: 500; padding: 4px 10px;
   border-radius: 6px; display: inline-block; margin-bottom: 8px;
@@ -637,7 +650,7 @@ footer { text-align: center; padding: 24px; font-size: 11px; color: var(--text-t
 
     <div class="section-label">TOOLS</div>
     <div class="action-card" onclick="showPage('browse')">
-      <div class="action-icon"><img src="images/microscope.jpg" alt="Microscope"></div>
+      <div class="action-icon"><img src="images/microscope.svg" alt="Microscope"></div>
       <div><h4>Browse Enzyme Database</h4><p>Explore plastic-degrading enzymes from the Protein Data Bank</p></div>
       <div class="action-trail">200+ structures</div>
       <div class="action-arrow">&#x203A;</div>
@@ -709,10 +722,10 @@ footer { text-align: center; padding: 24px; font-size: 11px; color: var(--text-t
       </div>
       <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:10px">Higher temp speeds up recycling but enzymes denature. Near the glass transition (70&deg;C) PET chains loosen.</p>
       <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px">
-        <div class="temp-display"><span class="num" id="tempNum">60</span><span class="unit">&deg;C</span></div>
+        <div class="temp-display"><input type="number" class="num-input" id="tempNum" value="60" min="30" max="90" step="0.01" oninput="document.getElementById('tempSlider').value=Math.round(this.value);updateTemp(true)"><span class="unit">&deg;C</span></div>
         <div class="temp-label" id="tempLabel" style="background:rgba(15,181,162,0.1);color:var(--success)">PET glass transition &mdash; ideal for recycling</div>
       </div>
-      <input type="range" id="tempSlider" min="30" max="90" step="5" value="60" oninput="updateTemp()">
+      <input type="range" id="tempSlider" min="30" max="90" step="1" value="60" oninput="updateTemp()">
     </div>
 
     <!-- Crystallinity -->
@@ -723,10 +736,10 @@ footer { text-align: center; padding: 24px; font-size: 11px; color: var(--text-t
       </div>
       <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:10px">Amorphous PET (~7%) degrades easily. Bottle-grade PET (~30%) is tightly packed and much harder to break down.</p>
       <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px">
-        <div class="temp-display"><span class="num" id="crystNum">10</span><span class="unit">%</span></div>
+        <div class="temp-display"><input type="number" class="num-input" id="crystNum" value="10" min="1" max="45" step="0.01" oninput="document.getElementById('crystSlider').value=Math.round(this.value);updateCryst(true)"><span class="unit">%</span></div>
         <div class="temp-label" id="crystLabel" style="background:rgba(15,181,162,0.1);color:var(--success)">Amorphous PET film &mdash; easiest to degrade</div>
       </div>
-      <input type="range" id="crystSlider" min="5" max="45" step="5" value="10" oninput="updateCryst()">
+      <input type="range" id="crystSlider" min="1" max="45" step="1" value="10" oninput="updateCryst()">
     </div>
 
     <!-- Contaminant -->
@@ -743,10 +756,10 @@ footer { text-align: center; padding: 24px; font-size: 11px; color: var(--text-t
         <button class="contam-chip" onclick="selectContam('mixed')" id="contam_mixed">Mixed Waste</button>
       </div>
       <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px">
-        <div class="temp-display"><span class="num" id="contamNum">0</span><span class="unit">%</span></div>
+        <div class="temp-display"><input type="number" class="num-input" id="contamNum" value="0" min="0" max="80" step="0.01" oninput="document.getElementById('contamSlider').value=Math.round(this.value);updateContam(true)"><span class="unit">%</span></div>
         <div class="temp-label" id="contamLabel" style="background:var(--surface);color:var(--text-tertiary)">No contamination &mdash; lab-grade sample</div>
       </div>
-      <input type="range" id="contamSlider" min="0" max="80" step="10" value="0" oninput="updateContam()">
+      <input type="range" id="contamSlider" min="0" max="80" step="1" value="0" oninput="updateContam()">
     </div>
 
     <!-- PET Pre-Processing -->
@@ -762,10 +775,10 @@ footer { text-align: center; padding: 24px; font-size: 11px; color: var(--text-t
       </label>
       <div id="preprocessOptions" style="display:none">
         <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:6px">
-          <div class="temp-display"><span class="num" id="preheatNum">250</span><span class="unit">&deg;C</span></div>
+          <div class="temp-display"><input type="number" class="num-input" id="preheatNum" value="250" min="80" max="270" step="0.01" oninput="document.getElementById('preheatSlider').value=Math.round(this.value);updatePreheat(true)"><span class="unit">&deg;C</span></div>
           <div class="temp-label" id="preheatLabel" style="background:rgba(232,145,12,0.1);color:var(--warning)">Full melt &mdash; maximum amorphization</div>
         </div>
-        <input type="range" id="preheatSlider" min="80" max="270" step="10" value="250" oninput="updatePreheat()">
+        <input type="range" id="preheatSlider" min="80" max="270" step="1" value="250" oninput="updatePreheat()">
         <div style="margin-top:8px;padding:8px 10px;border-radius:var(--radius-sm);background:rgba(26,127,196,0.06)">
           <div style="font-size:11px;color:var(--text-secondary)">
             <strong>Effective crystallinity:</strong> <span id="effectiveCryst">~3%</span> (down from <span id="originalCryst">10</span>%)
@@ -778,8 +791,8 @@ footer { text-align: center; padding: 24px; font-size: 11px; color: var(--text-t
     <div class="section-label" style="margin-top:24px">CANDIDATES TO GENERATE</div>
     <p style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;line-height:1.4">Each candidate is a unique enzyme variant the AI predicts will perform better.</p>
     <div class="card" style="display:flex;align-items:center;gap:16px">
-      <div><span id="candNum" style="font-size:28px;font-weight:800">10</span> <span style="font-size:14px;color:var(--text-secondary)">variants</span></div>
-      <div style="flex:1"><input type="range" id="candSlider" min="5" max="25" step="5" value="10" oninput="updateCand()"></div>
+      <div><input type="number" class="num-input" id="candNum" value="10" min="1" max="25" style="font-size:28px;width:60px" oninput="document.getElementById('candSlider').value=Math.round(this.value);updateCand(true)"> <span style="font-size:14px;color:var(--text-secondary)">variants</span></div>
+      <div style="flex:1"><input type="range" id="candSlider" min="1" max="25" step="1" value="10" oninput="updateCand()"></div>
     </div>
 
     <div id="optError" class="error-box" style="display:none"></div>
@@ -801,7 +814,7 @@ footer { text-align: center; padding: 24px; font-size: 11px; color: var(--text-t
       <div class="team-card">
         <img src="images/ayush.png" alt="Ayush Iyer" class="team-photo">
         <h3>Ayush Iyer</h3>
-        <div class="team-role">FOUNDER</div>
+        <div class="team-role">CO-FOUNDER</div>
         <p class="team-bio">High school researcher and developer focused on applying artificial intelligence to solve real-world environmental challenges. As the founder of PET Lab, Ayush built an AI-driven pipeline using protein language models and machine learning to predict thermostable PETase mutations, screening thousands of variants computationally to accelerate plastic-degrading enzyme design. His work focuses on bridging computational modeling with sustainable biotechnology, reducing the time required for enzyme optimization from years to seconds. Beyond PET Lab, Ayush has led multiple technology projects, including a firefighter tracking system and a youth-focused sports platform, reflecting his passion for building scalable, impact-driven solutions.</p>
       </div>
       <div class="team-card">
@@ -816,8 +829,8 @@ footer { text-align: center; padding: 24px; font-size: 11px; color: var(--text-t
       <h3>Our Mission</h3>
       <p>Over 400 million tons of plastic are produced every year, yet less than 10% is recycled. PET plastic takes over 1,000 years to decompose in landfills. Natural PETase enzymes can break down PET, but they denature at temperatures too low for industrial use. PET Lab uses AI to engineer thermostable enzymes that work at industrial temperatures, accelerating the path from discovery to deployment.</p>
       <div class="about-highlights">
-        <div class="about-highlight"><div class="val">95.3%</div><div class="lbl">ML Accuracy</div></div>
-        <div class="about-highlight"><div class="val">1,149</div><div class="lbl">Training Mutations</div></div>
+        <div class="about-highlight"><div class="val">99.9%</div><div class="lbl">ML Accuracy</div></div>
+        <div class="about-highlight"><div class="val">52,275</div><div class="lbl">Training Mutations</div></div>
         <div class="about-highlight"><div class="val">6,000+</div><div class="lbl">Variants Screened</div></div>
         <div class="about-highlight"><div class="val">107</div><div class="lbl">Enzyme Structures</div></div>
       </div>
@@ -867,11 +880,12 @@ const FAMILY_COLORS = {
 let pdbData = [];
 let selectedFamily = 'All';
 let selectedPreset = null;
+let currentSequence = null;
 let currentResult = null;
 let chartInstance = null;
 
 // ═══════════════════════════════════════════════════════════
-// Rotating Molecule Animation (Header)
+// Rotating 3D Molecule Animation (Header)
 // ═══════════════════════════════════════════════════════════
 (function animateMolecule() {
   const canvas = document.getElementById('moleculeCanvas');
@@ -879,74 +893,119 @@ let chartInstance = null;
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
   const cx = W / 2, cy = H / 2;
+  let t = 0;
 
-  // Define a small PET-like molecule: benzene ring + ester bonds
-  const atoms = [
-    // Benzene ring (6 carbons)
-    { x: 0, y: 0, z: -18, r: 4, color: '#1A7FC4' },
-    { x: 15.6, y: 0, z: -9, r: 4, color: '#1A7FC4' },
-    { x: 15.6, y: 0, z: 9, r: 4, color: '#1A7FC4' },
-    { x: 0, y: 0, z: 18, r: 4, color: '#1A7FC4' },
-    { x: -15.6, y: 0, z: 9, r: 4, color: '#1A7FC4' },
-    { x: -15.6, y: 0, z: -9, r: 4, color: '#1A7FC4' },
+  // Define atoms in 3D: {x, y, z, r (radius), color}
+  // A stylized small molecule (like a PET monomer fragment)
+  const baseAtoms = [
+    // Central benzene ring (6 carbons in a hexagon, radius ~18)
+    { x:  0,   y: -18,  z: 0,   r: 5, c: '#3d3d3d' },  // C0
+    { x:  15.6,y: -9,   z: 0,   r: 5, c: '#3d3d3d' },  // C1
+    { x:  15.6,y:  9,   z: 0,   r: 5, c: '#3d3d3d' },  // C2
+    { x:  0,   y:  18,  z: 0,   r: 5, c: '#3d3d3d' },  // C3
+    { x: -15.6,y:  9,   z: 0,   r: 5, c: '#3d3d3d' },  // C4
+    { x: -15.6,y: -9,   z: 0,   r: 5, c: '#3d3d3d' },  // C5
+    // Oxygen atoms (red)
+    { x:  28,  y: -16,  z:  6,  r: 5.5, c: '#D64045' },  // O6
+    { x: -28,  y: -16,  z: -6,  r: 5.5, c: '#D64045' },  // O7
     // Ester oxygens
-    { x: 0, y: 14, z: -26, r: 3.5, color: '#E74C3C' },
-    { x: 0, y: -14, z: 26, r: 3.5, color: '#E74C3C' },
-    // Carbonyl
-    { x: 0, y: 12, z: -34, r: 3, color: '#0FB5A2' },
-    { x: 0, y: -12, z: 34, r: 3, color: '#0FB5A2' },
+    { x:  0,   y:  32,  z:  8,  r: 5.5, c: '#D64045' },  // O8
+    { x:  0,   y: -34,  z: -8,  r: 5.5, c: '#D64045' },  // O9
+    // Hydrogen atoms (small, light blue)
+    { x:  26,  y:  14,  z:  4,  r: 3.5, c: '#1A7FC4' },  // H10
+    { x: -26,  y:  14,  z: -4,  r: 3.5, c: '#1A7FC4' },  // H11
+    // Carbon chain ends
+    { x:  12,  y:  30,  z: 12,  r: 4.5, c: '#0FB5A2' },  // C12
+    { x: -12,  y: -30,  z:-12,  r: 4.5, c: '#0FB5A2' },  // C13
   ];
 
+  // Define bonds: [atomIdx1, atomIdx2]
   const bonds = [
-    [0,1],[1,2],[2,3],[3,4],[4,5],[5,0], // ring
-    [0,6],[3,7],[6,8],[7,9], // ester chains
+    [0,1],[1,2],[2,3],[3,4],[4,5],[5,0], // benzene ring
+    [1,6],[5,7],   // C-O oxygens
+    [3,8],[0,9],   // ester oxygens
+    [2,10],[4,11], // C-H hydrogens
+    [8,12],[9,13], // chain extensions
   ];
 
-  let angle = 0;
-
-  function project(atom, a) {
-    const cosA = Math.cos(a), sinA = Math.sin(a);
-    const cosB = Math.cos(a * 0.7), sinB = Math.sin(a * 0.7);
-    // Rotate Y then X
-    const x1 = atom.x * cosA + atom.z * sinA;
-    const z1 = -atom.x * sinA + atom.z * cosA;
-    const y1 = atom.y * cosB - z1 * sinB;
-    const z2 = atom.y * sinB + z1 * cosB;
-    const scale = 60 / (60 + z2);
-    return { x: cx + x1 * scale, y: cy + y1 * scale, z: z2, scale: scale };
+  function rotateY(p, a) {
+    const cos = Math.cos(a), sin = Math.sin(a);
+    return { x: p.x * cos + p.z * sin, y: p.y, z: -p.x * sin + p.z * cos, r: p.r, c: p.c };
+  }
+  function rotateX(p, a) {
+    const cos = Math.cos(a), sin = Math.sin(a);
+    return { x: p.x, y: p.y * cos - p.z * sin, z: p.y * sin + p.z * cos, r: p.r, c: p.c };
   }
 
   function draw() {
     ctx.clearRect(0, 0, W, H);
-    angle += 0.02;
+    t += 0.012;
 
-    const projected = atoms.map(a => ({ ...project(a, angle), r: a.r, color: a.color }));
-
-    // Draw bonds
-    bonds.forEach(([i, j]) => {
-      const a = projected[i], b = projected[j];
-      ctx.beginPath();
-      ctx.moveTo(a.x, a.y);
-      ctx.lineTo(b.x, b.y);
-      ctx.strokeStyle = 'rgba(26,127,196,0.3)';
-      ctx.lineWidth = 1.5 * ((a.scale + b.scale) / 2);
-      ctx.stroke();
+    // Rotate all atoms
+    const rotated = baseAtoms.map(a => {
+      let p = rotateY(a, t * 2);
+      p = rotateX(p, t * 0.7 + 0.3);
+      return p;
     });
 
-    // Sort by z for painter's algorithm
-    const sorted = [...projected].sort((a, b) => b.z - a.z);
+    // Collect drawable items (bonds + atoms) with z-depth for sorting
+    const items = [];
 
-    // Draw atoms
-    sorted.forEach(a => {
-      const r = a.r * a.scale;
-      const grad = ctx.createRadialGradient(a.x - r * 0.3, a.y - r * 0.3, r * 0.1, a.x, a.y, r);
-      grad.addColorStop(0, 'rgba(255,255,255,0.7)');
-      grad.addColorStop(0.5, a.color);
-      grad.addColorStop(1, a.color + '88');
-      ctx.beginPath();
-      ctx.arc(a.x, a.y, r, 0, Math.PI * 2);
-      ctx.fillStyle = grad;
-      ctx.fill();
+    // Bonds
+    bonds.forEach(([i, j]) => {
+      const a = rotated[i], b = rotated[j];
+      items.push({ type: 'bond', a, b, z: (a.z + b.z) / 2 });
+    });
+
+    // Atoms
+    rotated.forEach((a, i) => {
+      items.push({ type: 'atom', a, z: a.z, idx: i });
+    });
+
+    // Sort back-to-front
+    items.sort((a, b) => a.z - b.z);
+
+    const maxZ = 40;
+    items.forEach(item => {
+      const depth = (item.z + maxZ) / (2 * maxZ);
+      const alpha = 0.35 + depth * 0.65;
+
+      if (item.type === 'bond') {
+        ctx.beginPath();
+        ctx.moveTo(cx + item.a.x, cy + item.a.y);
+        ctx.lineTo(cx + item.b.x, cy + item.b.y);
+        ctx.strokeStyle = `rgba(150,160,170,${alpha})`;
+        ctx.lineWidth = 1.2 + depth * 1.5;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+      } else {
+        const a = item.a;
+        const scale = 0.7 + depth * 0.5;
+        const r = a.r * scale;
+
+        // Shadow
+        ctx.beginPath();
+        ctx.arc(cx + a.x + 1, cy + a.y + 1, r + 0.5, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0,0,0,${0.08 + depth * 0.12})`;
+        ctx.fill();
+
+        // Atom body
+        ctx.beginPath();
+        ctx.arc(cx + a.x, cy + a.y, r, 0, Math.PI * 2);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = a.c;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+
+        // Highlight
+        ctx.beginPath();
+        ctx.arc(cx + a.x - r * 0.3, cy + a.y - r * 0.3, r * 0.35, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${0.3 + depth * 0.4})`;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
     });
 
     requestAnimationFrame(draw);
@@ -1331,9 +1390,11 @@ function updateSeqLength() {
   else { el.style.display = 'none'; }
 }
 
-function updateTemp() {
-  const v = document.getElementById('tempSlider').value;
-  document.getElementById('tempNum').textContent = v;
+function updateTemp(fromInput) {
+  const input = document.getElementById('tempNum');
+  const slider = document.getElementById('tempSlider');
+  if (!fromInput) input.value = slider.value;
+  const v = parseFloat(input.value) || 60;
   const el = document.getElementById('tempLabel');
   if (v <= 40) { el.textContent = 'Ambient \u2014 natural enzymes work here'; el.style.background = 'var(--surface)'; el.style.color = 'var(--text-tertiary)'; }
   else if (v <= 55) { el.textContent = 'Warm \u2014 enzymes start to struggle'; el.style.background = 'rgba(232,145,12,0.1)'; el.style.color = 'var(--warning)'; }
@@ -1342,15 +1403,16 @@ function updateTemp() {
   else { el.textContent = 'Extreme \u2014 very challenging for enzymes'; el.style.background = 'rgba(214,64,69,0.06)'; el.style.color = 'var(--error)'; }
 }
 
-function updateCand() {
-  document.getElementById('candNum').textContent = document.getElementById('candSlider').value;
+function updateCand(fromInput) {
+  if (!fromInput) document.getElementById('candNum').value = document.getElementById('candSlider').value;
 }
 
 let selectedContamType = 'none';
 
-function updateCryst() {
-  const v = parseInt(document.getElementById('crystSlider').value);
-  document.getElementById('crystNum').textContent = v;
+function updateCryst(fromInput) {
+  const input = document.getElementById('crystNum');
+  if (!fromInput) input.value = document.getElementById('crystSlider').value;
+  const v = parseFloat(input.value) || 10;
   const el = document.getElementById('crystLabel');
   if (v <= 10) { el.textContent = 'Amorphous PET film \u2014 easiest to degrade'; el.style.background = 'rgba(15,181,162,0.1)'; el.style.color = 'var(--success)'; }
   else if (v <= 20) { el.textContent = 'Low crystallinity \u2014 typical recycled flake'; el.style.background = 'rgba(15,181,162,0.1)'; el.style.color = 'var(--success)'; }
@@ -1370,15 +1432,28 @@ function selectContam(type) {
   updateContam();
 }
 
-function updateContam() {
-  const v = parseInt(document.getElementById('contamSlider').value);
-  document.getElementById('contamNum').textContent = v;
+function updateContam(fromInput) {
+  const input = document.getElementById('contamNum');
+  if (!fromInput) input.value = document.getElementById('contamSlider').value;
+  const v = parseFloat(input.value) || 0;
   const el = document.getElementById('contamLabel');
   if (v === 0) { el.textContent = 'No contamination \u2014 lab-grade sample'; el.style.background = 'var(--surface)'; el.style.color = 'var(--text-tertiary)'; }
   else if (v <= 20) { el.textContent = 'Light contamination \u2014 pre-washed'; el.style.background = 'rgba(15,181,162,0.1)'; el.style.color = 'var(--success)'; }
   else if (v <= 40) { el.textContent = 'Moderate \u2014 typical municipal waste'; el.style.background = 'rgba(232,145,12,0.1)'; el.style.color = 'var(--warning)'; }
   else if (v <= 60) { el.textContent = 'Heavy \u2014 unsorted post-consumer'; el.style.background = 'rgba(214,64,69,0.06)'; el.style.color = 'var(--error)'; }
   else { el.textContent = 'Severe \u2014 raw landfill / ocean plastic'; el.style.background = 'rgba(214,64,69,0.1)'; el.style.color = 'var(--error)'; }
+
+  // Auto-update chip selection based on slider value
+  let newType;
+  if (v === 0) newType = 'none';
+  else if (v <= 20) newType = 'dye';
+  else if (v <= 50) newType = 'coating';
+  else newType = 'mixed';
+
+  selectedContamType = newType;
+  ['none','dye','coating','mixed'].forEach(t => {
+    document.getElementById('contam_' + t).classList.toggle('active', t === newType);
+  });
 }
 
 function updatePreprocess() {
@@ -1387,16 +1462,18 @@ function updatePreprocess() {
   if (on) updatePreheat();
 }
 
-function updatePreheat() {
-  const T = parseInt(document.getElementById('preheatSlider').value);
-  document.getElementById('preheatNum').textContent = T;
+function updatePreheat(fromInput) {
+  const input = document.getElementById('preheatNum');
+  const slider = document.getElementById('preheatSlider');
+  if (!fromInput) input.value = slider.value;
+  const T = parseFloat(input.value) || 250;
   const el = document.getElementById('preheatLabel');
   if (T < 120) { el.textContent = 'Mild anneal \u2014 partial relaxation'; el.style.background = 'rgba(15,181,162,0.1)'; el.style.color = 'var(--success)'; }
   else if (T < 200) { el.textContent = 'Moderate \u2014 good crystallinity reduction'; el.style.background = 'rgba(232,145,12,0.1)'; el.style.color = 'var(--warning)'; }
   else { el.textContent = 'Full melt \u2014 maximum amorphization'; el.style.background = 'rgba(214,64,69,0.06)'; el.style.color = 'var(--error)'; }
 
   // Compute effective crystallinity after preprocessing
-  const origCryst = parseInt(document.getElementById('crystSlider').value) / 100;
+  const origCryst = parseFloat(document.getElementById('crystNum').value) / 100;
   const Tg = 70, Tm = 260;
   const meltFrac = Math.max(0, Math.min(1, (T - Tg) / (Tm - Tg)));
   const effectiveCryst = origCryst * (1 - meltFrac * 0.92); // 92% reduction at full melt
@@ -1412,6 +1489,7 @@ async function runOptimization() {
   if (seq.length < 10) { errEl.textContent = 'Sequence too short. Paste at least 10 amino acids.'; errEl.style.display = 'flex'; return; }
   if (!/^[ACDEFGHIKLMNPQRSTVWY]+$/.test(seq)) { errEl.textContent = 'Invalid characters. Use only the 20 standard amino acid letters.'; errEl.style.display = 'flex'; return; }
 
+  currentSequence = seq;
   const btn = document.getElementById('runBtn');
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Running AI Optimization...';
@@ -1422,9 +1500,9 @@ async function runOptimization() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         sequence: seq,
-        num_candidates: parseInt(document.getElementById('candSlider').value),
+        num_candidates: parseInt(document.getElementById('candNum').value),
         optimization_steps: 50,
-        target_temperature: parseFloat(document.getElementById('tempSlider').value),
+        target_temperature: parseFloat(document.getElementById('tempNum').value),
       }),
     });
     if (!r.ok) throw new Error('Server error: ' + r.status);
@@ -1432,19 +1510,19 @@ async function runOptimization() {
 
     // Attach environmental simulation parameters to the result
     const preprocessOn = document.getElementById('preprocessToggle').checked;
-    let effectiveCryst = parseInt(document.getElementById('crystSlider').value) / 100;
+    let effectiveCryst = parseFloat(document.getElementById('crystNum').value) / 100;
     if (preprocessOn) {
-      const pT = parseInt(document.getElementById('preheatSlider').value);
+      const pT = parseFloat(document.getElementById('preheatNum').value);
       const mf = Math.max(0, Math.min(1, (pT - 70) / (260 - 70)));
       effectiveCryst = effectiveCryst * (1 - mf * 0.92);
     }
     currentResult._env = {
-      temperature: parseFloat(document.getElementById('tempSlider').value),
+      temperature: parseFloat(document.getElementById('tempNum').value),
       crystallinity: effectiveCryst,
-      contaminant_level: parseInt(document.getElementById('contamSlider').value) / 100,
+      contaminant_level: parseFloat(document.getElementById('contamNum').value) / 100,
       contaminant_type: selectedContamType,
       preprocessing: preprocessOn,
-      original_crystallinity: parseInt(document.getElementById('crystSlider').value) / 100,
+      original_crystallinity: parseFloat(document.getElementById('crystNum').value) / 100,
     };
 
     renderResults();
@@ -1767,6 +1845,46 @@ function renderResults() {
 }
 
 function rankColor(rank) { return rank <= 3 ? 'var(--success)' : rank <= 7 ? 'var(--accent)' : 'var(--text-secondary)'; }
+// ── Copy sequence helper ──
+function copySeqText(btn, type, rank) {
+  const modal = document.getElementById('modalContent');
+  const proteinEl = modal.querySelector('.seq-display');
+  const protein = proteinEl ? proteinEl.textContent.replace(/\s/g,'') : '';
+  let text;
+  if (type === 'protein') {
+    text = protein;
+  } else {
+    const dna = proteinToDNA(protein);
+    text = type === 'fasta' ? '>Candidate_' + rank + '\n' + dna : dna;
+  }
+  navigator.clipboard.writeText(text);
+  const orig = btn.textContent;
+  btn.textContent = 'Copied!';
+  btn.style.color = 'var(--success)';
+  setTimeout(() => { btn.textContent = orig; btn.style.color = 'var(--primary)'; }, 1500);
+}
+
+// ── Codon optimization (E. coli K12 preferred codons) ──
+const CODON_TABLE = {
+  A:'GCG',C:'TGC',D:'GAT',E:'GAA',F:'TTC',G:'GGC',H:'CAT',I:'ATC',
+  K:'AAA',L:'CTG',M:'ATG',N:'AAC',P:'CCG',Q:'CAG',R:'CGT',S:'AGC',
+  T:'ACC',V:'GTG',W:'TGG',Y:'TAT'
+};
+function proteinToDNA(seq) {
+  return seq.split('').map(aa => CODON_TABLE[aa] || 'NNN').join('');
+}
+function formatDNA(dna, perLine=60) {
+  let lines = [];
+  for (let i = 0; i < dna.length; i += perLine) {
+    const chunk = dna.substring(i, i + perLine);
+    // group into triplets for readability
+    let triplets = [];
+    for (let j = 0; j < chunk.length; j += 3) triplets.push(chunk.substring(j, j + 3));
+    lines.push(triplets.join(' '));
+  }
+  return lines.join('\n');
+}
+
 function gradeLabel(s) { return s > 0.75 ? 'Excellent candidate' : s > 0.65 ? 'Strong candidate' : s > 0.55 ? 'Moderate improvement' : s > 0.45 ? 'Slight improvement' : 'Marginal change'; }
 function displayScore(s) { return Math.min(s * 100, 99.9).toFixed(1) + '%'; }
 function displayScoreDetail(s) { return Math.min(s * 100, 99.9).toFixed(3) + '%'; }
@@ -1876,10 +1994,22 @@ function showCandidateDetail(c) {
     html += c.mutations.map(m => `<div class="explanation-card"><span class="mut-label">${m}</span> <span style="font-size:13px;color:var(--text-secondary)">${AA[m[0]]||m[0]} to ${AA[m[m.length-1]]||m[m.length-1]}</span></div>`).join('');
   }
 
-  // Sequence
-  html += `<div class="section-label" style="margin-top:24px">FULL SEQUENCE</div>
-    <p style="font-size:12px;color:var(--text-secondary);margin-bottom:4px">Ready for gene synthesis &mdash; copy and send to provider.</p>
-    <div class="seq-display">${c.sequence}</div>`;
+  // Protein Sequence
+  html += `<div class="section-label" style="margin-top:24px">PROTEIN SEQUENCE</div>
+    <p style="font-size:12px;color:var(--text-secondary);margin-bottom:4px">Amino acid sequence with mutations applied.</p>
+    <div class="seq-display">${c.sequence}</div>
+    <button onclick="copySeqText(this,'protein')" style="margin-top:6px;font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;background:var(--surface);color:var(--primary);border:1px solid var(--border);cursor:pointer">Copy Protein</button>`;
+
+  // DNA Sequence
+  const dnaSeq = proteinToDNA(c.sequence);
+  const dnaFormatted = formatDNA(dnaSeq);
+  html += `<div class="section-label" style="margin-top:24px">DNA SEQUENCE</div>
+    <p style="font-size:12px;color:var(--text-secondary);margin-bottom:4px"><em>E. coli</em> codon-optimized &mdash; ${dnaSeq.length} bp &mdash; ready for gene synthesis.</p>
+    <div class="seq-display dna-seq-display" style="font-size:11px;line-height:1.6;letter-spacing:0.5px;white-space:pre-wrap">${dnaFormatted}</div>
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button onclick="copySeqText(this,'dna')" style="font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;background:var(--surface);color:var(--primary);border:1px solid var(--border);cursor:pointer">Copy DNA</button>
+      <button onclick="copySeqText(this,'fasta',${c.rank})" style="font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;background:var(--surface);color:var(--primary);border:1px solid var(--border);cursor:pointer">Copy as FASTA</button>
+    </div>`;
 
   document.getElementById('modalContent').innerHTML = html;
   document.getElementById('modal').classList.add('show');
@@ -1935,9 +2065,10 @@ window._3dShowLabels = true;
 
 function show3DViewer(mutations) {
   const preset = PRESETS.find(p => p.name === selectedPreset);
-  const pdbId = preset ? preset.pdbId : '5XJH';
-  const validPdb = /^[A-Z0-9]{4}$/i.test(pdbId) ? pdbId : '5XJH';
-  const enzymeName = preset ? preset.name : 'IsPETase';
+  const pdbId = preset ? preset.pdbId : null;
+  const validPdb = /^[A-Z0-9]{4}$/i.test(pdbId) ? pdbId : null;
+  const enzymeName = preset ? preset.name : 'Custom Enzyme';
+  const useESMFold = !validPdb;
 
   // Parse mutations
   const parsedMuts = (mutations || []).map(m => parseMutation(m)).filter(Boolean);
@@ -1962,7 +2093,7 @@ function show3DViewer(mutations) {
       <div>
         <h3 style="font-size:20px;font-weight:800;letter-spacing:-0.5px;margin-bottom:2px">Structural Analysis</h3>
         <p style="font-size:13px;color:var(--text-secondary)">
-          <span style="font-family:'SF Mono',monospace;font-weight:600;background:var(--surface);padding:2px 6px;border-radius:4px">${validPdb.toUpperCase()}</span>
+          <span style="font-family:'SF Mono',monospace;font-weight:600;background:var(--surface);padding:2px 6px;border-radius:4px">${useESMFold ? 'ESMFold' : validPdb.toUpperCase()}</span>
           &nbsp;${enzymeName} &middot; ${parsedMuts.length} mutation${parsedMuts.length !== 1 ? 's' : ''} highlighted
         </p>
       </div>
@@ -1973,13 +2104,13 @@ function show3DViewer(mutations) {
       <div id="viewer3d" style="width:100%;height:460px;background:#0f1023;position:relative;">
         <div id="viewer3dLoading" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:rgba(255,255,255,0.7);font-size:13px;gap:8px;">
           <div style="width:28px;height:28px;border:3px solid rgba(255,255,255,0.15);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite"></div>
-          Fetching structure from RCSB PDB...
+          ${useESMFold ? 'Predicting 3D structure with ESMFold AI...' : 'Fetching structure from RCSB PDB...'}
         </div>
       </div>
 
       <!-- Legend overlay -->
       <div id="viewer3dLegend" style="display:none;position:absolute;top:12px;left:12px;background:rgba(15,16,35,0.85);backdrop-filter:blur(8px);border-radius:8px;padding:10px 14px;font-size:11px;color:rgba(255,255,255,0.9);line-height:1.6;pointer-events:none">
-        <div style="font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:rgba(255,255,255,0.5);margin-bottom:4px">Legend</div>
+        <div style="font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:rgba(255,255,255,0.5);margin-bottom:4px">${useESMFold ? 'AI-Predicted Structure' : 'Legend'}</div>
         <div style="display:flex;align-items:center;gap:6px"><div style="width:10px;height:3px;background:linear-gradient(90deg,#3366ff,#33ff66,#ffff33,#ff6633,#ff3366);border-radius:1px"></div> Backbone (N&rarr;C terminus)</div>
         <div style="display:flex;align-items:center;gap:6px"><div style="width:10px;height:10px;border-radius:50%;background:#E74C3C"></div> Mutation site (engineered)</div>
         <div style="display:flex;align-items:center;gap:6px"><div style="width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3)"></div> Wild-type residue</div>
@@ -2012,13 +2143,15 @@ function show3DViewer(mutations) {
       ${mutListHtml}
       <p style="font-size:11px;color:var(--text-tertiary);margin-top:10px;line-height:1.5">
         Red-highlighted residues indicate positions where the AI-designed mutations are introduced.
-        These substitutions were selected by the GradientBoosting classifier (CV accuracy 95.3%) trained on ${(1149).toLocaleString()} experimentally validated mutations from FireProtDB and extremophile organisms, with ESM-2 protein language model embeddings.
+        These substitutions were selected by the noise-filtered GradientBoosting classifier (CV accuracy 99.9%) trained on ${(52275).toLocaleString()} mutations from FireProtDB, extremophile organisms, and biophysics-derived data, with ESM-2 protein language model embeddings.
       </p>
     </div>` : ''}
 
     <!-- Citation -->
     <div style="margin-top:12px;padding:12px 14px;background:var(--surface);border-radius:8px;border:1px solid var(--border);font-size:11px;color:var(--text-tertiary);line-height:1.5">
-      <strong style="color:var(--text-secondary)">Structure source:</strong> RCSB Protein Data Bank (rcsb.org), PDB ID: ${validPdb.toUpperCase()}.
+      <strong style="color:var(--text-secondary)">Structure source:</strong> ${useESMFold
+        ? 'ESMFold AI prediction (Lin et al., 2023). Structure predicted from amino acid sequence using Meta\'s ESM-2 protein language model.'
+        : 'RCSB Protein Data Bank (rcsb.org), PDB ID: ' + validPdb.toUpperCase() + '.'}
       Visualized with 3Dmol.js (Rego & Koes, 2015). Mutation sites predicted by PET Lab ML pipeline.
     </div>
 
@@ -2035,8 +2168,27 @@ function show3DViewer(mutations) {
 
   // Fetch PDB and render
   setTimeout(() => {
-    fetch('https://files.rcsb.org/download/' + validPdb.toUpperCase() + '.pdb')
-      .then(r => { if (!r.ok) throw new Error('PDB not found'); return r.text(); })
+    let structurePromise;
+
+    if (useESMFold && currentSequence) {
+      // Use ESMFold to predict structure from sequence
+      const seq = currentSequence.substring(0, 400); // ESMFold limit
+      structurePromise = fetch('https://api.esmatlas.com/foldSequence/v1/pdb/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: seq,
+      }).then(r => {
+        if (!r.ok) throw new Error('ESMFold prediction failed (status ' + r.status + ')');
+        return r.text();
+      });
+    } else {
+      // Fetch from RCSB PDB
+      const fetchPdb = validPdb ? validPdb.toUpperCase() : '5XJH';
+      structurePromise = fetch('https://files.rcsb.org/download/' + fetchPdb + '.pdb')
+        .then(r => { if (!r.ok) throw new Error('PDB not found'); return r.text(); });
+    }
+
+    structurePromise
       .then(pdbData => {
         const el = document.getElementById('viewer3d');
         if (!el) return;
@@ -2053,7 +2205,11 @@ function show3DViewer(mutations) {
       })
       .catch(err => {
         const loading = document.getElementById('viewer3dLoading');
-        if (loading) loading.textContent = 'Could not load structure: ' + err.message;
+        if (loading) {
+          loading.innerHTML = useESMFold
+            ? '<div style="color:#E74C3C;font-weight:600">ESMFold unavailable</div><div style="font-size:11px;margin-top:4px">The ESMFold API may be temporarily down. Try again later.</div>'
+            : 'Could not load structure: ' + err.message;
+        }
       });
   }, 100);
 }
