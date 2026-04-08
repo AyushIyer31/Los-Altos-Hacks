@@ -674,7 +674,7 @@ footer { text-align: center; padding: 24px; font-size: 11px; color: var(--text-t
       <p>Our AI scans 6,000+ possible mutations in seconds to find the ones that make the enzyme survive industrial heat while maintaining catalytic speed. This replaces months of lab trial-and-error.</p>
     </div>
 
-    <footer style="cursor:pointer" onclick="showPage('about')">AVDS Hackathon 2026 &middot; Meet the Team</footer>
+    <footer style="cursor:pointer" onclick="showPage('about')">Meet the Team</footer>
   </div>
 </div>
 
@@ -836,7 +836,6 @@ footer { text-align: center; padding: 24px; font-size: 11px; color: var(--text-t
       </div>
     </div>
 
-    <footer>AVDS Hackathon 2026</footer>
   </div>
 </div>
 
@@ -1779,7 +1778,6 @@ function renderResults() {
       ${['Order gene synthesis for top candidates','Express enzyme in E. coli host cells','Assay PET degradation rate at target temp','Measure thermal melting point via DSF','Validate with real PET film degradation'].map(s => `<div class="lab-step"><div class="bullet"></div><span>${s}</span></div>`).join('')}
       <p style="font-size:12px;color:var(--text-tertiary);font-style:italic;margin-top:10px;line-height:1.4">AI narrows months of random mutagenesis to a focused candidate set. Lab validation turns predictions into real-world impact.</p>
     </div>
-    <footer>AVDS Hackathon 2026</footer>
   `;
   document.getElementById('resultsContainer').innerHTML = html;
 
