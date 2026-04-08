@@ -853,7 +853,7 @@ footer { text-align: center; padding: 24px; font-size: 11px; color: var(--text-t
 // ═══════════════════════════════════════════════════════════
 // Configuration
 // ═══════════════════════════════════════════════════════════
-const API = 'http://10.0.0.76:8000';
+const API = 'https://pet-lab-api-production-ab97.up.railway.app';
 
 const PRESETS = [
   { name: 'IsPETase', organism: 'I. sakaiensis', pdbId: '5XJH', desc: 'Wild-type, denatures at 40\u00b0C', residues: 312,
@@ -1206,7 +1206,7 @@ function showPage(name) {
 let healthFailCount = 0;
 async function checkHealth() {
   const badge = document.getElementById('statusBadge');
-  const urls = [API + '/health', 'http://localhost:8000/health', 'http://127.0.0.1:8000/health'];
+  const urls = [API + '/health'];
   for (const url of urls) {
     try {
       const r = await fetch(url, { signal: AbortSignal.timeout(5000) });
