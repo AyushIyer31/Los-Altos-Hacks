@@ -582,10 +582,93 @@ footer { text-align: center; padding: 24px; font-size: 11px; color: var(--text-t
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
-  .hero h2 { font-size: 24px; }
+  .container { padding: 0 12px; }
+
+  /* Header */
+  header .container { flex-wrap: wrap; gap: 8px; }
+  nav { display: none; }
+  .logo-text span { display: none; }
+  .nav-right { margin-left: auto; gap: 8px; }
+  .molecule-anim { width: 32px; height: 32px; }
+  .molecule-anim canvas { width: 32px; height: 32px; }
+  .status-badge { padding: 4px 8px; font-size: 11px; }
+
+  /* Mobile nav — show as bottom bar */
+  .mobile-nav {
+    display: flex !important;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: white; border-top: 1px solid var(--border);
+    z-index: 200; padding: 8px 4px;
+    justify-content: space-around;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+  }
+  .mobile-nav button {
+    font-size: 11px; padding: 6px 12px; border-radius: 8px;
+    background: transparent; color: var(--text-secondary);
+    font-weight: 600; border: none;
+  }
+  .mobile-nav button.active { background: var(--primary); color: white; }
+
+  /* Hero */
+  .hero { padding: 20px 16px; border-radius: 12px; margin-bottom: 16px; }
+  .hero h2 { font-size: 22px; }
+  .hero p { font-size: 13px; }
+  .hero-stats { gap: 12px; padding: 12px; flex-wrap: wrap; }
+  .hero-stat .value { font-size: 18px; }
+  .hero-divider { display: none; }
+  .hero-stats { justify-content: space-around; }
+
+  /* Cards */
+  .card { padding: 16px; margin-bottom: 12px; border-radius: 12px; }
+  .action-card { padding: 14px; gap: 12px; }
+  .action-card .action-icon { width: 40px; height: 40px; min-width: 40px; }
+  .action-card .action-icon img { width: 24px; height: 24px; }
+  .action-card h4 { font-size: 15px; }
+  .action-card p { font-size: 12px; }
+
+  /* PDB Grid */
   .pdb-grid { grid-template-columns: 1fr; }
-  .hero-stats { gap: 16px; }
-  .modal-content { max-width: 100%; }
+  .pdb-card { padding: 14px; }
+
+  /* Optimizer */
+  .slider-row { flex-direction: column; gap: 4px; }
+  .temp-display { font-size: 28px; }
+
+  /* Results */
+  .cand-card { padding: 14px; }
+  .cand-header { flex-wrap: wrap; gap: 8px; }
+  .chart-row { flex-direction: column; }
+  .chart-box { min-height: 200px; }
+
+  /* Modal */
+  .modal-content { max-width: 100%; margin: 0; border-radius: 16px 16px 0 0; max-height: 90vh; }
+  .modal-header { padding: 16px; }
+  .modal-body { padding: 16px; }
+
+  /* About */
+  .team-grid { grid-template-columns: 1fr; }
+  .about-card { padding: 16px; }
+
+  /* Footer space for bottom nav */
+  .page { padding-bottom: 80px; }
+
+  /* Problem card */
+  .problem-card { padding: 16px; }
+  .problem-card h3 { font-size: 16px; line-height: 1.4; }
+  .problem-card p { font-size: 13px; }
+
+  /* Section label */
+  .section-label { font-size: 10px; }
+
+  /* Sequence input */
+  .seq-input { font-size: 12px; }
+
+  /* Contaminant chips */
+  .contam-chips { flex-wrap: wrap; gap: 6px; }
+  .contam-chip { font-size: 11px; padding: 5px 10px; }
+
+  /* 3D viewer */
+  .viewer-3d { height: 250px !important; }
 }
 </style>
 </head>
@@ -631,6 +714,14 @@ footer { text-align: center; padding: 24px; font-size: 11px; color: var(--text-t
     </div>
   </div>
 </header>
+
+<!-- Mobile bottom navigation -->
+<div class="mobile-nav" style="display:none">
+  <button class="active" onclick="mobileNav('home',this)">Home</button>
+  <button onclick="mobileNav('browse',this)">Browse</button>
+  <button onclick="mobileNav('optimize',this)">Design</button>
+  <button onclick="mobileNav('about',this)">About</button>
+</div>
 
 <!-- ════════ HOME PAGE ════════ -->
 <div id="page-home" class="page active">
@@ -1195,8 +1286,15 @@ function showPage(name) {
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
   const idx = { home: 0, browse: 1, optimize: 2, about: 3, results: -1 }[name];
   if (idx >= 0) document.querySelectorAll('nav button')[idx].classList.add('active');
+  // Sync mobile nav
+  document.querySelectorAll('.mobile-nav button').forEach(b => b.classList.remove('active'));
+  const mIdx = { home: 0, browse: 1, optimize: 2, about: 3 }[name];
+  if (mIdx !== undefined) document.querySelectorAll('.mobile-nav button')[mIdx]?.classList.add('active');
   if (name === 'browse' && pdbData.length === 0) loadPDB();
   window.scrollTo(0, 0);
+}
+function mobileNav(name, btn) {
+  showPage(name);
 }
 
 // ═══════════════════════════════════════════════════════════
