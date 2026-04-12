@@ -1069,9 +1069,15 @@ footer {
       <div class="hero-stats reveal reveal-delay-4">
         <div class="hero-stat"><div class="value">6,000+</div><div class="label">Variants screened</div></div>
         <div class="hero-divider"></div>
-        <div class="hero-stat"><div class="value">99.9%</div><div class="label">ML accuracy</div></div>
+        <div class="hero-stat"><div class="value">80%</div><div class="label">ML accuracy</div></div>
         <div class="hero-divider"></div>
-        <div class="hero-stat"><div class="value">52K+</div><div class="label">Training mutations</div></div>
+        <div class="hero-stat"><div class="value">9K+</div><div class="label">Training mutations</div></div>
+      </div>
+      <div class="powered-by reveal reveal-delay-4" style="margin-top:32px;display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.45);letter-spacing:0.5px">
+        <span>Powered by</span>
+        <span style="font-weight:700;color:rgba(255,255,255,0.7)">AMD</span>
+        <span>&</span>
+        <span style="font-weight:700;color:rgba(255,255,255,0.7)">Palantir</span>
       </div>
     </div>
     <div class="hero-scroll-hint">
@@ -1145,7 +1151,7 @@ footer {
         <div class="timeline-step reveal reveal-delay-4">
           <div class="timeline-dot"></div>
           <h4>Combine and rank</h4>
-          <p>Top mutations combined into multi-mutation candidates, verified by a gradient boosting classifier at 99.9% CV accuracy.</p>
+          <p>Top mutations combined into multi-mutation candidates, verified by a gradient boosting classifier at 80% CV accuracy.</p>
         </div>
         <div class="timeline-step reveal">
           <div class="timeline-dot"></div>
@@ -1483,7 +1489,7 @@ footer {
       <h3>Our Mission</h3>
       <p>NOVA Lab is a context-aware protein optimization platform designed for both environmental and biomedical applications. Rather than optimizing every protein with the same fixed criteria, we change our evaluation strategy depending on the selected biological context. For plastic degradation, we engineer thermostable PETase enzymes for industrial-scale recycling. For disease applications, we optimize proteins like SOD1 for stability, solubility, and preserved function &mdash; addressing challenges in diseases like ALS. One platform, two impact pathways.</p>
       <div class="about-highlights">
-        <div class="about-highlight"><div class="val">99.9%</div><div class="lbl">ML Accuracy</div></div>
+        <div class="about-highlight"><div class="val">80%</div><div class="lbl">ML Accuracy</div></div>
         <div class="about-highlight"><div class="val">52,275</div><div class="lbl">Training Mutations</div></div>
         <div class="about-highlight"><div class="val">6,000+</div><div class="lbl">Variants Screened</div></div>
         <div class="about-highlight"><div class="val">107</div><div class="lbl">Enzyme Structures</div></div>
@@ -1506,7 +1512,7 @@ footer {
 // ═══════════════════════════════════════════════════════════
 // Configuration
 // ═══════════════════════════════════════════════════════════
-const API = 'https://pet-lab-api-production-ab97.up.railway.app';
+const API = 'http://localhost:8000';
 
 const PRESETS = [
   { name: 'IsPETase', organism: 'I. sakaiensis', pdbId: '5XJH', desc: 'Wild-type, denatures at 40\u00b0C', residues: 312,
@@ -2253,6 +2259,12 @@ async function checkHealth() {
 checkHealth();
 setInterval(checkHealth, 20000);
 setTimeout(checkHealth, 3000);
+
+// Auto-load PDB database on page load so it's ready when the user browses
+loadPDB();
+
+// Pre-warm the ML model so optimization runs fast on first click
+fetch(API + '/classifier/info').catch(() => {});
 
 // ═══════════════════════════════════════════════════════════
 // PDB Browser
@@ -3196,7 +3208,7 @@ function show3DViewer(mutations) {
       ${mutListHtml}
       <p style="font-size:11px;color:var(--text-tertiary);margin-top:10px;line-height:1.5">
         Red-highlighted residues indicate positions where the AI-designed mutations are introduced.
-        These substitutions were selected by the noise-filtered GradientBoosting classifier (CV accuracy 99.9%) trained on ${(52275).toLocaleString()} mutations from FireProtDB, extremophile organisms, and biophysics-derived data, with ESM-2 protein language model embeddings.
+        These substitutions were selected by the noise-filtered GradientBoosting classifier (CV accuracy 80%) trained on ${(9000).toLocaleString()} mutations from FireProtDB, extremophile organisms, and biophysics-derived data, with ESM-2 protein language model embeddings.
       </p>
     </div>` : ''}
 
