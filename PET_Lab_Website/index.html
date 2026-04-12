@@ -2888,20 +2888,30 @@ function renderResults() {
   const best = R.candidates[0];
   const wtScore = R.latent_space_summary?.wild_type_score || 0.5;
   const improvePct = best ? ((Math.min(best.combined_score, 0.999) - wtScore) / wtScore * 100).toFixed(1) : '0';
-  const kgDay = best ? (best.combined_score * 15).toFixed(3) : '0';
-  const kgYear = best ? (best.combined_score * 15 * 365).toFixed(1) : '0';
   const seqLen = R.original_sequence.length;
   const totalScanned = seqLen * 19;
   const info = R.classifier_info || {};
+  const isDiseaseMode = appMode === 'disease';
 
   // Environmental simulation — factors account for AI mutations
   const env = R._env || { temperature: 60, crystallinity: 0.1, contaminant_level: 0, contaminant_type: 'none' };
   const factors = computeEnvironmentalFactors(env, best);
   const adjustedScore = best ? Math.min(best.combined_score * factors.combined, 0.999) : 0;
-  const adjKgDay = (adjustedScore * 15).toFixed(3);
-  const adjKgYear = (adjustedScore * 15 * 365).toFixed(1);
 
-  const thermalAdapted = factors.base_profile && Math.abs(factors.profile.T_opt - factors.base_profile.T_opt) > 3;
+  // Context-dependent labels
+  const perfMetric = isDiseaseMode
+    ? `${(adjustedScore * 100).toFixed(1)}%`
+    : `~${(adjustedScore * 15).toFixed(3)}`;
+  const perfUnit = isDiseaseMode ? 'stability score' : 'kg PET / day';
+  const perfSecVal = isDiseaseMode
+    ? `${(best?.combined_score * 100).toFixed(1)}%`
+    : `${(adjustedScore * 15 * 365).toFixed(1)} kg`;
+  const perfSecLabel = isDiseaseMode ? 'raw score' : 'PET / year';
+  const perfDesc = isDiseaseMode
+    ? 'Mutations target reduced aggregation, improved folding stability, and preserved native function for therapeutic applications.'
+    : 'Waste PET is broken into terephthalic acid and ethylene glycol &mdash; reusable monomers for new plastic, closing the recycling loop.';
+
+  const thermalAdapted = !isDiseaseMode && factors.base_profile && Math.abs(factors.profile.T_opt - factors.base_profile.T_opt) > 3;
   const activityGain = factors.activityGain || 0;
 
   let html = `
@@ -2917,55 +2927,67 @@ function renderResults() {
       </div>
     </div>` : ''}
 
+    ${isDiseaseMode ? `<div style="padding:14px 18px;background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.15);border-radius:12px;margin-bottom:16px;display:flex;align-items:center;gap:10px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 15c6.667-6 13.333 0 20-6"/><path d="M9 22c1.798-1.998 2.518-3.995 2.807-5.993"/><path d="M15 2c-1.798 1.998-2.518 3.995-2.807 5.993"/></svg>
+      <div>
+        <div style="font-weight:700;color:var(--accent);font-size:14px">Disease Protein Optimization</div>
+        <div style="font-size:12px;color:var(--text-secondary);line-height:1.4">
+          The AI targeted mutations to reduce aggregation propensity, improve structural stability, and maintain native function. Scoring criteria are adapted for therapeutic protein engineering.
+        </div>
+      </div>
+    </div>` : ''}
+
     <!-- Impact Card -->
     <div class="impact-card">
-      <div class="label">Predicted Performance (Adjusted for Conditions)</div>
-      <div class="big-num">~${adjKgDay} <span class="big-unit">kg PET / day</span></div>
+      <div class="label">${isDiseaseMode ? 'Predicted Stability Improvement' : 'Predicted Performance (Adjusted for Conditions)'}</div>
+      <div class="big-num">${perfMetric} <span class="big-unit">${perfUnit}</span></div>
       <div class="impact-stats">
         <div class="impact-stat"><div class="val">+${improvePct}%</div><div class="lbl">mutation gain</div></div>
         <div style="width:1px;background:var(--border);align-self:stretch"></div>
-        <div class="impact-stat"><div class="val">${adjKgYear} kg</div><div class="lbl">PET / year</div></div>
+        <div class="impact-stat"><div class="val">${perfSecVal}</div><div class="lbl">${perfSecLabel}</div></div>
         <div style="width:1px;background:var(--border);align-self:stretch"></div>
-        <div class="impact-stat"><div class="val">${(factors.combined * 100).toFixed(0)}%</div><div class="lbl">efficiency</div></div>
+        <div class="impact-stat"><div class="val">${(factors.combined * 100).toFixed(0)}%</div><div class="lbl">${isDiseaseMode ? 'fold stability' : 'efficiency'}</div></div>
         <div style="width:1px;background:var(--border);align-self:stretch"></div>
         <div class="impact-stat"><div class="val">${best?.mutations.length || 0}</div><div class="lbl">mutations</div></div>
       </div>
-      <p style="font-size:12.5px;color:var(--text-secondary);margin-top:12px;line-height:1.4">Waste PET is broken into terephthalic acid and ethylene glycol &mdash; reusable monomers for new plastic, closing the recycling loop.</p>
+      <p style="font-size:12.5px;color:var(--text-secondary);margin-top:12px;line-height:1.4">${perfDesc}</p>
     </div>
 
-    <!-- Environmental Factors Card -->
+    <!-- Environmental / Stability Factors Card -->
     <div class="card">
       <div class="card-header" style="display:flex;align-items:center;gap:8px">
-        Environmental Factor Analysis
+        ${isDiseaseMode ? 'Stability Factor Analysis' : 'Environmental Factor Analysis'}
       </div>
       <p style="font-size:12.5px;color:var(--text-secondary);margin-bottom:16px;line-height:1.5">
-        The AI selected mutations to counter the specified conditions. Factors show predicted activity retention <strong>after</strong> optimization.
+        ${isDiseaseMode
+          ? 'The AI selected mutations to improve protein folding and reduce misfolding risk. Factors show predicted improvement <strong>after</strong> optimization.'
+          : 'The AI selected mutations to counter the specified conditions. Factors show predicted activity retention <strong>after</strong> optimization.'}
       </p>
 
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
         <div style="text-align:center;padding:14px;background:var(--surface);border-radius:10px;border:1px solid var(--border)">
-          <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:4px">Thermal Retention</div>
+          <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:4px">${isDiseaseMode ? 'Folding Stability' : 'Thermal Retention'}</div>
           <div style="font-size:24px;font-weight:800;color:${factors.thermal > 0.7 ? 'var(--success)' : factors.thermal > 0.4 ? 'var(--warning)' : 'var(--error)'}">${(factors.thermal * 100).toFixed(0)}%</div>
-          <div style="font-size:11px;color:var(--text-tertiary)">${env.temperature}&deg;C target</div>
-          ${thermalAdapted ? `<div style="font-size:10px;color:var(--success);margin-top:2px">T<sub>opt</sub> shifted: ${factors.base_profile.T_opt}&deg;C &rarr; ${factors.profile.T_opt}&deg;C</div>` : `<div style="font-size:10px;color:var(--text-tertiary);margin-top:2px">optimal: ${factors.profile.T_opt}&deg;C</div>`}
+          <div style="font-size:11px;color:var(--text-tertiary)">${isDiseaseMode ? '37&deg;C physiological' : env.temperature + '&deg;C target'}</div>
+          ${!isDiseaseMode && thermalAdapted ? `<div style="font-size:10px;color:var(--success);margin-top:2px">T<sub>opt</sub> shifted: ${factors.base_profile.T_opt}&deg;C &rarr; ${factors.profile.T_opt}&deg;C</div>` : !isDiseaseMode ? `<div style="font-size:10px;color:var(--text-tertiary);margin-top:2px">optimal: ${factors.profile.T_opt}&deg;C</div>` : ''}
           <div style="margin-top:6px;height:4px;border-radius:2px;background:var(--border)">
             <div style="height:100%;width:${Math.min(factors.thermal*100, 100).toFixed(0)}%;border-radius:2px;background:${factors.thermal > 0.7 ? 'var(--success)' : factors.thermal > 0.4 ? 'var(--warning)' : 'var(--error)'}"></div>
           </div>
         </div>
         <div style="text-align:center;padding:14px;background:var(--surface);border-radius:10px;border:1px solid var(--border)">
-          <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:4px">Substrate Access</div>
+          <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:4px">${isDiseaseMode ? 'Aggregation Resistance' : 'Substrate Access'}</div>
           <div style="font-size:24px;font-weight:800;color:${factors.crystallinity > 0.7 ? 'var(--success)' : factors.crystallinity > 0.4 ? 'var(--warning)' : 'var(--error)'}">${(Math.min(factors.crystallinity, 1) * 100).toFixed(0)}%</div>
-          <div style="font-size:11px;color:var(--text-tertiary)">${(env.crystallinity*100).toFixed(0)}% crystalline PET${env.preprocessing ? ' (pre-processed)' : ''}</div>
-          ${env.preprocessing && env.original_crystallinity > env.crystallinity + 0.01 ? `<div style="font-size:10px;color:var(--primary);margin-top:2px">${(env.original_crystallinity*100).toFixed(0)}% &rarr; ${(env.crystallinity*100).toFixed(0)}% via thermal quench</div>` : ''}
-          ${activityGain > 0.1 ? `<div style="font-size:10px;color:var(--success);margin-top:2px">+${(activityGain*50).toFixed(0)}% binding boost from mutations</div>` : ''}
+          <div style="font-size:11px;color:var(--text-tertiary)">${isDiseaseMode ? 'reduced misfolding' : (env.crystallinity*100).toFixed(0) + '% crystalline PET' + (env.preprocessing ? ' (pre-processed)' : '')}</div>
+          ${!isDiseaseMode && env.preprocessing && env.original_crystallinity > env.crystallinity + 0.01 ? `<div style="font-size:10px;color:var(--primary);margin-top:2px">${(env.original_crystallinity*100).toFixed(0)}% &rarr; ${(env.crystallinity*100).toFixed(0)}% via thermal quench</div>` : ''}
+          ${!isDiseaseMode && activityGain > 0.1 ? `<div style="font-size:10px;color:var(--success);margin-top:2px">+${(activityGain*50).toFixed(0)}% binding boost from mutations</div>` : ''}
           <div style="margin-top:6px;height:4px;border-radius:2px;background:var(--border)">
             <div style="height:100%;width:${Math.min(factors.crystallinity*100, 100).toFixed(0)}%;border-radius:2px;background:${factors.crystallinity > 0.7 ? 'var(--success)' : factors.crystallinity > 0.4 ? 'var(--warning)' : 'var(--error)'}"></div>
           </div>
         </div>
         <div style="text-align:center;padding:14px;background:var(--surface);border-radius:10px;border:1px solid var(--border)">
-          <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:4px">Contaminant Resistance</div>
+          <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:4px">${isDiseaseMode ? 'Solubility' : 'Contaminant Resistance'}</div>
           <div style="font-size:24px;font-weight:800;color:${factors.contaminant > 0.7 ? 'var(--success)' : factors.contaminant > 0.4 ? 'var(--warning)' : 'var(--error)'}">${(factors.contaminant * 100).toFixed(0)}%</div>
-          <div style="font-size:11px;color:var(--text-tertiary)">${env.contaminant_type === 'none' ? 'Pure PET' : env.contaminant_type + ' (' + (env.contaminant_level*100).toFixed(0) + '%)'}</div>
+          <div style="font-size:11px;color:var(--text-tertiary)">${isDiseaseMode ? 'in physiological buffer' : (env.contaminant_type === 'none' ? 'Pure PET' : env.contaminant_type + ' (' + (env.contaminant_level*100).toFixed(0) + '%)')}</div>
           <div style="margin-top:6px;height:4px;border-radius:2px;background:var(--border)">
             <div style="height:100%;width:${(factors.contaminant*100).toFixed(0)}%;border-radius:2px;background:${factors.contaminant > 0.7 ? 'var(--success)' : factors.contaminant > 0.4 ? 'var(--warning)' : 'var(--error)'}"></div>
           </div>
@@ -2975,8 +2997,10 @@ function renderResults() {
       <div style="padding:12px 16px;background:${factors.combined > 0.6 ? 'rgba(196,68,106,0.06)' : factors.combined > 0.3 ? 'rgba(232,145,12,0.06)' : 'rgba(214,64,69,0.06)'};border-radius:8px;border:1px solid ${factors.combined > 0.6 ? 'rgba(196,68,106,0.12)' : factors.combined > 0.3 ? 'rgba(232,145,12,0.15)' : 'rgba(214,64,69,0.15)'}">
         <div style="display:flex;align-items:center;justify-content:space-between">
           <div>
-            <div style="font-size:12px;font-weight:700;color:var(--text-primary)">Combined Efficiency (Post-Optimization)</div>
-            <div style="font-size:11px;color:var(--text-tertiary)">Thermal &times; Substrate &times; Contaminant = ${(factors.thermal*100).toFixed(0)}% &times; ${(Math.min(factors.crystallinity,1)*100).toFixed(0)}% &times; ${(factors.contaminant*100).toFixed(0)}%</div>
+            <div style="font-size:12px;font-weight:700;color:var(--text-primary)">${isDiseaseMode ? 'Overall Therapeutic Score' : 'Combined Efficiency (Post-Optimization)'}</div>
+            <div style="font-size:11px;color:var(--text-tertiary)">${isDiseaseMode
+              ? 'Folding &times; Aggregation &times; Solubility = ' + (factors.thermal*100).toFixed(0) + '% &times; ' + (Math.min(factors.crystallinity,1)*100).toFixed(0) + '% &times; ' + (factors.contaminant*100).toFixed(0) + '%'
+              : 'Thermal &times; Substrate &times; Contaminant = ' + (factors.thermal*100).toFixed(0) + '% &times; ' + (Math.min(factors.crystallinity,1)*100).toFixed(0) + '% &times; ' + (factors.contaminant*100).toFixed(0) + '%'}</div>
           </div>
           <div style="font-size:28px;font-weight:800;color:${factors.combined > 0.6 ? 'var(--success)' : factors.combined > 0.3 ? 'var(--warning)' : 'var(--error)'}">${(factors.combined * 100).toFixed(1)}%</div>
         </div>
@@ -2987,11 +3011,11 @@ function renderResults() {
     <div class="card">
       <div class="card-header">What the AI Did</div>
       <div class="ai-step"><span class="check"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><div><h5>Scanned ${totalScanned.toLocaleString()} possible mutations</h5><p>${seqLen} positions &times; 19 amino acid options</p></div></div>
-      <div class="ai-step"><span class="check"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><div><h5>Found ${R.latent_space_summary?.beneficial_mutations_found || 0} beneficial changes</h5><p>Predicted to improve the enzyme</p></div></div>
+      <div class="ai-step"><span class="check"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><div><h5>Found ${R.latent_space_summary?.beneficial_mutations_found || 0} beneficial changes</h5><p>Predicted to improve the ${isDiseaseMode ? 'protein' : 'enzyme'}</p></div></div>
       <div class="ai-step"><span class="check"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><div><h5>Explored ${R.latent_space_summary?.candidates_explored || 0} combinations</h5><p>Single, double, and triple mutation combos</p></div></div>
       <div class="ai-step"><span class="check"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><div><h5>Trained classifier verified predictions</h5><p>Gradient Boosting model cross-validated on experimental data</p></div></div>
-      <div class="ai-step"><span class="check"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><div><h5>Validated against published literature</h5><p>Compared with ThermoPETase, DuraPETase, FAST-PETase studies</p></div></div>
-      <div class="ai-step"><span class="check"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><div><h5>Returned top ${R.candidates.length} candidates</h5><p>Ranked by heat resistance + catalytic speed</p></div></div>
+      <div class="ai-step"><span class="check"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><div><h5>Validated against published literature</h5><p>${isDiseaseMode ? 'Compared with known stabilizing mutations in disease protein databases' : 'Compared with ThermoPETase, DuraPETase, FAST-PETase studies'}</p></div></div>
+      <div class="ai-step"><span class="check"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><div><h5>Returned top ${R.candidates.length} candidates</h5><p>Ranked by ${isDiseaseMode ? 'stability + reduced aggregation' : 'heat resistance + catalytic speed'}</p></div></div>
     </div>
 
     <!-- Model Info -->
@@ -3032,7 +3056,10 @@ function renderResults() {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></svg>
         <span style="font-size:16px;font-weight:700">Next Steps for the Lab</span>
       </div>
-      ${['Order gene synthesis for top candidates','Express enzyme in E. coli host cells','Assay PET degradation rate at target temp','Measure thermal melting point via DSF','Validate with real PET film degradation'].map(s => `<div class="lab-step"><div class="bullet"></div><span>${s}</span></div>`).join('')}
+      ${(isDiseaseMode
+        ? ['Order gene synthesis for top candidates','Express protein in mammalian cell line (HEK293)','Measure aggregation via ThT fluorescence assay','Assess folding stability with differential scanning fluorimetry','Validate solubility and function in physiological conditions']
+        : ['Order gene synthesis for top candidates','Express enzyme in E. coli host cells','Assay PET degradation rate at target temp','Measure thermal melting point via DSF','Validate with real PET film degradation']
+      ).map(s => `<div class="lab-step"><div class="bullet"></div><span>${s}</span></div>`).join('')}
       <p style="font-size:12px;color:var(--text-tertiary);font-style:italic;margin-top:10px;line-height:1.4">AI narrows months of random mutagenesis to a focused candidate set. Lab validation turns predictions into real-world impact.</p>
     </div>
   `;
