@@ -269,6 +269,12 @@ header.logo-arrived .logo-text { opacity: 1; transform: translateX(0); }
   width: 44px; height: 44px; position: relative;
 }
 .molecule-anim canvas { width: 44px; height: 44px; }
+
+/* Hero particle canvas */
+#heroParticles {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 0; pointer-events: none;
+}
 .status-badge {
   display: flex; align-items: center; gap: 6px;
   padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
@@ -1055,6 +1061,7 @@ footer {
 
   <!-- ── HERO: Cinematic editorial ── -->
   <div class="hero-section">
+    <canvas id="heroParticles"></canvas>
     <div class="hero-bg-3d">
       <div id="heroProteinViewer"></div>
     </div>
@@ -1599,7 +1606,7 @@ let currentResult = null;
 let chartInstance = null;
 
 // ═══════════════════════════════════════════════════════════
-// Rotating 3D Molecule Animation (Header)
+// Rotating 3D DNA/Protein Helix Animation (Header)
 // ═══════════════════════════════════════════════════════════
 (function animateMolecule() {
   const canvas = document.getElementById('moleculeCanvas');
@@ -1609,117 +1616,243 @@ let chartInstance = null;
   const cx = W / 2, cy = H / 2;
   let t = 0;
 
-  // Define atoms in 3D: {x, y, z, r (radius), color}
-  // A stylized small molecule (like a PET monomer fragment)
-  const baseAtoms = [
-    // Central benzene ring (6 carbons in a hexagon, radius ~18)
-    { x:  0,   y: -18,  z: 0,   r: 5, c: '#3d3d3d' },  // C0
-    { x:  15.6,y: -9,   z: 0,   r: 5, c: '#3d3d3d' },  // C1
-    { x:  15.6,y:  9,   z: 0,   r: 5, c: '#3d3d3d' },  // C2
-    { x:  0,   y:  18,  z: 0,   r: 5, c: '#3d3d3d' },  // C3
-    { x: -15.6,y:  9,   z: 0,   r: 5, c: '#3d3d3d' },  // C4
-    { x: -15.6,y: -9,   z: 0,   r: 5, c: '#3d3d3d' },  // C5
-    // Oxygen atoms (red)
-    { x:  28,  y: -16,  z:  6,  r: 5.5, c: '#E54D5D' },  // O6
-    { x: -28,  y: -16,  z: -6,  r: 5.5, c: '#E54D5D' },  // O7
-    // Ester oxygens
-    { x:  0,   y:  32,  z:  8,  r: 5.5, c: '#E54D5D' },  // O8
-    { x:  0,   y: -34,  z: -8,  r: 5.5, c: '#E54D5D' },  // O9
-    // Hydrogen atoms (small, light blue)
-    { x:  26,  y:  14,  z:  4,  r: 3.5, c: '#7C8CF8' },  // H10
-    { x: -26,  y:  14,  z: -4,  r: 3.5, c: '#7C8CF8' },  // H11
-    // Carbon chain ends
-    { x:  12,  y:  30,  z: 12,  r: 4.5, c: '#C4446A' },  // C12
-    { x: -12,  y: -30,  z:-12,  r: 4.5, c: '#C4446A' },  // C13
-  ];
-
-  // Define bonds: [atomIdx1, atomIdx2]
-  const bonds = [
-    [0,1],[1,2],[2,3],[3,4],[4,5],[5,0], // benzene ring
-    [1,6],[5,7],   // C-O oxygens
-    [3,8],[0,9],   // ester oxygens
-    [2,10],[4,11], // C-H hydrogens
-    [8,12],[9,13], // chain extensions
-  ];
-
-  function rotateY(p, a) {
-    const cos = Math.cos(a), sin = Math.sin(a);
-    return { x: p.x * cos + p.z * sin, y: p.y, z: -p.x * sin + p.z * cos, r: p.r, c: p.c };
-  }
-  function rotateX(p, a) {
-    const cos = Math.cos(a), sin = Math.sin(a);
-    return { x: p.x, y: p.y * cos - p.z * sin, z: p.y * sin + p.z * cos, r: p.r, c: p.c };
-  }
+  const HELIX_R = 16, HELIX_LEN = 12, ATOM_R = 3.2;
+  const colors = ['#7C8CF8','#A78BFA','#C4446A','#E54D5D','#38BDF8','#34D399'];
 
   function draw() {
     ctx.clearRect(0, 0, W, H);
-    t += 0.012;
+    t += 0.018;
 
-    // Rotate all atoms
-    const rotated = baseAtoms.map(a => {
-      let p = rotateY(a, t * 2);
-      p = rotateX(p, t * 0.7 + 0.3);
-      return p;
-    });
-
-    // Collect drawable items (bonds + atoms) with z-depth for sorting
     const items = [];
+    // Double helix backbone
+    for (let i = 0; i < HELIX_LEN; i++) {
+      const frac = i / (HELIX_LEN - 1);
+      const angle = frac * Math.PI * 3 + t * 2;
+      const yy = (frac - 0.5) * 60;
+      // Strand A
+      const ax = Math.cos(angle) * HELIX_R;
+      const az = Math.sin(angle) * HELIX_R;
+      // Strand B (opposite)
+      const bx = Math.cos(angle + Math.PI) * HELIX_R;
+      const bz = Math.sin(angle + Math.PI) * HELIX_R;
 
-    // Bonds
-    bonds.forEach(([i, j]) => {
-      const a = rotated[i], b = rotated[j];
-      items.push({ type: 'bond', a, b, z: (a.z + b.z) / 2 });
-    });
+      // Rotate whole structure
+      const cosR = Math.cos(t * 0.5), sinR = Math.sin(t * 0.5);
+      const a3x = ax * cosR - az * sinR, a3z = ax * sinR + az * cosR;
+      const b3x = bx * cosR - bz * sinR, b3z = bx * sinR + bz * cosR;
 
-    // Atoms
-    rotated.forEach((a, i) => {
-      items.push({ type: 'atom', a, z: a.z, idx: i });
-    });
+      items.push({ type:'atom', x:a3x, y:yy, z:a3z, c:colors[i % 3], r:ATOM_R });
+      items.push({ type:'atom', x:b3x, y:yy, z:b3z, c:colors[(i % 3) + 3], r:ATOM_R });
+      // Cross-rung bond
+      if (i % 2 === 0) items.push({ type:'bond', x1:a3x, y1:yy, z1:a3z, x2:b3x, y2:yy, z2:b3z, zm:(a3z+b3z)/2 });
+      // Backbone bonds
+      if (i > 0) {
+        const pa = items[items.length - 4]; // prev strand A atom
+        const pb = items[items.length - 3]; // prev strand B atom
+        const ca = items[items.length - 2]; // current strand A
+        const cb = items[items.length - (i % 2 === 0 ? 3 : 1)]; // current strand B
+        // Use simplified connections
+      }
+    }
+    // Backbone connections
+    for (let i = 1; i < HELIX_LEN; i++) {
+      const ai = (i - 1) * 2, bi = i * 2; // approx indices in items for atoms
+      // Find atoms at these helix positions
+    }
 
-    // Sort back-to-front
-    items.sort((a, b) => a.z - b.z);
+    // Rebuild as simple sorted list
+    const drawables = [];
+    const atoms = items.filter(i => i.type === 'atom');
+    // Backbone bonds between consecutive same-strand atoms
+    for (let i = 0; i < atoms.length - 2; i += 2) {
+      drawables.push({ type:'bond', a:atoms[i], b:atoms[i+2], z:(atoms[i].z+atoms[i+2].z)/2 });
+      if (i+1 < atoms.length && i+3 < atoms.length)
+        drawables.push({ type:'bond', a:atoms[i+1], b:atoms[i+3], z:(atoms[i+1].z+atoms[i+3].z)/2 });
+    }
+    // Cross rungs
+    for (let i = 0; i < atoms.length - 1; i += 2) {
+      if ((i / 2) % 2 === 0)
+        drawables.push({ type:'rung', a:atoms[i], b:atoms[i+1], z:(atoms[i].z+atoms[i+1].z)/2 });
+    }
+    atoms.forEach(a => drawables.push({ type:'atom', ...a }));
 
-    const maxZ = 40;
-    items.forEach(item => {
-      const depth = (item.z + maxZ) / (2 * maxZ);
-      const alpha = 0.35 + depth * 0.65;
+    drawables.sort((a, b) => (a.z || 0) - (b.z || 0));
+
+    const maxZ = HELIX_R + 5;
+    drawables.forEach(item => {
+      const iz = item.z || 0;
+      const depth = (iz + maxZ) / (2 * maxZ);
+      const alpha = 0.3 + depth * 0.7;
 
       if (item.type === 'bond') {
         ctx.beginPath();
         ctx.moveTo(cx + item.a.x, cy + item.a.y);
         ctx.lineTo(cx + item.b.x, cy + item.b.y);
-        ctx.strokeStyle = `rgba(150,160,170,${alpha})`;
-        ctx.lineWidth = 1.2 + depth * 1.5;
+        ctx.strokeStyle = `rgba(124,140,248,${alpha * 0.5})`;
+        ctx.lineWidth = 0.8 + depth;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+      } else if (item.type === 'rung') {
+        // Glowing cross-rungs
+        const grad = ctx.createLinearGradient(cx + item.a.x, cy + item.a.y, cx + item.b.x, cy + item.b.y);
+        grad.addColorStop(0, `rgba(124,140,248,${alpha * 0.6})`);
+        grad.addColorStop(0.5, `rgba(196,68,106,${alpha * 0.8})`);
+        grad.addColorStop(1, `rgba(52,211,153,${alpha * 0.6})`);
+        ctx.beginPath();
+        ctx.moveTo(cx + item.a.x, cy + item.a.y);
+        ctx.lineTo(cx + item.b.x, cy + item.b.y);
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 1.5 + depth * 0.5;
         ctx.lineCap = 'round';
         ctx.stroke();
       } else {
-        const a = item.a;
-        const scale = 0.7 + depth * 0.5;
-        const r = a.r * scale;
-
-        // Shadow
+        const scale = 0.6 + depth * 0.5;
+        const r = item.r * scale;
+        // Glow
+        const glow = ctx.createRadialGradient(cx + item.x, cy + item.y, 0, cx + item.x, cy + item.y, r * 3);
+        glow.addColorStop(0, item.c + Math.round(alpha * 40).toString(16).padStart(2,'0'));
+        glow.addColorStop(1, 'transparent');
         ctx.beginPath();
-        ctx.arc(cx + a.x + 1, cy + a.y + 1, r + 0.5, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0,0,0,${0.08 + depth * 0.12})`;
+        ctx.arc(cx + item.x, cy + item.y, r * 3, 0, Math.PI * 2);
+        ctx.fillStyle = glow;
         ctx.fill();
-
-        // Atom body
+        // Atom
         ctx.beginPath();
-        ctx.arc(cx + a.x, cy + a.y, r, 0, Math.PI * 2);
+        ctx.arc(cx + item.x, cy + item.y, r, 0, Math.PI * 2);
         ctx.globalAlpha = alpha;
-        ctx.fillStyle = a.c;
+        ctx.fillStyle = item.c;
         ctx.fill();
-        ctx.strokeStyle = 'rgba(0,0,0,0.25)';
-        ctx.lineWidth = 0.8;
-        ctx.stroke();
-
         // Highlight
         ctx.beginPath();
-        ctx.arc(cx + a.x - r * 0.3, cy + a.y - r * 0.3, r * 0.35, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255,255,255,${0.3 + depth * 0.4})`;
+        ctx.arc(cx + item.x - r * 0.25, cy + item.y - r * 0.25, r * 0.4, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${0.4 + depth * 0.4})`;
         ctx.fill();
         ctx.globalAlpha = 1;
       }
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ═══════════════════════════════════════════════════════════
+// Hero Particle Network (Full-screen background animation)
+// ═══════════════════════════════════════════════════════════
+(function initHeroParticles() {
+  const canvas = document.getElementById('heroParticles');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [], mouse = { x: -1000, y: -1000 };
+
+  function resize() {
+    const hero = canvas.parentElement;
+    W = canvas.width = hero.offsetWidth;
+    H = canvas.height = hero.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Track mouse for interactive glow
+  canvas.parentElement.addEventListener('mousemove', e => {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    mouse.x = e.clientX - rect.left;
+    mouse.y = e.clientY - rect.top;
+  });
+  canvas.parentElement.addEventListener('mouseleave', () => { mouse.x = -1000; mouse.y = -1000; });
+
+  const PARTICLE_COUNT = 80;
+  const CONNECT_DIST = 140;
+  const colors = [
+    [124, 140, 248],  // primary blue
+    [167, 139, 250],  // purple
+    [196, 68, 106],   // pink
+    [56, 189, 248],   // cyan
+    [52, 211, 153],   // green
+  ];
+
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    particles.push({
+      x: Math.random() * 2000,
+      y: Math.random() * 1200,
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: (Math.random() - 0.5) * 0.4,
+      r: 1.5 + Math.random() * 2.5,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      phase: Math.random() * Math.PI * 2,
+      pulseSpeed: 0.01 + Math.random() * 0.02,
+    });
+  }
+
+  let t = 0;
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    t += 1;
+
+    // Update particles
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.x < -20) p.x = W + 20;
+      if (p.x > W + 20) p.x = -20;
+      if (p.y < -20) p.y = H + 20;
+      if (p.y > H + 20) p.y = -20;
+      p.phase += p.pulseSpeed;
+    });
+
+    // Draw connections
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const a = particles[i], b = particles[j];
+        const dx = a.x - b.x, dy = a.y - b.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < CONNECT_DIST) {
+          const alpha = (1 - dist / CONNECT_DIST) * 0.15;
+          // Check if near mouse for highlight
+          const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+          const mDist = Math.sqrt((mx - mouse.x) ** 2 + (my - mouse.y) ** 2);
+          const boost = mDist < 200 ? (1 - mDist / 200) * 0.3 : 0;
+
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.strokeStyle = `rgba(124,140,248,${alpha + boost})`;
+          ctx.lineWidth = 0.6 + boost * 2;
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Draw particles
+    particles.forEach(p => {
+      const pulse = 0.7 + 0.3 * Math.sin(p.phase);
+      const r = p.r * pulse;
+      const [cr, cg, cb] = p.color;
+
+      // Mouse proximity glow
+      const mDist = Math.sqrt((p.x - mouse.x) ** 2 + (p.y - mouse.y) ** 2);
+      const mBoost = mDist < 180 ? (1 - mDist / 180) : 0;
+
+      // Outer glow
+      const glowR = r * (4 + mBoost * 6);
+      const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glowR);
+      glow.addColorStop(0, `rgba(${cr},${cg},${cb},${0.12 + mBoost * 0.2})`);
+      glow.addColorStop(1, 'transparent');
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, glowR, 0, Math.PI * 2);
+      ctx.fillStyle = glow;
+      ctx.fill();
+
+      // Core
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${cr},${cg},${cb},${0.6 + mBoost * 0.4})`;
+      ctx.fill();
+
+      // Bright center
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r * 0.4, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${0.5 * pulse + mBoost * 0.3})`;
+      ctx.fill();
     });
 
     requestAnimationFrame(draw);
@@ -2270,16 +2403,18 @@ fetch(API + '/classifier/info').catch(() => {});
 // PDB Browser
 // ═══════════════════════════════════════════════════════════
 async function loadPDB() {
+  if (pdbData.length > 0) return; // already loaded
   document.getElementById('pdbLoading').style.display = 'flex';
   document.getElementById('pdbGrid').innerHTML = '';
   try {
-    const r = await fetch(API + '/pdb/search');
+    // Load from static JSON file — no backend needed
+    const r = await fetch('pdb_data.json');
     pdbData = await r.json();
     document.getElementById('pdbCount').textContent = pdbData.length + ' structures';
     buildFamilyChips();
     renderPDB();
   } catch (e) {
-    document.getElementById('pdbGrid').innerHTML = '<div class="loading-center" style="grid-column:1/-1"><p>Could not reach backend. Is it running?</p></div>';
+    document.getElementById('pdbGrid').innerHTML = '<div class="loading-center" style="grid-column:1/-1"><p>Could not load protein database.</p></div>';
   }
   document.getElementById('pdbLoading').style.display = 'none';
 }
