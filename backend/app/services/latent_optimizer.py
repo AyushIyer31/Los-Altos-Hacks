@@ -316,8 +316,8 @@ def optimize(
         for mut_label in cand["mutations"]:
             prob = score_cache.get(mut_label, 0.5)
             conf = confidence_cache.get(mut_label, 0.5)
-            ddg = -np.log(prob / max(1 - prob, 1e-6))  # inverse sigmoid
-            is_ben = ddg < 0
+            ddg = float(-np.log(prob / max(1 - prob, 1e-6)))  # inverse sigmoid
+            is_ben = bool(ddg < 0)
             if is_ben:
                 beneficial_count += 1
             total_ddg += ddg
