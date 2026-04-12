@@ -39,57 +39,65 @@ def _get_hotspot_bonus(target_temp: float) -> float:
 
 
 def _scan_beneficial_mutations(sequence: str, top_k: int = 50) -> list[dict]:
-    """Scan single-point mutations using the trained classifier.
+    """Scan single-point mutations using the trained classifier (vectorized).
 
-    Instead of loading the full 650M ESM-2 model at runtime, uses the
-    pre-trained XGBoost classifier which already incorporates ESM-2 features
-    from training.
+    Uses raw numpy arrays to score all ~6000 mutations in a single batch,
+    then only builds result dicts for the beneficial ones (~50).
     """
     from . import trained_classifier as _clf
     _clf.train_model()
 
-    mutations = []
+    catalytic_set = set(CATALYTIC_RESIDUES.values())
+    aa_set = set(AMINO_ACIDS)
+
+    # Build all mutation tuples at once
+    mutation_tuples = []
+    mutation_meta = []  # parallel list of (pos, wt_aa, mut_aa)
     for pos in range(len(sequence)):
         wt_aa = sequence[pos]
-        if wt_aa not in AMINO_ACIDS:
+        if wt_aa not in aa_set or pos in catalytic_set:
             continue
-        # Skip catalytic residues
-        if pos in CATALYTIC_RESIDUES.values():
-            continue
-
         for mut_aa in AMINO_ACIDS:
             if mut_aa == wt_aa:
                 continue
+            mutation_tuples.append((wt_aa, pos + 1, mut_aa))
+            mutation_meta.append((pos, wt_aa, mut_aa))
 
-            pred = _clf.predict_mutation(wt_aa, pos + 1, mut_aa)
-            if pred["predicted_beneficial"] and pred["probability_beneficial"] > 0.5:
-                # Score based on classifier probability + property heuristics
-                score = pred["probability_beneficial"]
+    # Single batch — returns raw numpy arrays, no dict overhead
+    all_ddg, all_prob = _clf.predict_mutations_batch_raw(mutation_tuples, sequence=sequence)
 
-                # Bonus for thermostability hotspots
-                if pos in THERMOSTABILITY_HOTSPOTS:
-                    score += 0.1
+    if len(all_ddg) == 0:
+        return []
 
-                mutations.append({
-                    "position": pos,
-                    "wild_type": wt_aa,
-                    "mutant": mut_aa,
-                    "score": score,
-                    "confidence": pred["confidence"],
-                    "label": f"{wt_aa}{pos + 1}{mut_aa}",
-                })
+    # Filter beneficial (ddg < 0 and prob > 0.5) using numpy masks
+    beneficial_mask = (all_ddg < 0) & (all_prob > 0.5)
+    beneficial_indices = np.where(beneficial_mask)[0]
+
+    # Only build dicts for the beneficial mutations (~50 vs ~6000)
+    mutations = []
+    for idx in beneficial_indices:
+        pos, wt_aa, mut_aa = mutation_meta[idx]
+        prob = float(all_prob[idx])
+        score = prob + (0.1 if pos in THERMOSTABILITY_HOTSPOTS else 0.0)
+        mutations.append({
+            "position": pos,
+            "wild_type": wt_aa,
+            "mutant": mut_aa,
+            "score": score,
+            "confidence": round(prob, 4),
+            "label": f"{wt_aa}{pos + 1}{mut_aa}",
+        })
 
     mutations.sort(key=lambda x: x["score"], reverse=True)
     return mutations[:top_k]
 
 
-def _score_candidate(sequence: str, original: str) -> tuple[float, float]:
-    """Score a candidate using classifier predictions for its mutations.
+def _score_candidate(sequence: str, original: str, score_cache: dict = None) -> tuple[float, float]:
+    """Score a candidate using cached mutation scores (no re-prediction).
 
     Returns (stability_score, activity_score) both in 0-1 range.
+    score_cache maps mutation label (e.g. "S121E") to probability_beneficial.
     """
-    from . import trained_classifier as _clf
-
     mutations = []
     for i, (wt, mt) in enumerate(zip(original, sequence)):
         if wt != mt:
@@ -98,27 +106,29 @@ def _score_candidate(sequence: str, original: str) -> tuple[float, float]:
     if not mutations:
         return 0.5, 0.5
 
-    # Get classifier predictions for each mutation
+    catalytic_vals = set(CATALYTIC_RESIDUES.values())
     probs = []
     active_site_probs = []
+
     for wt, pos, mt in mutations:
-        pred = _clf.predict_mutation(wt, pos, mt)
-        probs.append(pred["probability_beneficial"])
-
-        # Check if near active site
-        near_active = any(abs((pos - 1) - center) <= 5
-                         for center in CATALYTIC_RESIDUES.values())
+        label = f"{wt}{pos}{mt}"
+        if score_cache and label in score_cache:
+            prob = score_cache[label]
+        else:
+            # Fallback: quick single prediction only if not in cache
+            from . import trained_classifier as _clf
+            pred = _clf.predict_mutation(wt, pos, mt, sequence=original)
+            prob = pred["probability_beneficial"]
+        probs.append(prob)
+        near_active = any(abs((pos - 1) - center) <= 5 for center in catalytic_vals)
         if near_active:
-            active_site_probs.append(pred["probability_beneficial"])
+            active_site_probs.append(prob)
 
-    # Stability score: average probability across all mutations
     stability_score = float(np.mean(probs))
 
-    # Activity score: if mutations near active site, use those; else use overall
     if active_site_probs:
         activity_score = float(np.mean(active_site_probs))
     else:
-        # Mutations away from active site slightly preserve activity
         activity_score = 0.5 + 0.2 * float(np.mean(probs))
 
     return stability_score, activity_score
@@ -148,6 +158,11 @@ def _combine_beneficial_mutations(
     return "".join(seq_list)
 
 
+# In-memory cache for optimization results (avoids re-scanning on repeated runs)
+_optimize_cache: dict[str, dict] = {}
+_OPTIMIZE_CACHE_MAX = 20
+
+
 def optimize(
     sequence: str,
     num_candidates: int = 10,
@@ -156,10 +171,16 @@ def optimize(
 ) -> dict:
     """Run optimization to generate improved PETase candidates.
 
-    Uses the trained XGBoost classifier (94.4% accuracy, 5,386 mutations)
-    to identify beneficial mutations without loading the full ESM-2 model.
+    Uses the trained XGBoost classifier and amino acid property analysis.
+    Results are cached in memory so repeated requests for the same
+    sequence/temperature return instantly.
     """
-    # Step 1: Scan for beneficial single mutations using classifier
+    # Check result cache
+    cache_key = f"{sequence}:{num_candidates}:{target_temp}"
+    if cache_key in _optimize_cache:
+        return _optimize_cache[cache_key]
+
+    # Step 1: Scan for beneficial single mutations (single batch call)
     beneficial = _scan_beneficial_mutations(sequence, top_k=optimization_steps)
 
     if not beneficial:
@@ -168,6 +189,10 @@ def optimize(
             "candidates": [],
             "latent_space_summary": {"beneficial_mutations_found": 0},
         }
+
+    # Build score cache from step 1 — reused everywhere, no re-prediction
+    score_cache = {m["label"]: m["score"] for m in beneficial}
+    confidence_cache = {m["label"]: m["confidence"] for m in beneficial}
 
     # Step 2: Deduplicate by position
     best_per_position = {}
@@ -180,13 +205,14 @@ def optimize(
     # Step 3: Generate candidates
     candidates = []
     seen_seqs = set()
+    catalytic_vals = set(CATALYTIC_RESIDUES.values())
 
     # Single mutants
     for mut in unique_muts:
-        seq_list = list(sequence)
         pos = mut["position"]
-        if pos in CATALYTIC_RESIDUES.values():
+        if pos in catalytic_vals:
             continue
+        seq_list = list(sequence)
         seq_list[pos] = mut["mutant"]
         candidate_seq = "".join(seq_list)
         if candidate_seq != sequence and candidate_seq not in seen_seqs:
@@ -214,13 +240,12 @@ def optimize(
         if len(candidates) >= optimization_steps:
             break
 
-    # Step 4: Pre-rank by mutation score sum
+    # Step 4: Pre-rank using cached scores (zero prediction cost)
+    pre_rank_hotspot = 0.5 if target_temp >= 60 else 0.2
     for cand in candidates:
         cand["mutation_score_sum"] = sum(
-            m["score"] for m in beneficial
-            if any(m["label"] == mut for mut in cand["mutations"])
+            score_cache.get(mut, 0) for mut in cand["mutations"]
         )
-        pre_rank_hotspot = 0.5 if target_temp >= 60 else 0.2
         hotspot_bonus = sum(
             pre_rank_hotspot for m in cand["mutations"]
             if int(m[1:-1]) - 1 in THERMOSTABILITY_HOTSPOTS
@@ -230,7 +255,7 @@ def optimize(
     candidates.sort(key=lambda x: x["mutation_score_sum"], reverse=True)
     top_to_score = candidates[:num_candidates + 5]
 
-    # Score candidates
+    # Score candidates using cached scores (no re-prediction)
     stability_w, activity_w = _get_temp_weights(target_temp)
     wt_stability, wt_activity = 0.5, 0.5
     wt_combined = stability_w * wt_stability + activity_w * wt_activity
@@ -238,7 +263,7 @@ def optimize(
 
     scored = []
     for cand in top_to_score:
-        stability, activity = _score_candidate(cand["sequence"], sequence)
+        stability, activity = _score_candidate(cand["sequence"], sequence, score_cache=score_cache)
         combined = stability_w * stability + activity_w * activity
 
         hotspot_bonus = sum(
@@ -263,16 +288,13 @@ def optimize(
         cand["rank"] = i + 1
 
     # Step 6: Add explainability, literature validation, and classifier predictions
+    # All use cached scores — no ML re-prediction needed
     from . import explainability as _explain
     from . import literature_validation as _litval
-    from . import trained_classifier as _clf
-
-    esm_score_lookup = {m["label"]: m["score"] for m in beneficial}
-    _clf.train_model()
 
     for cand in top_candidates:
         explanation = _explain.explain_candidate(
-            cand["mutations"], esm_scores=esm_score_lookup
+            cand["mutations"], esm_scores=score_cache
         )
         cand["explanations"] = explanation["mutation_explanations"]
         cand["overall_strategy"] = explanation["overall_strategy"]
@@ -287,13 +309,34 @@ def optimize(
             "summary": validation["summary"],
         }
 
-        classifier_result = _clf.predict_candidate_mutations(cand["mutations"])
+        # Build classifier prediction from cached scores (no re-prediction)
+        per_mutation = []
+        beneficial_count = 0
+        total_ddg = 0.0
+        for mut_label in cand["mutations"]:
+            prob = score_cache.get(mut_label, 0.5)
+            conf = confidence_cache.get(mut_label, 0.5)
+            ddg = -np.log(prob / max(1 - prob, 1e-6))  # inverse sigmoid
+            is_ben = ddg < 0
+            if is_ben:
+                beneficial_count += 1
+            total_ddg += ddg
+            per_mutation.append({
+                "mutation": mut_label,
+                "predicted_beneficial": is_ben,
+                "predicted_ddg": round(ddg, 4),
+                "confidence": round(conf, 4),
+                "probability_beneficial": round(prob, 4),
+            })
+
+        avg_conf = np.mean([p["confidence"] for p in per_mutation]) if per_mutation else 0.0
         cand["classifier_prediction"] = {
-            "all_beneficial": classifier_result["all_beneficial"],
-            "beneficial_count": classifier_result["beneficial_count"],
-            "total": classifier_result["total"],
-            "average_confidence": classifier_result["average_confidence"],
-            "per_mutation": classifier_result["predictions"],
+            "all_beneficial": beneficial_count == len(per_mutation),
+            "beneficial_count": beneficial_count,
+            "total": len(per_mutation),
+            "total_predicted_ddg": round(total_ddg, 4),
+            "average_confidence": round(float(avg_conf), 4),
+            "per_mutation": per_mutation,
         }
 
     # Latent space summary
@@ -303,9 +346,10 @@ def optimize(
         y = (cand["predicted_activity_score"] - 0.5) * 4
         coords_2d.append([round(x, 4), round(y, 4)])
 
+    from . import trained_classifier as _clf
     training_info = _clf.get_training_metrics()
 
-    return {
+    result = {
         "original_sequence": sequence,
         "candidates": top_candidates,
         "wild_type_score": round(wt_combined, 6),
@@ -324,3 +368,10 @@ def optimize(
             "feature_importances": training_info.get("feature_importances", {}),
         },
     }
+
+    # Cache result for instant repeat requests
+    if len(_optimize_cache) >= _OPTIMIZE_CACHE_MAX:
+        _optimize_cache.pop(next(iter(_optimize_cache)))
+    _optimize_cache[cache_key] = result
+
+    return result

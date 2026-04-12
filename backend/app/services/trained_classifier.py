@@ -282,6 +282,10 @@ def train_model(force_retrain: bool = False) -> dict:
     """Load pre-trained ensemble from disk."""
     global _ensemble, _scaler, _training_metrics, _conservation_cache
 
+    # Already loaded — skip disk I/O
+    if not force_retrain and _ensemble is not None and _scaler is not None:
+        return _training_metrics or {}
+
     if not force_retrain and os.path.exists(REGRESSOR_PATH) and os.path.exists(SCALER_PATH):
         import sys
         print(f"[trained_classifier] Loading ensemble from {REGRESSOR_PATH}...", file=sys.stderr)
@@ -355,19 +359,210 @@ def predict_mutation(wt_aa: str, position: int, mut_aa: str,
     }
 
 
+def _extract_features_batch(mutation_tuples: list[tuple], sequence: str = None, protein_id: str = None) -> np.ndarray:
+    """Vectorized feature extraction for many mutations at once.
+
+    Much faster than calling _extract_features in a loop because it
+    pre-computes shared sequence-level data and caches position-dependent
+    features (RSA, secondary structure, context, PSSM) that are identical
+    across all mutations at the same residue position.
+    """
+    n = len(mutation_tuples)
+    features = np.zeros((n, 48), dtype=np.float64)
+
+    # Pre-compute sequence-level data once (shared across all mutations)
+    seq_len = len(sequence) if sequence else 0
+    if sequence:
+        seq_hydro = np.array([HYDROPHOBICITY.get(a, 0.0) for a in sequence])
+        seq_charge = np.array([CHARGE.get(a, 0.0) for a in sequence])
+        seq_helix = np.array([HELIX_PROPENSITY.get(a, 1.0) for a in sequence])
+        seq_sheet = np.array([SHEET_PROPENSITY.get(a, 1.0) for a in sequence])
+
+    # Local references for tight loop
+    _h = HYDROPHOBICITY
+    _v = VOLUME
+    _c = CHARGE
+    _f = FLEXIBILITY
+    _hp = HELIX_PROPENSITY
+    _sp = SHEET_PROPENSITY
+    _b62 = _BLOSUM62
+    _bd = BLOSUM62_DIAG
+    _aromatic = frozenset('FWYH')
+    _small = frozenset('GASTC')
+    _large = frozenset('FWYRKH')
+    _charged = frozenset('DEKR')
+    _deamid = frozenset('NQ')
+    _gp = frozenset('GP')
+
+    # Cache position-dependent features (RSA, secondary structure, context, PSSM)
+    # These are identical for all mutations at the same position (~19x savings)
+    _pos_cache = {}
+
+    for i, (wt_aa, position, mut_aa) in enumerate(mutation_tuples):
+        if wt_aa not in AA_SET or mut_aa not in AA_SET:
+            continue
+
+        # Physicochemical deltas (6)
+        dH = _h.get(mut_aa, 0) - _h.get(wt_aa, 0)
+        dV = _v.get(mut_aa, 0) - _v.get(wt_aa, 0)
+        dC = _c.get(mut_aa, 0) - _c.get(wt_aa, 0)
+        dF = _f.get(mut_aa, 0) - _f.get(wt_aa, 0)
+        dHelix = _hp.get(mut_aa, 1) - _hp.get(wt_aa, 1)
+        dSheet = _sp.get(mut_aa, 1) - _sp.get(wt_aa, 1)
+        features[i, 0:6] = [dH, dV, dC, dF, dHelix, dSheet]
+
+        # Absolute deltas (6)
+        adH, adV, adC, adF = abs(dH), abs(dV), abs(dC), abs(dF)
+        adHelix, adSheet = abs(dHelix), abs(dSheet)
+        features[i, 6:12] = [adH, adV, adC, adF, adHelix, adSheet]
+
+        # BLOSUM62 (1)
+        features[i, 12] = _b62.get((wt_aa, mut_aa), 0)
+
+        # Position-dependent features — compute once per position, reuse ~19x
+        if position in _pos_cache:
+            h_norm, s_norm, c_norm, rsa, local_h, local_c, gp_frac, rel_pos, cons_wt_feats = _pos_cache[position]
+        else:
+            idx = position - 1
+            if sequence and 0 <= idx < seq_len:
+                w_start = max(0, idx - 4)
+                w_end = min(seq_len, idx + 5)
+                h = float(seq_helix[w_start:w_end].mean())
+                s = float(seq_sheet[w_start:w_end].mean())
+                total = h + s + 1.0
+                h_norm, s_norm, c_norm = h / total, s / total, 1.0 / total
+
+                aa_h = _h.get(sequence[idx], 0)
+                base_rsa = 0.5 - aa_h * 0.05
+                rel_pos = idx / max(seq_len - 1, 1)
+                if rel_pos < 0.05 or rel_pos > 0.95:
+                    base_rsa += 0.2
+                ctx_start = max(0, idx - 3)
+                ctx_end = min(seq_len, idx + 4)
+                avg_h = float(seq_hydro[ctx_start:ctx_end].mean())
+                base_rsa -= avg_h * 0.02
+                rsa = max(0.0, min(1.0, base_rsa))
+
+                local_h = float(seq_hydro[ctx_start:ctx_end].mean())
+                local_c = float(seq_charge[ctx_start:ctx_end].mean())
+                window_str = sequence[ctx_start:ctx_end]
+                gp_frac = sum(1 for a in window_str if a in _gp) / len(window_str)
+            else:
+                h_norm, s_norm, c_norm = 0.33, 0.33, 0.34
+                rsa = 0.5
+                local_h, local_c, gp_frac, rel_pos = 0, 0, 0, 0.5
+
+            # PSSM features for wt at this position (position-dependent part)
+            cons_wt_feats = _get_conservation_features(protein_id, position, wt_aa, wt_aa)
+            _pos_cache[position] = (h_norm, s_norm, c_norm, rsa, local_h, local_c, gp_frac, rel_pos, cons_wt_feats)
+
+        features[i, 13:16] = [h_norm, s_norm, c_norm]
+        features[i, 16] = rsa
+        features[i, 17:21] = [local_h, local_c, gp_frac, rel_pos]
+
+        # Thermostability features (6, indices 21-26)
+        features[i, 21] = 1.0 if mut_aa == 'P' and wt_aa != 'P' else 0.0
+        features[i, 22] = 1.0 if wt_aa == 'P' and mut_aa != 'P' else 0.0
+        features[i, 23] = 1.0 if mut_aa == 'G' and wt_aa != 'G' else 0.0
+        if wt_aa in _deamid and mut_aa not in _deamid:
+            features[i, 24] = -1.0
+        elif mut_aa in _deamid and wt_aa not in _deamid:
+            features[i, 24] = 1.0
+        if mut_aa in _charged and wt_aa not in _charged:
+            features[i, 25] = 1.0
+        elif wt_aa in _charged and mut_aa not in _charged:
+            features[i, 25] = -1.0
+        if mut_aa == 'C' and wt_aa != 'C':
+            features[i, 26] = 1.0
+        elif wt_aa == 'C' and mut_aa != 'C':
+            features[i, 26] = -1.0
+
+        # Interaction terms (9, indices 27-35)
+        burial = 1.0 - rsa
+        to_proline = features[i, 21]
+        features[i, 27:36] = [
+            adH * burial, adV * burial, adC * burial,
+            adH * adV, adC * adH,
+            to_proline * burial, burial * h_norm, burial * s_norm, adH * h_norm,
+        ]
+
+        # Additional (6, indices 36-41)
+        aromatic_wt = 1.0 if wt_aa in _aromatic else 0.0
+        aromatic_mut = 1.0 if mut_aa in _aromatic else 0.0
+        cons_wt = _bd.get(wt_aa, 4)
+        cons_mut = _bd.get(mut_aa, 4)
+        features[i, 36:42] = [
+            aromatic_wt - aromatic_mut,
+            1.0 if wt_aa in _small and mut_aa in _large else 0.0,
+            1.0 if wt_aa in _large and mut_aa in _small else 0.0,
+            cons_wt, cons_mut, cons_wt - cons_mut,
+        ]
+
+        # PSSM conservation features (6, indices 42-47)
+        cons_feats = _get_conservation_features(protein_id, position, wt_aa, mut_aa)
+        features[i, 42:48] = cons_feats
+
+    return features
+
+
+def predict_mutations_batch_raw(mutation_tuples: list[tuple], sequence: str = None, protein_id: str = None) -> tuple[np.ndarray, np.ndarray]:
+    """Batch prediction returning raw numpy arrays (ddg, probability).
+
+    Much faster than predict_mutations_batch when you only need the arrays
+    and will filter before building dicts (e.g. scanning ~6000 mutations).
+    """
+    if _ensemble is None:
+        train_model()
+
+    if not mutation_tuples:
+        return np.array([]), np.array([])
+
+    all_features = _extract_features_batch(mutation_tuples, sequence=sequence, protein_id=protein_id)
+    all_scaled = _scaler.transform(all_features)
+    all_ddg = _ensemble_predict(all_scaled)
+    all_prob = 1.0 / (1.0 + np.exp(all_ddg))
+    return all_ddg, all_prob
+
+
+def predict_mutations_batch(mutation_tuples: list[tuple], sequence: str = None, protein_id: str = None) -> list[dict]:
+    """Vectorized batch prediction for many mutations at once.
+
+    mutation_tuples: list of (wt_aa, position, mut_aa)
+    Returns list of prediction dicts in same order.
+    """
+    all_ddg, all_prob = predict_mutations_batch_raw(mutation_tuples, sequence=sequence, protein_id=protein_id)
+
+    if len(all_ddg) == 0:
+        return []
+
+    results = []
+    for i in range(len(mutation_tuples)):
+        ddg = float(all_ddg[i])
+        conf = float(all_prob[i])
+        results.append({
+            "predicted_beneficial": ddg < 0,
+            "predicted_ddg": round(ddg, 4),
+            "confidence": round(conf, 4),
+            "probability_beneficial": round(conf, 4),
+        })
+    return results
+
+
 def predict_candidate_mutations(mutations: list[str], sequence: str = None) -> dict:
     """Predict all mutations in a candidate and return aggregate assessment."""
     if _ensemble is None:
         train_model()
 
+    # Parse all mutations and batch-predict
+    tuples = []
+    for mut_str in mutations:
+        tuples.append((mut_str[0], int(mut_str[1:-1]), mut_str[-1]))
+
+    batch_results = predict_mutations_batch(tuples, sequence=sequence)
+
     predictions = []
     total_ddg = 0.0
-    for mut_str in mutations:
-        wt_aa = mut_str[0]
-        mut_aa = mut_str[-1]
-        position = int(mut_str[1:-1])
-
-        pred = predict_mutation(wt_aa, position, mut_aa, sequence=sequence)
+    for mut_str, pred in zip(mutations, batch_results):
         pred["mutation"] = mut_str
         predictions.append(pred)
         total_ddg += pred["predicted_ddg"]

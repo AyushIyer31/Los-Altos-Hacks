@@ -3,10 +3,17 @@
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
+import json
+import os
 
 RCSB_SEARCH_URL = "https://search.rcsb.org/rcsbsearch/v2/query"
 RCSB_DATA_URL = "https://data.rcsb.org/rest/v1/core/entry"
 RCSB_FASTA_URL = "https://www.rcsb.org/fasta/entry"
+
+# Persistent disk cache for PDB data (avoids re-fetching on every restart)
+_DISK_CACHE_DIR = os.path.join(os.path.dirname(__file__), "..", "cached_data")
+_DISK_CACHE_PATH = os.path.join(_DISK_CACHE_DIR, "petase_db_cache.json")
+_DISK_CACHE_TTL = 86400  # 24 hours
 
 KNOWN_PETASE_IDS = [
     # ── IsPETase (Ideonella sakaiensis) & variants ──
@@ -255,13 +262,52 @@ def _fetch_single_entry(pdb_id: str) -> dict | None:
     return None
 
 
+def _load_disk_cache() -> list[dict] | None:
+    """Load PDB data from disk cache if fresh enough."""
+    try:
+        if not os.path.exists(_DISK_CACHE_PATH):
+            return None
+        mtime = os.path.getmtime(_DISK_CACHE_PATH)
+        if (time.time() - mtime) > _DISK_CACHE_TTL:
+            return None
+        with open(_DISK_CACHE_PATH, "r") as f:
+            data = json.load(f)
+        if data:
+            return data
+    except Exception:
+        pass
+    return None
+
+
+def _save_disk_cache(results: list[dict]) -> None:
+    """Persist PDB data to disk for fast reload."""
+    try:
+        os.makedirs(_DISK_CACHE_DIR, exist_ok=True)
+        with open(_DISK_CACHE_PATH, "w") as f:
+            json.dump(results, f)
+    except Exception:
+        pass
+
+
 def fetch_all_petase_data() -> list[dict]:
-    """Fetch all PETase data with parallel requests and caching."""
+    """Fetch all PETase data with parallel requests and caching.
+
+    Priority: in-memory cache → disk cache → network fetch.
+    """
     global _cache, _cache_time
 
+    # 1. In-memory cache (fastest)
     if _cache and (time.time() - _cache_time) < _CACHE_TTL:
         return _cache
 
+    # 2. Disk cache (fast — avoids 340+ HTTP requests)
+    disk_data = _load_disk_cache()
+    if disk_data:
+        _cache = disk_data
+        _cache_time = time.time()
+        return _cache
+
+    # 3. Network fetch (slow — only on first run or after 24h)
     pdb_ids = search_petase_structures()
     all_ids = list(dict.fromkeys(KNOWN_PETASE_IDS + pdb_ids))
 
@@ -279,4 +325,5 @@ def fetch_all_petase_data() -> list[dict]:
 
     _cache = results
     _cache_time = time.time()
+    _save_disk_cache(results)
     return results

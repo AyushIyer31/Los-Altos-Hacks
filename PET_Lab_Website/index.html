@@ -13,40 +13,35 @@
 /* ── Reset & Base ── */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
-  --primary: #4DA8DA;
-  --primary-light: #6BC0F0;
-  --accent: #D64070;
-  --accent-light: #E8638E;
-  --surface: #0a0a12;
-  --surface-2: #101018;
-  --surface-3: #16161f;
-  --card: #121220;
-  --text-primary: #EEEEF2;
-  --text-secondary: #8888A0;
-  --text-tertiary: #4E4E66;
-  --border: #222236;
-  --warning: #F5A623;
-  --error: #E54D5D;
-  --success: #4DA8DA;
-  --radius: 12px;
-  --radius-sm: 8px;
-  --glow-primary: rgba(77,168,218,0.12);
-  --glow-accent: rgba(214,64,112,0.12);
+  --primary: #7C8CF8;
+  --primary-light: #9BA6FF;
+  --accent: #C4446A;
+  --accent-light: #D4607F;
+  --surface: #08080f;
+  --surface-2: #0c0c15;
+  --surface-3: #111119;
+  --card: #0e0e18;
+  --text-primary: #E8E8ED;
+  --text-secondary: #70708A;
+  --text-tertiary: #444460;
+  --border: rgba(255,255,255,0.06);
+  --warning: #D4A04A;
+  --error: #D45555;
+  --success: #7C8CF8;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --glow-primary: rgba(124,140,248,0.08);
+  --glow-accent: rgba(196,68,106,0.08);
 }
 html { scroll-behavior: smooth; }
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: var(--surface);
   color: var(--text-primary);
-  line-height: 1.5;
+  line-height: 1.6;
   overflow-x: hidden;
-}
-/* Subtle noise grain overlay */
-body::before {
-  content: ''; position: fixed; inset: 0; z-index: 9998; pointer-events: none;
-  opacity: 0.018;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-  background-repeat: repeat;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 a { color: var(--primary); text-decoration: none; }
 button {
@@ -56,38 +51,129 @@ button {
   outline: none;
 }
 
-/* ── Scroll Reveal Animations ── */
+/* ── Scroll Reveal System ── */
 .reveal {
-  opacity: 0;
-  transform: translateY(40px);
-  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0; transform: translateY(28px);
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.reveal.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
+.reveal.visible { opacity: 1; transform: translateY(0); }
 .reveal-delay-1 { transition-delay: 0.1s; }
 .reveal-delay-2 { transition-delay: 0.2s; }
 .reveal-delay-3 { transition-delay: 0.3s; }
 .reveal-delay-4 { transition-delay: 0.4s; }
 .reveal-left {
-  opacity: 0;
-  transform: translateX(-40px);
-  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0; transform: translateX(-28px);
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .reveal-left.visible { opacity: 1; transform: translateX(0); }
 .reveal-right {
-  opacity: 0;
-  transform: translateX(40px);
-  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0; transform: translateX(28px);
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .reveal-right.visible { opacity: 1; transform: translateX(0); }
 .reveal-scale {
-  opacity: 0;
-  transform: scale(0.9);
-  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0; transform: scale(0.96);
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .reveal-scale.visible { opacity: 1; transform: scale(1); }
+
+/* ── Text Mask Reveal (words slide up from behind a clip) ── */
+.text-reveal {
+  overflow: hidden; display: inline-block;
+}
+.text-reveal-inner {
+  display: block;
+  transform: translateY(110%);
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.text-reveal.visible .text-reveal-inner {
+  transform: translateY(0);
+}
+.text-reveal-delay-1 .text-reveal-inner { transition-delay: 0.08s; }
+.text-reveal-delay-2 .text-reveal-inner { transition-delay: 0.16s; }
+.text-reveal-delay-3 .text-reveal-inner { transition-delay: 0.24s; }
+
+/* ── Line Draw (horizontal rules that grow from center) ── */
+.section-rule {
+  width: 0; height: 1px; background: var(--text-tertiary);
+  margin: 20px 0; transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s;
+}
+.section-rule.center { margin: 20px auto; }
+.section-rule.visible { width: 48px; }
+
+/* ── Hero parallax (controlled via JS scroll) ── */
+.hero-bg-3d {
+  position: absolute; top: 0; right: 0; width: 55%; height: 100%;
+  z-index: 0; pointer-events: none;
+  will-change: transform, opacity;
+  transition: none;
+}
+
+/* ── Timeline draw-in ── */
+.timeline::before {
+  content: ''; position: absolute; left: 7px; top: 8px; bottom: 8px;
+  width: 1px; background: var(--border);
+}
+.timeline-progress {
+  position: absolute; left: 7px; top: 8px;
+  width: 1px; height: 0; background: var(--primary);
+  transition: none; z-index: 1;
+}
+.timeline-dot {
+  position: absolute; left: -32px; top: 6px;
+  width: 15px; height: 15px; border-radius: 50%;
+  border: 2px solid var(--border); background: var(--surface);
+  transition: border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.timeline-step.active .timeline-dot {
+  border-color: var(--primary);
+  background: var(--primary);
+  box-shadow: 0 0 12px rgba(124,140,248,0.3);
+}
+
+/* ── Editorial panel stagger (left slides from left, right from right) ── */
+.editorial-panel-item:first-child {
+  opacity: 0; transform: translateX(-20px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.editorial-panel-item:last-child {
+  opacity: 0; transform: translateX(20px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.12s, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.12s;
+}
+.editorial-panel.visible .editorial-panel-item:first-child,
+.editorial-panel.visible .editorial-panel-item:last-child {
+  opacity: 1; transform: translateX(0);
+}
+
+/* ── Counter number animation ── */
+.hero-stat .value {
+  font-size: 24px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Smooth scroll indicator fade ── */
+.hero-scroll-hint {
+  position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  animation: float 3s ease-in-out infinite;
+  color: var(--text-tertiary); font-size: 10px; letter-spacing: 2px;
+  transition: opacity 0.5s ease;
+}
+.hero-scroll-hint.faded { opacity: 0; }
+
+/* ── Section eyebrow letter-spacing animation ── */
+.section-eyebrow {
+  font-size: 11px; font-weight: 600; color: var(--text-tertiary);
+  letter-spacing: 4px; margin-bottom: 16px; text-transform: uppercase;
+  transition: letter-spacing 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s ease;
+  opacity: 0;
+}
+.section-eyebrow.visible {
+  letter-spacing: 2.5px;
+  opacity: 1;
+}
 
 /* ── Splash Screen ── */
 #splash {
@@ -115,14 +201,14 @@ button {
 #splash.transitioning .splash-text { opacity: 0; transform: translateY(-20px); }
 #splash h1 {
   font-size: 64px; font-weight: 900; letter-spacing: 10px;
-  background: linear-gradient(135deg, #4DA8DA 0%, #7B68EE 50%, #D64070 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   opacity: 0; transform: translateY(16px);
   transition: opacity 0.9s ease, transform 0.9s ease;
 }
 #splash h1.show { opacity: 1; transform: translateY(0); }
 #splash h2 {
-  font-size: 22px; font-weight: 400; color: var(--accent); letter-spacing: 14px;
+  font-size: 22px; font-weight: 400; color: var(--text-secondary); letter-spacing: 14px;
   opacity: 0; transition: opacity 0.8s ease 0.15s;
 }
 #splash h2.show { opacity: 1; }
@@ -135,9 +221,9 @@ button {
 /* ── Layout ── */
 .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
 header {
-  background: rgba(10,10,18,0.85);
-  backdrop-filter: blur(20px) saturate(1.2); -webkit-backdrop-filter: blur(20px) saturate(1.2);
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: rgba(8,8,15,0.7);
+  backdrop-filter: blur(24px) saturate(1.1); -webkit-backdrop-filter: blur(24px) saturate(1.1);
+  border-bottom: 1px solid var(--border);
   position: sticky; top: 0; z-index: 100;
   padding: 10px 0;
   transition: background 0.3s ease;
@@ -149,19 +235,19 @@ header .container { display: flex; align-items: center; gap: 12px; }
   opacity: 0;
   transition: opacity 0.4s ease, transform 0.2s ease;
 }
-.logo-wrap:hover { transform: scale(1.08); }
-.logo-text:hover h3 { color: var(--primary) !important; }
+.logo-wrap:hover { transform: scale(1.04); }
+.logo-text:hover h3 { opacity: 0.8; }
 header.logo-arrived .logo-wrap { opacity: 1; }
 .logo-box {
   width: 44px; height: 44px; background: var(--surface-3);
   border-radius: 12px; display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 2px 10px rgba(77,168,218,0.2);
   position: relative; overflow: hidden;
+  border: 1px solid var(--border);
 }
 .logo-box canvas { width: 38px; height: 38px; }
 .logo-box::after {
   content: ''; position: absolute; inset: 0; border-radius: 12px;
-  border: 1px solid rgba(214,64,112,0.15);
+  border: 1px solid rgba(124,140,248,0.08);
   pointer-events: none;
 }
 
@@ -172,10 +258,8 @@ header.logo-arrived .logo-wrap { opacity: 1; }
 }
 header.logo-arrived .logo-text { opacity: 1; transform: translateX(0); }
 .logo-text h3 {
-  font-size: 17px; font-weight: 900; letter-spacing: -0.3px; line-height: 1.2;
-  background: linear-gradient(135deg, #4DA8DA 0%, #7B68EE 50%, #D64070 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: 17px; font-weight: 800; letter-spacing: -0.3px; line-height: 1.2;
+  color: var(--text-primary);
 }
 .logo-text span { font-size: 11px; color: var(--text-tertiary); letter-spacing: 0.3px; }
 .nav-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
@@ -189,9 +273,9 @@ header.logo-arrived .logo-text { opacity: 1; transform: translateX(0); }
   display: flex; align-items: center; gap: 6px;
   padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
 }
-.status-badge.online { background: rgba(214,64,112,0.08); color: var(--success); }
-.status-badge.offline { background: rgba(214,64,69,0.08); color: var(--error); }
-.status-badge.checking { background: #f0f0f0; color: var(--text-tertiary); }
+.status-badge.online { background: rgba(124,140,248,0.06); color: var(--success); }
+.status-badge.offline { background: rgba(212,85,85,0.06); color: var(--error); }
+.status-badge.checking { background: var(--surface-3); color: var(--text-tertiary); }
 .status-dot { width: 7px; height: 7px; border-radius: 50%; }
 .status-badge.online .status-dot { background: var(--success); }
 .status-badge.offline .status-dot { background: var(--error); }
@@ -206,14 +290,14 @@ header.logo-arrived .logo-text { opacity: 1; transform: translateX(0); }
 
 nav { display: flex; gap: 2px; }
 nav button {
-  padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500;
+  padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500;
   background: transparent; color: var(--text-secondary);
-  transition: all 0.2s ease;
+  transition: color 0.2s ease;
 }
 nav button:hover { color: var(--text-primary); }
 nav button.active {
-  background: var(--primary);
-  color: white;
+  color: var(--text-primary);
+  background: rgba(255,255,255,0.04);
 }
 
 /* ── Pages ── */
@@ -228,17 +312,17 @@ nav button.active {
   margin-bottom: 16px;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
-.card:hover { border-color: rgba(77,168,218,0.15); }
+.card:hover { border-color: rgba(124,140,248,0.12); }
 .card-header { font-size: 18px; font-weight: 700; margin-bottom: 12px; letter-spacing: -0.3px; }
 .card-sub { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.5; }
 
-/* ── Hero (Fullscreen 3D Background — Stability AI style) ── */
+/* ── Hero (Cinematic Editorial) ── */
 .hero-section {
   min-height: 100vh;
   display: flex; align-items: center;
   position: relative; overflow: hidden;
-  padding: 120px 0 80px;
-  background: #0a0a12;
+  padding: 140px 0 100px;
+  background: var(--surface);
 }
 .hero-bg-3d {
   position: absolute; top: 0; right: 0; width: 55%; height: 100%;
@@ -250,31 +334,9 @@ nav button.active {
 .hero-bg-3d::after {
   content: ''; position: absolute; inset: 0; z-index: 1;
   background:
-    linear-gradient(90deg, #0a0a12 0%, rgba(10,10,18,0.85) 30%, rgba(10,10,18,0.2) 70%, rgba(10,10,18,0.4) 100%),
-    linear-gradient(180deg, #0a0a12 0%, transparent 15%, transparent 85%, #0a0a12 100%);
+    linear-gradient(90deg, var(--surface) 0%, rgba(8,8,15,0.9) 25%, rgba(8,8,15,0.15) 65%, rgba(8,8,15,0.3) 100%),
+    linear-gradient(180deg, var(--surface) 0%, transparent 12%, transparent 88%, var(--surface) 100%);
   pointer-events: none;
-}
-/* Ambient glow orbs */
-.hero-section::before {
-  content: ''; position: absolute; z-index: 0;
-  width: 700px; height: 700px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(77,168,218,0.07) 0%, transparent 70%);
-  top: -15%; right: 10%;
-  animation: orbFloat 12s ease-in-out infinite;
-  pointer-events: none;
-}
-.hero-section::after {
-  content: ''; position: absolute; z-index: 0;
-  width: 500px; height: 500px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(214,64,112,0.05) 0%, transparent 70%);
-  bottom: -10%; left: 20%;
-  animation: orbFloat 15s ease-in-out infinite reverse;
-  pointer-events: none;
-}
-@keyframes orbFloat {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(30px, -20px) scale(1.05); }
-  66% { transform: translate(-20px, 15px) scale(0.95); }
 }
 .hero-content {
   position: relative; z-index: 2;
@@ -283,20 +345,22 @@ nav button.active {
 }
 .hero-tag {
   display: inline-block; padding: 0; border: none; background: none;
-  font-size: 13px; font-weight: 600;
-  letter-spacing: 0.5px; color: rgba(255,255,255,0.5); margin-bottom: 24px;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 2px; color: var(--text-tertiary); margin-bottom: 32px;
+  text-transform: uppercase;
 }
-.hero-tag .accent { color: var(--primary); }
+.hero-tag .accent { color: var(--primary); font-weight: 700; }
 .hero-title {
-  font-size: clamp(48px, 6.5vw, 82px); font-weight: 900; line-height: 1.0;
-  letter-spacing: -3px; margin-bottom: 28px; max-width: 700px;
+  font-size: clamp(44px, 5.5vw, 72px); font-weight: 800; line-height: 1.05;
+  letter-spacing: -2.5px; margin-bottom: 28px; max-width: 600px;
+  color: var(--text-primary);
 }
 .hero-title .gradient-text {
-  background: linear-gradient(135deg, #4DA8DA 0%, #8B7BF7 30%, #D64070 60%, #4DA8DA 100%);
-  background-size: 250% 250%;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 40%, var(--accent) 100%);
+  background-size: 200% 200%;
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: gradientShift 8s ease infinite;
+  animation: gradientShift 10s ease infinite;
 }
 @keyframes gradientShift {
   0% { background-position: 0% 50%; }
@@ -304,125 +368,157 @@ nav button.active {
   100% { background-position: 0% 50%; }
 }
 .hero-subtitle {
-  font-size: 17px; color: rgba(255,255,255,0.45); line-height: 1.7;
-  max-width: 480px; margin-bottom: 40px; font-weight: 400;
+  font-size: 16px; color: var(--text-secondary); line-height: 1.7;
+  max-width: 440px; margin-bottom: 44px; font-weight: 400;
 }
 .hero-cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
 .hero-cta {
-  padding: 14px 30px; border-radius: 8px; font-size: 14px; font-weight: 600;
-  transition: all 0.25s ease; cursor: pointer; border: none;
-  position: relative; letter-spacing: -0.2px;
+  padding: 13px 28px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600;
+  transition: all 0.2s ease; cursor: pointer; border: none;
+  letter-spacing: -0.1px;
 }
 .hero-cta-primary {
-  background: var(--accent); color: white;
+  background: var(--primary); color: white;
 }
-.hero-cta-primary:hover { background: #c23665; transform: translateY(-1px); box-shadow: 0 6px 24px rgba(214,64,112,0.3); }
+.hero-cta-primary:hover { background: var(--primary-light); transform: translateY(-1px); }
 .hero-cta-secondary {
   background: transparent; color: var(--text-primary);
-  border: 1px solid rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.1);
 }
-.hero-cta-secondary:hover { border-color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.04); }
+.hero-cta-secondary:hover { border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.03); }
 .hero-stats {
-  display: flex; gap: 40px; margin-top: 56px; flex-wrap: wrap;
+  display: flex; gap: 40px; margin-top: 64px; flex-wrap: wrap;
 }
 .hero-stat { text-align: left; }
-.hero-stat .value {
-  font-size: 28px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.5px;
-}
-.hero-stat .label { font-size: 12px; color: rgba(255,255,255,0.3); letter-spacing: 0; margin-top: 2px; }
-.hero-divider { width: 1px; background: rgba(255,255,255,0.06); align-self: stretch; }
-.hero-scroll-hint {
-  position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-  display: flex; flex-direction: column; align-items: center; gap: 6px;
-  animation: float 2.5s ease-in-out infinite;
-  color: rgba(255,255,255,0.2); font-size: 10px; letter-spacing: 2px;
-}
-@keyframes float { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(8px); } }
+.hero-stat .label { font-size: 11px; color: var(--text-tertiary); letter-spacing: 0.3px; margin-top: 4px; }
+.hero-divider { width: 1px; background: var(--border); align-self: stretch; }
+@keyframes float { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(6px); } }
 
 /* ── Scrolling Home Sections ── */
 .home-section {
-  padding: 100px 24px;
+  padding: 120px 24px;
   position: relative;
 }
 .home-section-dark {
-  background: var(--surface-2);
+  background: var(--surface);
 }
 .section-title {
-  font-size: clamp(32px, 4vw, 46px); font-weight: 900; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 16px;
+  font-size: clamp(28px, 3.5vw, 42px); font-weight: 800; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 16px;
   color: var(--text-primary);
 }
-.section-subtitle { font-size: 15px; color: var(--text-secondary); line-height: 1.7; max-width: 520px; }
+.section-subtitle { font-size: 15px; color: var(--text-secondary); line-height: 1.7; max-width: 480px; }
 .section-subtitle.center { margin: 0 auto; text-align: center; }
 
 /* Legacy hero (for inline old style) */
 .hero {
-  background: linear-gradient(135deg, rgba(77,168,218,0.08), rgba(214,64,112,0.05));
+  background: var(--surface-2);
   border: 1px solid var(--border);
-  border-radius: 20px; padding: 36px; color: var(--text-primary); margin-bottom: 24px;
+  border-radius: var(--radius); padding: 36px; color: var(--text-primary); margin-bottom: 24px;
   position: relative; overflow: hidden;
 }
-.hero::before {
-  content: ''; position: absolute; top: 0; right: 0; width: 200px; height: 200px;
-  background: radial-gradient(circle, rgba(77,168,218,0.06) 0%, transparent 70%);
-  pointer-events: none;
-}
-.hero h2 { font-size: 32px; font-weight: 900; line-height: 1.12; letter-spacing: -0.8px; margin-bottom: 12px; }
+.hero::before { display: none; }
+.hero h2 { font-size: 28px; font-weight: 800; line-height: 1.12; letter-spacing: -0.8px; margin-bottom: 12px; }
 .hero p { font-size: 14px; color: var(--text-secondary); line-height: 1.6; max-width: 600px; }
 
 /* ── Section Label ── */
 .section-label {
-  font-size: 11px; font-weight: 700; color: var(--text-tertiary);
-  letter-spacing: 1.2px; margin-bottom: 10px; margin-top: 24px;
+  font-size: 11px; font-weight: 600; color: var(--text-tertiary);
+  letter-spacing: 1.5px; margin-bottom: 10px; margin-top: 24px;
+  text-transform: uppercase;
+}
+
+/* ── Editorial Split Panels (Pathway section) ── */
+.editorial-panel {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+  max-width: 1000px; margin: 0 auto;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.editorial-panel-item {
+  background: var(--surface);
+  padding: 48px 40px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  position: relative;
+}
+.editorial-panel-item:hover {
+  background: var(--surface-2);
+}
+.editorial-panel-item .panel-eyebrow {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; margin-bottom: 20px;
+}
+.editorial-panel-item h3 {
+  font-size: 22px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 12px;
+  color: var(--text-primary);
+}
+.editorial-panel-item p {
+  font-size: 14px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 20px;
+}
+.panel-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+.panel-tag {
+  font-size: 10px; font-weight: 600; padding: 4px 10px; border-radius: 4px;
+  letter-spacing: 0.3px;
+}
+.editorial-panel-item .panel-arrow {
+  position: absolute; bottom: 40px; right: 40px;
+  color: var(--text-tertiary); transition: transform 0.2s, color 0.2s;
+}
+.editorial-panel-item:hover .panel-arrow { transform: translateX(3px); color: var(--text-primary); }
+
+/* ── Minimal Vertical Timeline (Pipeline section) ── */
+.timeline {
+  max-width: 560px; margin: 0 auto; position: relative;
+  padding-left: 32px;
+}
+.timeline-step {
+  position: relative; padding-bottom: 36px;
+}
+.timeline-step:last-child { padding-bottom: 0; }
+.timeline-step h4 {
+  font-size: 15px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.2px;
+}
+.timeline-step p {
+  font-size: 13px; color: var(--text-secondary); line-height: 1.6;
 }
 
 /* ── Checkbox accent for dark theme ── */
 input[type="checkbox"] { accent-color: var(--primary); }
 input[type="number"] { color-scheme: dark; }
 
-/* ── Action Cards ── */
+/* ── Action Cards (minimal) ── */
 .action-card {
   display: flex; align-items: center; gap: 16px;
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: 14px; padding: 20px; cursor: pointer;
-  transition: all 0.2s ease; margin-bottom: 10px;
-  position: relative; overflow: hidden;
+  background: transparent; border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px; cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  margin-bottom: 8px;
 }
-.action-card::before {
-  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
-  border-radius: 0 3px 3px 0; transition: all 0.2s;
-  opacity: 0;
-}
-.action-card:nth-child(1)::before { background: var(--primary); }
-.action-card:nth-child(2)::before { background: var(--accent); }
-.action-card:nth-child(3)::before { background: var(--warning); }
 .action-card:hover {
   border-color: rgba(255,255,255,0.1);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-  transform: translateX(2px);
+  background: rgba(255,255,255,0.02);
 }
-.action-card:hover::before { opacity: 1; }
 .action-icon {
-  width: 52px; height: 52px; border-radius: 14px;
+  width: 44px; height: 44px; border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; position: relative; overflow: hidden;
+  flex-shrink: 0; background: var(--surface-2);
+  border: 1px solid var(--border);
 }
 .action-icon img {
-  width: 52px; height: 52px; border-radius: 14px; object-fit: cover;
-  transition: transform 0.3s ease;
+  width: 44px; height: 44px; border-radius: 10px; object-fit: cover;
 }
-.action-card:hover .action-icon img { transform: scale(1.1); }
-.action-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
-.action-card p { font-size: 12.5px; color: var(--text-secondary); line-height: 1.4; }
+.action-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 2px; letter-spacing: -0.2px; }
+.action-card p { font-size: 12px; color: var(--text-secondary); line-height: 1.4; }
 .action-trail {
-  margin-left: auto; font-size: 11px; color: white; font-weight: 600;
-  padding: 4px 10px; border-radius: 8px;
-  white-space: nowrap;
+  margin-left: auto; font-size: 10px; color: var(--text-tertiary); font-weight: 600;
+  padding: 4px 10px; border-radius: var(--radius-sm);
+  white-space: nowrap; background: var(--surface-2); border: 1px solid var(--border);
+  letter-spacing: 0.3px;
 }
-.action-card:nth-child(1) .action-trail { background: var(--primary); }
-.action-card:nth-child(2) .action-trail { background: var(--accent); }
-.action-card:nth-child(3) .action-trail { background: var(--warning); }
-.action-arrow { color: var(--text-tertiary); font-size: 20px; margin-left: 4px; transition: transform 0.3s; }
-.action-card:hover .action-arrow { transform: translateX(3px); color: var(--primary); }
+.action-arrow { color: var(--text-tertiary); font-size: 20px; margin-left: 4px; transition: transform 0.2s; }
+.action-card:hover .action-arrow { transform: translateX(3px); color: var(--text-secondary); }
 
 /* ── Problem Section ── */
 .problem-card { line-height: 1.6; }
@@ -434,54 +530,51 @@ input[type="number"] { color-scheme: dark; }
   text-align: center; margin-bottom: 48px;
 }
 .about-header h2 {
-  font-size: 30px; font-weight: 900; margin-bottom: 8px; letter-spacing: -0.5px;
-  background: linear-gradient(135deg, #4DA8DA 0%, #7B68EE 50%, #D64070 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  font-size: 28px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px;
+  color: var(--text-primary);
 }
 .about-header p { font-size: 14px; color: var(--text-secondary); max-width: 560px; margin: 0 auto; line-height: 1.6; }
-.team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; margin-bottom: 40px; }
+.team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; margin-bottom: 40px; }
 .team-card {
-  background: var(--card); border: 1px solid var(--border); border-radius: 18px;
-  padding: 32px 28px; text-align: center; transition: all 0.3s;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 32px 28px; text-align: center; transition: border-color 0.3s;
 }
-.team-card:hover { border-color: var(--primary); box-shadow: 0 8px 32px rgba(77,168,218,0.15); transform: translateY(-2px); }
+.team-card:hover { border-color: rgba(255,255,255,0.1); }
 .team-photo {
-  width: 140px; height: 140px; border-radius: 50%; margin: 0 auto 20px;
-  object-fit: cover; border: 3px solid var(--border);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  width: 120px; height: 120px; border-radius: 50%; margin: 0 auto 20px;
+  object-fit: cover; border: 2px solid var(--border);
 }
 .team-avatar {
-  width: 140px; height: 140px; border-radius: 50%; margin: 0 auto 20px;
+  width: 120px; height: 120px; border-radius: 50%; margin: 0 auto 20px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 48px; font-weight: 800; color: white;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  border: 3px solid var(--border);
+  font-size: 42px; font-weight: 800; color: white;
+  border: 2px solid var(--border);
 }
-.team-avatar.ai { background: linear-gradient(135deg, #4DA8DA, #D64070); }
-.team-avatar.ab { background: linear-gradient(135deg, #D64070, #4DA8DA); }
-.team-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.team-avatar.ai { background: linear-gradient(135deg, var(--primary), var(--accent)); }
+.team-avatar.ab { background: linear-gradient(135deg, var(--accent), var(--primary)); }
+.team-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
 .team-role {
-  display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.8px;
-  color: var(--primary); background: rgba(77,168,218,0.08); padding: 4px 12px;
-  border-radius: 20px; margin-bottom: 16px;
+  display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 1px;
+  color: var(--text-secondary); background: var(--surface-3); padding: 4px 12px;
+  border-radius: 4px; margin-bottom: 16px; text-transform: uppercase;
 }
 .team-bio { font-size: 13px; color: var(--text-secondary); line-height: 1.7; text-align: left; }
 .about-mission {
-  background: linear-gradient(135deg, rgba(77,168,218,0.15), rgba(214,64,112,0.1));
+  background: var(--surface-2);
   border: 1px solid var(--border);
-  border-radius: 18px; padding: 32px; color: var(--text-primary); margin-bottom: 24px;
+  border-radius: var(--radius); padding: 32px; color: var(--text-primary); margin-bottom: 24px;
 }
-.about-mission h3 { font-size: 20px; font-weight: 800; margin-bottom: 12px; }
+.about-mission h3 { font-size: 18px; font-weight: 800; margin-bottom: 12px; }
 .about-mission p { font-size: 14px; color: var(--text-secondary); line-height: 1.7; }
 .about-highlights {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 12px; margin-top: 24px;
 }
 .about-highlight {
-  background: rgba(255,255,255,0.04); border-radius: 12px; padding: 16px; text-align: center; border: 1px solid var(--border);
+  background: var(--surface-3); border-radius: var(--radius-sm); padding: 16px; text-align: center; border: 1px solid var(--border);
 }
-.about-highlight .val { font-size: 24px; font-weight: 800; }
-.about-highlight .lbl { font-size: 11px; opacity: 0.7; margin-top: 2px; }
+.about-highlight .val { font-size: 22px; font-weight: 800; }
+.about-highlight .lbl { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
 
 /* ── PDB Browser ── */
 .search-bar {
@@ -596,7 +689,7 @@ input[type="range"]::-webkit-slider-thumb {
   transition: all 0.2s; margin-top: 24px;
   letter-spacing: -0.2px;
 }
-.btn-primary:hover { background: #c23665; box-shadow: 0 4px 16px rgba(214,64,112,0.25); }
+.btn-primary:hover { background: #b33d5e; box-shadow: 0 4px 16px rgba(196,68,106,0.2); }
 .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .error-box {
@@ -608,9 +701,9 @@ input[type="range"]::-webkit-slider-thumb {
 
 /* ── Results Page ── */
 .impact-card {
-  background: linear-gradient(135deg, rgba(77,168,218,0.2), rgba(214,64,112,0.1));
+  background: var(--surface-2);
   border: 1px solid var(--border);
-  border-radius: 18px; padding: 28px;
+  border-radius: var(--radius); padding: 28px;
   color: var(--text-primary); margin-bottom: 16px;
 }
 .impact-card .label { font-size: 13px; font-weight: 600; color: var(--text-secondary); letter-spacing: 0.5px; }
@@ -634,7 +727,7 @@ input[type="range"]::-webkit-slider-thumb {
 .model-stat .lbl { font-size: 11px; color: var(--text-tertiary); }
 .model-tag {
   display: inline-block; padding: 3px 8px; border-radius: 6px;
-  background: rgba(214,64,112,0.1); color: var(--accent);
+  background: rgba(196,68,106,0.1); color: var(--accent);
   font-size: 10px; font-weight: 800; letter-spacing: 0.8px; margin-right: 10px;
 }
 
@@ -643,7 +736,7 @@ input[type="range"]::-webkit-slider-thumb {
 .mutations-wrap { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
 .mut-chip {
   font-family: 'SF Mono', Menlo, monospace; font-size: 13px; font-weight: 700;
-  color: var(--primary); background: rgba(77,168,218,0.07);
+  color: var(--primary); background: rgba(124,140,248,0.07);
   padding: 5px 10px; border-radius: 6px;
 }
 
@@ -653,7 +746,7 @@ input[type="range"]::-webkit-slider-thumb {
   border-radius: var(--radius); padding: 18px;
   margin-bottom: 10px; cursor: pointer; transition: all 0.2s;
 }
-.candidate-card:hover { border-color: var(--primary); box-shadow: 0 2px 8px rgba(77,168,218,0.1); }
+.candidate-card:hover { border-color: var(--primary); box-shadow: 0 2px 8px rgba(124,140,248,0.1); }
 .cand-header { display: flex; align-items: center; gap: 14px; }
 .rank-badge {
   width: 38px; height: 38px; border-radius: 10px;
@@ -701,7 +794,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 .lit-section {
   padding: 16px; border-radius: 12px; margin-top: 16px;
-  background: rgba(214,64,112,0.04); border: 1px solid rgba(214,64,112,0.2);
+  background: rgba(196,68,106,0.04); border: 1px solid rgba(196,68,106,0.15);
 }
 
 .explanation-card {
@@ -752,7 +845,7 @@ input[type="range"]::-webkit-slider-thumb {
 .pipeline-step { display: flex; gap: 14px; margin-bottom: 22px; }
 .pipeline-num {
   width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
-  background: rgba(77,168,218,0.1); color: var(--primary);
+  background: rgba(124,140,248,0.1); color: var(--primary);
   display: flex; align-items: center; justify-content: center;
   font-weight: 700; font-size: 14px;
 }
@@ -768,44 +861,35 @@ footer {
   letter-spacing: 0.5px; border-top: 1px solid rgba(255,255,255,0.03);
 }
 
-/* ── Pathway Cards (Home) ── */
+/* ── Pathway Cards (Home) — kept for compatibility ── */
 .pathway-card {
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: 16px; padding: 32px; cursor: pointer;
-  transition: all 0.3s ease;
+  background: transparent; border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 32px; cursor: pointer;
+  transition: border-color 0.3s ease, background 0.3s ease;
   position: relative; overflow: hidden;
 }
-.pathway-card::before {
-  content: ''; position: absolute; inset: 0;
-  background: radial-gradient(ellipse at 50% 0%, var(--glow) 0%, transparent 70%);
-  opacity: 0; transition: opacity 0.3s;
-}
+.pathway-card::before { display: none; }
 .pathway-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--hover-border);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+  border-color: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.02);
 }
-.pathway-card:hover::before { opacity: 1; }
 
 /* ── Feature Grid ── */
-.feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
 .feature-card {
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: 14px; padding: 28px;
-  transition: all 0.25s ease;
+  background: var(--surface); padding: 32px;
+  transition: background 0.2s ease;
 }
 .feature-card:hover {
-  border-color: rgba(255,255,255,0.1);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+  background: var(--surface-2);
 }
 .feature-icon { margin-bottom: 16px; display: flex; }
-.feature-card h4 { font-size: 16px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.2px; }
+.feature-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.2px; }
 .feature-card p { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
-  .container { padding: 0 12px; }
+  .container { padding: 0 16px; }
 
   /* Header */
   header .container { flex-wrap: wrap; gap: 8px; }
@@ -820,43 +904,50 @@ footer {
   .mobile-nav {
     display: flex !important;
     position: fixed; bottom: 0; left: 0; right: 0;
-    background: rgba(13,13,20,0.9); backdrop-filter: blur(20px);
+    background: rgba(8,8,15,0.9); backdrop-filter: blur(24px);
     border-top: 1px solid var(--border);
     z-index: 200; padding: 8px 4px;
     justify-content: space-around;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
   }
   .mobile-nav button {
-    font-size: 11px; padding: 6px 12px; border-radius: 8px;
+    font-size: 11px; padding: 6px 12px; border-radius: var(--radius-sm);
     background: transparent; color: var(--text-secondary);
     font-weight: 600; border: none;
   }
-  .mobile-nav button.active { background: var(--primary); color: white; }
+  .mobile-nav button.active { color: var(--text-primary); background: rgba(255,255,255,0.04); }
 
   /* Hero */
   .hero-section { min-height: 100vh; min-height: 100dvh; padding: 100px 0 60px; }
-  .hero-bg-3d { width: 100%; height: 50%; top: auto; bottom: 0; opacity: 0.4; }
+  .hero-bg-3d { width: 100%; height: 45%; top: auto; bottom: 0; opacity: 0.35; }
   .hero-content { padding: 0 20px; }
   .hero-title { letter-spacing: -1.5px; }
   .hero-subtitle { font-size: 14px; }
-  .hero-stats { gap: 20px; }
-  .hero-stat .value { font-size: 22px; }
+  .hero-stats { gap: 24px; }
+  .hero-stat .value { font-size: 20px; }
   .hero-divider { display: none; }
   .hero-scroll-hint { display: none; }
-  .home-section { padding: 60px 16px; }
-  .section-title { font-size: 28px; }
+  .home-section { padding: 80px 16px; }
+  .section-title { font-size: 26px; }
+
+  /* Editorial panels */
+  .editorial-panel { grid-template-columns: 1fr; }
+  .editorial-panel-item { padding: 32px 24px; }
+  .editorial-panel-item .panel-arrow { bottom: 28px; right: 24px; }
+
+  /* Timeline */
+  .timeline { padding-left: 28px; }
+
   .pathway-card { padding: 20px; }
   [style*="grid-template-columns:1fr 1fr"] { grid-template-columns: 1fr !important; }
-  .hero { padding: 20px 16px; border-radius: 12px; margin-bottom: 16px; }
+  .hero { padding: 20px 16px; border-radius: var(--radius); margin-bottom: 16px; }
   .hero h2 { font-size: 22px; }
   .hero p { font-size: 13px; }
 
   /* Cards */
-  .card { padding: 16px; margin-bottom: 12px; border-radius: 12px; }
+  .card { padding: 16px; margin-bottom: 12px; }
   .action-card { padding: 14px; gap: 12px; }
-  .action-card .action-icon { width: 40px; height: 40px; min-width: 40px; }
-  .action-card .action-icon img { width: 24px; height: 24px; }
-  .action-card h4 { font-size: 15px; }
+  .action-card .action-icon { width: 36px; height: 36px; min-width: 36px; }
+  .action-card h4 { font-size: 14px; }
   .action-card p { font-size: 12px; }
 
   /* PDB Grid */
@@ -874,7 +965,7 @@ footer {
   .chart-box { min-height: 200px; }
 
   /* Modal */
-  .modal-content { max-width: 100%; margin: 0; border-radius: 16px 16px 0 0; max-height: 90vh; }
+  .modal-content { max-width: 100%; margin: 0; border-radius: var(--radius) var(--radius) 0 0; max-height: 90vh; }
   .modal-header { padding: 16px; }
   .modal-body { padding: 16px; }
 
@@ -889,6 +980,9 @@ footer {
   .problem-card { padding: 16px; }
   .problem-card h3 { font-size: 16px; line-height: 1.4; }
   .problem-card p { font-size: 13px; }
+
+  /* Feature grid mobile */
+  .feature-grid { grid-template-columns: 1fr; }
 
   /* Section label */
   .section-label { font-size: 10px; }
@@ -959,158 +1053,169 @@ footer {
 <!-- ════════ HOME PAGE ════════ -->
 <div id="page-home" class="page active">
 
-  <!-- ── HERO: Stability AI editorial style ── -->
+  <!-- ── HERO: Cinematic editorial ── -->
   <div class="hero-section">
     <div class="hero-bg-3d">
       <div id="heroProteinViewer"></div>
     </div>
     <div class="hero-content">
-      <div class="hero-tag reveal reveal-delay-1"><span class="accent">NOVA Lab</span> &mdash; AI-Powered Protein Optimization</div>
+      <div class="hero-tag reveal reveal-delay-1"><span class="accent">NOVA Lab</span> &mdash; Protein Engineering Platform</div>
       <h1 class="hero-title reveal reveal-delay-2"><span class="gradient-text">Redesign<br>proteins.<br>Save lives.</span></h1>
-      <p class="hero-subtitle reveal reveal-delay-3">The protein engineering platform that adapts its optimization criteria to match the biological goal — from plastic degradation to disease therapeutics.</p>
+      <p class="hero-subtitle reveal reveal-delay-3">AI-driven protein optimization that adapts its criteria to the biological goal &mdash; from plastic degradation to disease therapeutics.</p>
       <div class="hero-cta-row reveal reveal-delay-4">
         <button class="hero-cta hero-cta-primary" onclick="showPage('optimize')">Start designing</button>
-        <button class="hero-cta hero-cta-secondary" onclick="showPage('browse')">Explore proteins</button>
+        <button class="hero-cta hero-cta-secondary" onclick="showPage('browse')">Explore database</button>
       </div>
       <div class="hero-stats reveal reveal-delay-4">
-        <div class="hero-stat"><div class="value">6,000+</div><div class="label">variants screened</div></div>
+        <div class="hero-stat"><div class="value">6,000+</div><div class="label">Variants screened</div></div>
         <div class="hero-divider"></div>
         <div class="hero-stat"><div class="value">99.9%</div><div class="label">ML accuracy</div></div>
         <div class="hero-divider"></div>
-        <div class="hero-stat"><div class="value">52K+</div><div class="label">training mutations</div></div>
+        <div class="hero-stat"><div class="value">52K+</div><div class="label">Training mutations</div></div>
       </div>
     </div>
     <div class="hero-scroll-hint">
       <span>SCROLL</span>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
     </div>
   </div>
 
-  <!-- ── SECTION: Application Pathways ── -->
-  <div class="home-section home-section-dark">
-    <div class="container">
-      <div class="reveal" style="text-align:center;margin-bottom:48px">
-        <div style="font-size:11px;font-weight:700;color:var(--primary);letter-spacing:2px;margin-bottom:12px">APPLICATION PATHWAYS</div>
-        <h2 class="section-title" style="text-align:center">Two modes.<br>One platform.</h2>
-        <p class="section-subtitle center">Switch between application contexts and the system adapts its optimization criteria to match the biological goal.</p>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:900px;margin:0 auto">
-        <div class="pathway-card reveal reveal-delay-1" style="--glow:rgba(77,168,218,0.08);--hover-border:var(--primary)" onclick="setAppMode('pet');showPage('browse')">
-          <div style="width:48px;height:48px;margin-bottom:16px;display:flex;align-items:center;justify-content:center;border-radius:14px;background:rgba(77,168,218,0.1)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4DA8DA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 19H4.815a1.83 1.83 0 0 1-1.57-.881 1.785 1.785 0 0 1-.004-1.784L7.196 9.5"/><path d="M11 19h8.203a1.83 1.83 0 0 0 1.556-.89 1.784 1.784 0 0 0 0-1.775l-1.226-2.12"/><path d="m14 16-3 3 3 3"/><path d="M8.293 13.596 7.196 9.5 3.1 10.598"/><path d="m9.344 5.811 1.093-1.892A1.83 1.83 0 0 1 12 3a1.83 1.83 0 0 1 1.563.91l3.904 6.59"/><path d="m21 13.5-2.7-1.6"/></svg></div>
-          <h3 style="font-size:20px;font-weight:800;color:var(--primary);margin-bottom:8px">PET Plastic Degradation</h3>
-          <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:16px">Optimize enzymes like PETase for higher catalytic activity, thermal stability, pH tolerance, and PET binding.</p>
-          <div style="display:flex;gap:6px;flex-wrap:wrap">
-            <span style="font-size:10px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(77,168,218,0.1);color:var(--primary)">Catalytic Activity</span>
-            <span style="font-size:10px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(77,168,218,0.1);color:var(--primary)">Thermal Stability</span>
-            <span style="font-size:10px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(77,168,218,0.1);color:var(--primary)">PET Binding</span>
-          </div>
-        </div>
-        <div class="pathway-card reveal reveal-delay-2" style="--glow:rgba(214,64,112,0.08);--hover-border:var(--accent)" onclick="setAppMode('disease');showPage('browse')">
-          <div style="width:48px;height:48px;margin-bottom:16px;display:flex;align-items:center;justify-content:center;border-radius:14px;background:rgba(214,64,112,0.1)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D64070" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 15c6.667-6 13.333 0 20-6"/><path d="M9 22c1.798-1.998 2.518-3.995 2.807-5.993"/><path d="M15 2c-1.798 1.998-2.518 3.995-2.807 5.993"/><path d="m17 6-2.5-2.5"/><path d="m14 8-1-1"/><path d="m7 18 2.5 2.5"/><path d="m3.5 14.5.5.5"/><path d="m20 9 .5.5"/><path d="m6.5 12.5 1 1"/><path d="m16.5 10.5 1 1"/></svg></div>
-          <h3 style="font-size:20px;font-weight:800;color:var(--accent);margin-bottom:8px">Disease Protein Optimization</h3>
-          <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:16px">Optimize disease-related proteins like SOD1 for lower aggregation, improved stability, higher solubility, and preserved function.</p>
-          <div style="display:flex;gap:6px;flex-wrap:wrap">
-            <span style="font-size:10px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(214,64,112,0.1);color:var(--accent)">Aggregation</span>
-            <span style="font-size:10px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(214,64,112,0.1);color:var(--accent)">Structural Stability</span>
-            <span style="font-size:10px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(214,64,112,0.1);color:var(--accent)">Solubility</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── SECTION: How It Works ── -->
+  <!-- ── SECTION: Application Pathways (Editorial Split Panels) ── -->
   <div class="home-section">
     <div class="container">
-      <div class="reveal" style="text-align:center;margin-bottom:48px">
-        <div style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:2px;margin-bottom:12px">HOW IT WORKS</div>
-        <h2 class="section-title" style="text-align:center">Five-step AI pipeline</h2>
-        <p class="section-subtitle center">From raw protein data to engineered enzymes — powered by ESM-2 and gradient boosting.</p>
+      <div class="reveal" style="text-align:center;margin-bottom:56px">
+        <div class="section-eyebrow" style="color:var(--primary)">Application Pathways</div>
+        <h2 class="section-title" style="text-align:center">Two modes. One platform.</h2>
+        <div class="section-rule center"></div>
+        <p class="section-subtitle center">The system adapts its optimization criteria to match the biological goal.</p>
       </div>
-      <div style="max-width:700px;margin:0 auto;display:flex;flex-direction:column;gap:24px">
-        <div class="reveal reveal-delay-1" style="display:flex;gap:20px;align-items:flex-start">
-          <div style="width:48px;height:48px;border-radius:14px;background:rgba(77,168,218,0.1);border:1px solid rgba(77,168,218,0.2);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:var(--primary);flex-shrink:0">1</div>
-          <div><h4 style="font-size:16px;font-weight:700;margin-bottom:4px">Collect Known Proteins</h4><p style="font-size:13px;color:var(--text-secondary);line-height:1.5">Pull real structures from RCSB PDB and AlphaFold — 200,000+ structures worldwide.</p></div>
+      <div class="editorial-panel reveal">
+        <div class="editorial-panel-item" onclick="setAppMode('pet');showPage('browse')">
+          <div class="panel-eyebrow" style="color:var(--primary)">PET Plastic</div>
+          <h3>Degradation enzymes</h3>
+          <p>Optimize PETase variants for catalytic activity, thermal stability, and substrate binding at industrial temperatures.</p>
+          <div class="panel-tags">
+            <span class="panel-tag" style="background:rgba(124,140,248,0.08);color:var(--primary)">Catalytic Activity</span>
+            <span class="panel-tag" style="background:rgba(124,140,248,0.08);color:var(--primary)">Thermal Stability</span>
+            <span class="panel-tag" style="background:rgba(124,140,248,0.08);color:var(--primary)">PET Binding</span>
+          </div>
+          <div class="panel-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m9 18 6-6-6-6"/></svg></div>
         </div>
-        <div class="reveal reveal-delay-2" style="display:flex;gap:20px;align-items:flex-start">
-          <div style="width:48px;height:48px;border-radius:14px;background:rgba(77,168,218,0.1);border:1px solid rgba(77,168,218,0.2);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:var(--primary);flex-shrink:0">2</div>
-          <div><h4 style="font-size:16px;font-weight:700;margin-bottom:4px">Understand with ESM-2</h4><p style="font-size:13px;color:var(--text-secondary);line-height:1.5">Meta's 650M-parameter protein language model reads the sequence and learns how each residue contributes to function.</p></div>
+        <div class="editorial-panel-item" onclick="setAppMode('disease');showPage('browse')">
+          <div class="panel-eyebrow" style="color:var(--accent)">Disease Proteins</div>
+          <h3>Therapeutic optimization</h3>
+          <p>Reduce aggregation, improve structural stability, and increase solubility in disease-related proteins like SOD1.</p>
+          <div class="panel-tags">
+            <span class="panel-tag" style="background:rgba(196,68,106,0.08);color:var(--accent)">Aggregation</span>
+            <span class="panel-tag" style="background:rgba(196,68,106,0.08);color:var(--accent)">Stability</span>
+            <span class="panel-tag" style="background:rgba(196,68,106,0.08);color:var(--accent)">Solubility</span>
+          </div>
+          <div class="panel-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m9 18 6-6-6-6"/></svg></div>
         </div>
-        <div class="reveal reveal-delay-3" style="display:flex;gap:20px;align-items:flex-start">
-          <div style="width:48px;height:48px;border-radius:14px;background:rgba(214,64,112,0.1);border:1px solid rgba(214,64,112,0.2);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:var(--accent);flex-shrink:0">3</div>
-          <div><h4 style="font-size:16px;font-weight:700;margin-bottom:4px">Score Every Mutation</h4><p style="font-size:13px;color:var(--text-secondary);line-height:1.5">6,000+ possible amino acid swaps scored with context-specific criteria — thermal stability for PET, aggregation for disease.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SECTION: How It Works (Minimal Timeline) ── -->
+  <div class="home-section" style="border-top:1px solid var(--border)">
+    <div class="container">
+      <div class="reveal" style="text-align:center;margin-bottom:64px">
+        <div class="section-eyebrow" style="color:var(--accent)">Pipeline</div>
+        <h2 class="section-title" style="text-align:center">From sequence to<br>engineered protein</h2>
+        <div class="section-rule center"></div>
+        <p class="section-subtitle center">Five steps. ESM-2 language model. Gradient-boosted scoring.</p>
+      </div>
+      <div class="timeline" id="pipelineTimeline">
+        <div class="timeline-progress" id="timelineProgress"></div>
+        <div class="timeline-step reveal reveal-delay-1">
+          <div class="timeline-dot"></div>
+          <h4>Collect known proteins</h4>
+          <p>Pull real structures from RCSB PDB and AlphaFold &mdash; 200,000+ structures worldwide.</p>
         </div>
-        <div class="reveal reveal-delay-4" style="display:flex;gap:20px;align-items:flex-start">
-          <div style="width:48px;height:48px;border-radius:14px;background:rgba(214,64,112,0.1);border:1px solid rgba(214,64,112,0.2);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:var(--accent);flex-shrink:0">4</div>
-          <div><h4 style="font-size:16px;font-weight:700;margin-bottom:4px">Combine &amp; Rank</h4><p style="font-size:13px;color:var(--text-secondary);line-height:1.5">Top mutations are combined into multi-mutation candidates, verified by a trained Gradient Boosting classifier (99.9% CV accuracy).</p></div>
+        <div class="timeline-step reveal reveal-delay-2">
+          <div class="timeline-dot"></div>
+          <h4>Understand with ESM-2</h4>
+          <p>Meta's 650M-parameter protein language model reads each sequence and maps residue contributions to function.</p>
         </div>
-        <div class="reveal" style="display:flex;gap:20px;align-items:flex-start">
-          <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,rgba(77,168,218,0.15),rgba(214,64,112,0.15));border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:var(--text-primary);flex-shrink:0">5</div>
-          <div><h4 style="font-size:16px;font-weight:700;margin-bottom:4px">Output for the Lab</h4><p style="font-size:13px;color:var(--text-secondary);line-height:1.5">Top-ranked candidates with full protein + DNA sequences — ready for gene synthesis and experimental validation.</p></div>
+        <div class="timeline-step reveal reveal-delay-3">
+          <div class="timeline-dot"></div>
+          <h4>Score every mutation</h4>
+          <p>6,000+ amino acid swaps scored with context-specific criteria &mdash; thermal stability for PET, aggregation for disease.</p>
+        </div>
+        <div class="timeline-step reveal reveal-delay-4">
+          <div class="timeline-dot"></div>
+          <h4>Combine and rank</h4>
+          <p>Top mutations combined into multi-mutation candidates, verified by a gradient boosting classifier at 99.9% CV accuracy.</p>
+        </div>
+        <div class="timeline-step reveal">
+          <div class="timeline-dot"></div>
+          <h4>Output for the lab</h4>
+          <p>Ranked candidates with full protein and DNA sequences &mdash; ready for gene synthesis and experimental validation.</p>
         </div>
       </div>
     </div>
   </div>
 
   <!-- ── SECTION: Tools ── -->
-  <div class="home-section home-section-dark">
+  <div class="home-section" style="border-top:1px solid var(--border)">
     <div class="container">
       <div class="reveal" style="text-align:center;margin-bottom:48px">
-        <div style="font-size:11px;font-weight:700;color:var(--primary);letter-spacing:2px;margin-bottom:12px">TOOLS</div>
+        <div class="section-eyebrow">Tools</div>
         <h2 class="section-title" style="text-align:center">Get started</h2>
       </div>
-      <div style="max-width:700px;margin:0 auto">
+      <div style="max-width:600px;margin:0 auto">
         <div class="action-card reveal reveal-delay-1" onclick="showPage('browse')">
-          <div class="action-icon" style="width:52px;height:52px;border-radius:14px;background:rgba(77,168,218,0.1);display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4DA8DA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div>
-          <div><h4>Browse Protein Database</h4><p>Explore proteins across PET plastic degradation and disease contexts</p></div>
-          <div class="action-trail">200+ structures</div>
-          <div class="action-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></div>
+          <div class="action-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div>
+          <div><h4>Browse Database</h4><p>Explore proteins across PET degradation and disease contexts</p></div>
+          <div class="action-trail">200+</div>
+          <div class="action-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m9 18 6-6-6-6"/></svg></div>
         </div>
         <div class="action-card reveal reveal-delay-2" onclick="showPage('optimize')">
-          <div class="action-icon" style="width:52px;height:52px;border-radius:14px;background:rgba(214,64,112,0.1);display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D64070" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v8"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m8 6 4-4 4 4"/><path d="M16 18a4 4 0 0 0-8 0"/></svg></div>
-          <div><h4>Design Better Protein</h4><p>AI finds mutations optimized for your selected application context</p></div>
+          <div class="action-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v8"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m8 6 4-4 4 4"/><path d="M16 18a4 4 0 0 0-8 0"/></svg></div>
+          <div><h4>Design Protein</h4><p>AI-powered mutation optimization for your application context</p></div>
           <div class="action-trail">ESM-2</div>
-          <div class="action-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></div>
+          <div class="action-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m9 18 6-6-6-6"/></svg></div>
         </div>
         <div class="action-card reveal reveal-delay-3" onclick="showHowItWorks()">
-          <div class="action-icon" style="width:52px;height:52px;border-radius:14px;background:rgba(245,166,35,0.1);display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F5A623" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4"/><path d="M12 19v4"/><path d="m4.22 4.22 2.83 2.83"/><path d="m16.95 16.95 2.83 2.83"/><path d="M1 12h4"/><path d="M19 12h4"/><path d="m4.22 19.78 2.83-2.83"/><path d="m16.95 7.05 2.83-2.83"/></svg></div>
-          <div><h4>How It Works</h4><p>The 5-step AI pipeline from sequence to optimized protein</p></div>
-          <div class="action-trail">5 steps</div>
-          <div class="action-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></div>
+          <div class="action-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4"/><path d="M12 19v4"/><path d="m4.22 4.22 2.83 2.83"/><path d="m16.95 16.95 2.83 2.83"/><path d="M1 12h4"/><path d="M19 12h4"/><path d="m4.22 19.78 2.83-2.83"/><path d="m16.95 7.05 2.83-2.83"/></svg></div>
+          <div><h4>How It Works</h4><p>The five-step pipeline from sequence to optimized protein</p></div>
+          <div class="action-trail">Pipeline</div>
+          <div class="action-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m9 18 6-6-6-6"/></svg></div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- ── SECTION: Why Two Modes ── -->
-  <div class="home-section">
+  <div class="home-section" style="border-top:1px solid var(--border)">
     <div class="container" style="max-width:800px">
-      <div class="reveal" style="text-align:center;margin-bottom:40px">
-        <div style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:2px;margin-bottom:12px">WHY TWO MODES?</div>
+      <div class="reveal" style="text-align:center;margin-bottom:48px">
+        <div class="section-eyebrow">Context Matters</div>
         <h2 class="section-title" style="text-align:center">Context changes<br>everything.</h2>
+        <div class="section-rule center"></div>
       </div>
       <div class="feature-grid reveal">
         <div class="feature-card">
-          <div class="feature-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4DA8DA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 19H4.815a1.83 1.83 0 0 1-1.57-.881 1.785 1.785 0 0 1-.004-1.784L7.196 9.5"/><path d="M11 19h8.203a1.83 1.83 0 0 0 1.556-.89 1.784 1.784 0 0 0 0-1.775l-1.226-2.12"/><path d="m14 16-3 3 3 3"/><path d="M8.293 13.596 7.196 9.5 3.1 10.598"/><path d="m9.344 5.811 1.093-1.892A1.83 1.83 0 0 1 12 3a1.83 1.83 0 0 1 1.563.91l3.904 6.59"/><path d="m21 13.5-2.7-1.6"/></svg></div>
+          <div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 19H4.815a1.83 1.83 0 0 1-1.57-.881 1.785 1.785 0 0 1-.004-1.784L7.196 9.5"/><path d="M11 19h8.203a1.83 1.83 0 0 0 1.556-.89 1.784 1.784 0 0 0 0-1.775l-1.226-2.12"/><path d="m14 16-3 3 3 3"/><path d="M8.293 13.596 7.196 9.5 3.1 10.598"/><path d="m9.344 5.811 1.093-1.892A1.83 1.83 0 0 1 12 3a1.83 1.83 0 0 1 1.563.91l3.904 6.59"/><path d="m21 13.5-2.7-1.6"/></svg></div>
           <h4>PET Plastic</h4>
-          <p>Natural PETase denatures above 40&deg;C. Industrial recycling requires 60&ndash;70&deg;C. The AI optimizes for catalytic activity, thermal stability, pH tolerance, and PET binding affinity.</p>
+          <p>Natural PETase denatures above 40&deg;C. Industrial recycling requires 60&ndash;70&deg;C. The AI targets catalytic activity, thermal stability, and PET binding affinity.</p>
         </div>
         <div class="feature-card">
-          <div class="feature-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#D64070" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 15c6.667-6 13.333 0 20-6"/><path d="M9 22c1.798-1.998 2.518-3.995 2.807-5.993"/><path d="M15 2c-1.798 1.998-2.518 3.995-2.807 5.993"/><path d="m17 6-2.5-2.5"/><path d="m14 8-1-1"/><path d="m7 18 2.5 2.5"/><path d="m3.5 14.5.5.5"/><path d="m20 9 .5.5"/></svg></div>
+          <div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 15c6.667-6 13.333 0 20-6"/><path d="M9 22c1.798-1.998 2.518-3.995 2.807-5.993"/><path d="M15 2c-1.798 1.998-2.518 3.995-2.807 5.993"/><path d="m17 6-2.5-2.5"/><path d="m14 8-1-1"/><path d="m7 18 2.5 2.5"/><path d="m3.5 14.5.5.5"/><path d="m20 9 .5.5"/></svg></div>
           <h4>Disease Proteins</h4>
-          <p>Proteins like SOD1 misfold and aggregate in diseases such as ALS. The AI optimizes for reduced aggregation, improved structural stability, increased solubility, and preserved function.</p>
+          <p>SOD1 misfolds and aggregates in ALS. The AI targets reduced aggregation, improved structural stability, and preserved native function.</p>
         </div>
       </div>
-      <p class="reveal" style="font-size:14px;color:var(--text-secondary);line-height:1.7;text-align:center;margin-top:32px;max-width:600px;margin-left:auto;margin-right:auto">By switching between application contexts, the system changes its scoring criteria to match the biological goal &mdash; making this a flexible protein engineering platform, not a single-purpose tool.</p>
+      <p class="reveal" style="font-size:13px;color:var(--text-tertiary);line-height:1.7;text-align:center;margin-top:32px;max-width:520px;margin-left:auto;margin-right:auto">Switching application context changes the scoring criteria to match the biological goal &mdash; one platform, purpose-built for both.</p>
     </div>
   </div>
 
-  <!-- ── FOOTER CTA ── -->
-  <div class="home-section home-section-dark" style="padding:80px 24px;text-align:center">
+  <!-- ── FOOTER CTA (minimal closing) ── -->
+  <div class="home-section" style="padding:100px 24px;text-align:center;border-top:1px solid var(--border)">
     <div class="container reveal">
-      <p style="font-size:12px;color:var(--text-tertiary);letter-spacing:1px;font-weight:500;margin-bottom:12px">BUILT BY HIGH SCHOOL RESEARCHERS</p>
-      <h2 style="font-size:clamp(28px,3.5vw,38px);font-weight:900;letter-spacing:-1px;margin-bottom:28px;color:var(--text-primary)">Meet the team behind NOVA Lab</h2>
-      <button class="hero-cta hero-cta-primary" onclick="showPage('about')" style="display:inline-block">About us</button>
+      <div class="section-eyebrow" style="margin-bottom:16px">Built by high school researchers</div>
+      <h2 style="font-size:clamp(24px,3vw,34px);font-weight:800;letter-spacing:-1px;margin-bottom:28px;color:var(--text-primary)">Meet the team behind NOVA Lab</h2>
+      <button class="hero-cta hero-cta-secondary" onclick="showPage('about')" style="display:inline-block">About us</button>
     </div>
   </div>
 
@@ -1121,7 +1226,7 @@ footer {
   <div class="container">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       <h2 style="font-size:22px;font-weight:700">Protein Database</h2>
-      <div id="pdbCount" style="font-size:12px;font-weight:700;color:var(--primary);background:rgba(77,168,218,0.08);padding:4px 10px;border-radius:8px"></div>
+      <div id="pdbCount" style="font-size:12px;font-weight:700;color:var(--primary);background:rgba(124,140,248,0.08);padding:4px 10px;border-radius:8px"></div>
     </div>
 
     <!-- Context Switch -->
@@ -1178,13 +1283,13 @@ footer {
     </div>
 
     <!-- Scoring criteria display -->
-    <div id="scoringCriteria" class="card" style="margin-bottom:16px;padding:14px 18px;background:rgba(77,168,218,0.04);border:1px solid rgba(77,168,218,0.15)">
+    <div id="scoringCriteria" class="card" style="margin-bottom:16px;padding:14px 18px;background:rgba(124,140,248,0.04);border:1px solid rgba(124,140,248,0.12)">
       <div style="font-size:11px;font-weight:700;color:var(--text-tertiary);letter-spacing:1px;margin-bottom:8px">OPTIMIZATION TARGETS</div>
       <div id="scoringTags" style="display:flex;gap:6px;flex-wrap:wrap">
-        <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(77,168,218,0.08);color:var(--primary)">Catalytic Activity</span>
-        <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(77,168,218,0.08);color:var(--primary)">Thermal Stability</span>
-        <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(77,168,218,0.08);color:var(--primary)">pH Tolerance</span>
-        <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(77,168,218,0.08);color:var(--primary)">PET Binding</span>
+        <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(124,140,248,0.08);color:var(--primary)">Catalytic Activity</span>
+        <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(124,140,248,0.08);color:var(--primary)">Thermal Stability</span>
+        <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(124,140,248,0.08);color:var(--primary)">pH Tolerance</span>
+        <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(124,140,248,0.08);color:var(--primary)">PET Binding</span>
       </div>
     </div>
 
@@ -1194,7 +1299,7 @@ footer {
 
     <div class="section-label" style="display:flex;align-items:center;gap:8px">
       SEQUENCE
-      <span id="seqLength" style="font-size:10px;font-weight:600;color:var(--success);background:rgba(214,64,112,0.1);padding:2px 6px;border-radius:4px;display:none"></span>
+      <span id="seqLength" style="font-size:10px;font-weight:600;color:var(--success);background:rgba(196,68,106,0.1);padding:2px 6px;border-radius:4px;display:none"></span>
     </div>
     <textarea class="seq-input" id="seqInput" placeholder="Select a preset above or paste a sequence..." oninput="updateSeqLength()"></textarea>
 
@@ -1211,7 +1316,7 @@ footer {
       <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:10px">Higher temp speeds up recycling but enzymes denature. Near the glass transition (70&deg;C) PET chains loosen.</p>
       <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px">
         <div class="temp-display"><input type="number" class="num-input" id="tempNum" value="60" min="30" max="90" step="0.01" oninput="document.getElementById('tempSlider').value=Math.round(this.value);updateTemp(true)"><span class="unit">&deg;C</span></div>
-        <div class="temp-label" id="tempLabel" style="background:rgba(214,64,112,0.1);color:var(--success)">PET glass transition &mdash; ideal for recycling</div>
+        <div class="temp-label" id="tempLabel" style="background:rgba(196,68,106,0.1);color:var(--success)">PET glass transition &mdash; ideal for recycling</div>
       </div>
       <input type="range" id="tempSlider" min="30" max="90" step="1" value="60" oninput="updateTemp()">
     </div>
@@ -1225,7 +1330,7 @@ footer {
       <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:10px">Amorphous PET (~7%) degrades easily. Bottle-grade PET (~30%) is tightly packed and much harder to break down.</p>
       <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px">
         <div class="temp-display"><input type="number" class="num-input" id="crystNum" value="10" min="1" max="45" step="0.01" oninput="document.getElementById('crystSlider').value=Math.round(this.value);updateCryst(true)"><span class="unit">%</span></div>
-        <div class="temp-label" id="crystLabel" style="background:rgba(214,64,112,0.1);color:var(--success)">Amorphous PET film &mdash; easiest to degrade</div>
+        <div class="temp-label" id="crystLabel" style="background:rgba(196,68,106,0.1);color:var(--success)">Amorphous PET film &mdash; easiest to degrade</div>
       </div>
       <input type="range" id="crystSlider" min="1" max="45" step="1" value="10" oninput="updateCryst()">
     </div>
@@ -1305,7 +1410,7 @@ footer {
         <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:10px">Target melting temperature increase (&Delta;T<sub>m</sub>) for the optimized protein.</p>
         <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px">
           <div class="temp-display"><input type="number" class="num-input" id="stabNum" value="10" min="2" max="30" step="1" oninput="document.getElementById('stabSlider').value=this.value"><span class="unit">&deg;C</span></div>
-          <div class="temp-label" id="stabLabel" style="background:rgba(214,64,112,0.1);color:var(--success)">Moderate stabilization</div>
+          <div class="temp-label" id="stabLabel" style="background:rgba(196,68,106,0.1);color:var(--success)">Moderate stabilization</div>
         </div>
         <input type="range" id="stabSlider" min="2" max="30" step="1" value="10" oninput="document.getElementById('stabNum').value=this.value;updateDiseaseParam('stab')">
       </div>
@@ -1401,7 +1506,7 @@ footer {
 // ═══════════════════════════════════════════════════════════
 // Configuration
 // ═══════════════════════════════════════════════════════════
-const API = 'http://localhost:8000';
+const API = 'https://pet-lab-api-production-ab97.up.railway.app';
 
 const PRESETS = [
   { name: 'IsPETase', organism: 'I. sakaiensis', pdbId: '5XJH', desc: 'Wild-type, denatures at 40\u00b0C', residues: 312,
@@ -1515,11 +1620,11 @@ let chartInstance = null;
     { x:  0,   y:  32,  z:  8,  r: 5.5, c: '#E54D5D' },  // O8
     { x:  0,   y: -34,  z: -8,  r: 5.5, c: '#E54D5D' },  // O9
     // Hydrogen atoms (small, light blue)
-    { x:  26,  y:  14,  z:  4,  r: 3.5, c: '#4DA8DA' },  // H10
-    { x: -26,  y:  14,  z: -4,  r: 3.5, c: '#4DA8DA' },  // H11
+    { x:  26,  y:  14,  z:  4,  r: 3.5, c: '#7C8CF8' },  // H10
+    { x: -26,  y:  14,  z: -4,  r: 3.5, c: '#7C8CF8' },  // H11
     // Carbon chain ends
-    { x:  12,  y:  30,  z: 12,  r: 4.5, c: '#D64070' },  // C12
-    { x: -12,  y: -30,  z:-12,  r: 4.5, c: '#D64070' },  // C13
+    { x:  12,  y:  30,  z: 12,  r: 4.5, c: '#C4446A' },  // C12
+    { x: -12,  y: -30,  z:-12,  r: 4.5, c: '#C4446A' },  // C13
   ];
 
   // Define bonds: [atomIdx1, atomIdx2]
@@ -1621,7 +1726,7 @@ let chartInstance = null;
 // ═══════════════════════════════════════════════════════════
 (function animateSplash() {
   // ── Shared helix drawing function ──
-  const red = '#D64070', blue = '#4DA8DA';
+  const red = '#C4446A', blue = '#7C8CF8';
 
   function drawHelix(ctx, W, H, phase, opts) {
     const cx = W / 2;
@@ -1637,8 +1742,8 @@ let chartInstance = null;
     // Soft center glow
     if (opts.glow) {
       const g = ctx.createRadialGradient(cx, H * 0.45, 0, cx, H * 0.45, opts.glow);
-      g.addColorStop(0, 'rgba(214,64,112,0.15)');
-      g.addColorStop(1, 'rgba(214,64,112,0)');
+      g.addColorStop(0, 'rgba(124,140,248,0.1)');
+      g.addColorStop(1, 'rgba(124,140,248,0)');
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, W, H);
     }
@@ -1653,7 +1758,7 @@ let chartInstance = null;
         ctx.beginPath();
         ctx.moveTo(cx + w, y);
         ctx.lineTo(cx - w, y);
-        ctx.strokeStyle = 'rgba(77,168,218,0.25)';
+        ctx.strokeStyle = 'rgba(124,140,248,0.2)';
         ctx.lineWidth = bondW;
         ctx.stroke();
       }
@@ -1770,7 +1875,7 @@ let chartInstance = null;
       .then(r => r.text())
       .then(pdbData => {
         const viewer = $3Dmol.createViewer(el, {
-          backgroundColor: 'rgb(10,10,18)',
+          backgroundColor: 'rgb(8,8,15)',
           antialias: true,
           disableFog: true,
         });
@@ -1807,7 +1912,7 @@ function startLogoHelix() {
   if (!c) return;
   const ctx = c.getContext('2d');
   const W = c.width, H = c.height;
-  const red = '#D64070', blue = '#4DA8DA';
+  const rose = '#C4446A', indigo = '#7C8CF8';
   let phase = 0;
 
   function tick() {
@@ -1825,10 +1930,8 @@ function startLogoHelix() {
       const angle = t * Math.PI * twists * 2 + phase;
       const sinA = Math.sin(angle);
       const cosA = Math.cos(angle);
-      // Strand 1 (red): x = cx + sin(angle)*amp, depth = cos(angle)
-      points.push({ x: cx + sinA * amp, y, depth: cosA, color: red, glow: 'rgba(214,64,112,0.4)', strand: 0, t });
-      // Strand 2 (blue): x = cx - sin(angle)*amp, depth = -cos(angle)
-      points.push({ x: cx - sinA * amp, y, depth: -cosA, color: blue, glow: 'rgba(77,168,218,0.4)', strand: 1, t });
+      points.push({ x: cx + sinA * amp, y, depth: cosA, color: rose, glow: 'rgba(196,68,106,0.35)', strand: 0, t });
+      points.push({ x: cx - sinA * amp, y, depth: -cosA, color: indigo, glow: 'rgba(124,140,248,0.35)', strand: 1, t });
     }
 
     // Draw bonds (rungs) between strands
@@ -1855,8 +1958,8 @@ function startLogoHelix() {
           if (!started) { ctx.moveTo(p.x, p.y); started = true; }
           else ctx.lineTo(p.x, p.y);
         }
-        const baseColor = si === 0 ? red : blue;
-        const glowColor = si === 0 ? 'rgba(214,64,112,0.35)' : 'rgba(77,168,218,0.35)';
+        const baseColor = si === 0 ? rose : indigo;
+        const glowColor = si === 0 ? 'rgba(196,68,106,0.3)' : 'rgba(124,140,248,0.3)';
         ctx.strokeStyle = baseColor;
         ctx.lineWidth = pass ? 4.5 : 2.5;
         ctx.globalAlpha = pass ? 1.0 : 0.35;
@@ -1973,12 +2076,12 @@ function syncOptimizeContext(mode) {
     optPetBtn.style.background = 'var(--primary)'; optPetBtn.style.color = 'white';
     optDiseaseBtn.style.background = 'transparent'; optDiseaseBtn.style.color = 'var(--text-secondary)';
     petConds.style.display = 'block'; diseaseConds.style.display = 'none';
-    scoringCard.style.background = 'rgba(77,168,218,0.04)'; scoringCard.style.borderColor = 'rgba(77,168,218,0.15)';
+    scoringCard.style.background = 'rgba(124,140,248,0.04)'; scoringCard.style.borderColor = 'rgba(124,140,248,0.12)';
     scoringTags.innerHTML = `
-      <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(77,168,218,0.08);color:var(--primary)">Catalytic Activity</span>
-      <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(77,168,218,0.08);color:var(--primary)">Thermal Stability</span>
-      <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(77,168,218,0.08);color:var(--primary)">pH Tolerance</span>
-      <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(77,168,218,0.08);color:var(--primary)">PET Binding</span>`;
+      <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(124,140,248,0.08);color:var(--primary)">Catalytic Activity</span>
+      <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(124,140,248,0.08);color:var(--primary)">Thermal Stability</span>
+      <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(124,140,248,0.08);color:var(--primary)">pH Tolerance</span>
+      <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(124,140,248,0.08);color:var(--primary)">PET Binding</span>`;
     presetHint.textContent = 'Pick a known enzyme or paste your own sequence below';
     selectedPreset = null;
     renderPresets();
@@ -1986,12 +2089,12 @@ function syncOptimizeContext(mode) {
     optDiseaseBtn.style.background = 'var(--accent)'; optDiseaseBtn.style.color = 'white';
     optPetBtn.style.background = 'transparent'; optPetBtn.style.color = 'var(--text-secondary)';
     petConds.style.display = 'none'; diseaseConds.style.display = 'block';
-    scoringCard.style.background = 'rgba(214,64,112,0.04)'; scoringCard.style.borderColor = 'rgba(214,64,112,0.15)';
+    scoringCard.style.background = 'rgba(196,68,106,0.04)'; scoringCard.style.borderColor = 'rgba(196,68,106,0.12)';
     scoringTags.innerHTML = `
-      <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(214,64,112,0.08);color:var(--accent)">Aggregation Reduction</span>
-      <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(214,64,112,0.08);color:var(--accent)">Structural Stability</span>
-      <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(214,64,112,0.08);color:var(--accent)">Solubility</span>
-      <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(214,64,112,0.08);color:var(--accent)">Function Preservation</span>`;
+      <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(196,68,106,0.08);color:var(--accent)">Aggregation Reduction</span>
+      <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(196,68,106,0.08);color:var(--accent)">Structural Stability</span>
+      <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(196,68,106,0.08);color:var(--accent)">Solubility</span>
+      <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(196,68,106,0.08);color:var(--accent)">Function Preservation</span>`;
     presetHint.textContent = 'Pick a disease-related protein or paste your own sequence below';
     selectedPreset = null;
     renderDiseasePresets();
@@ -2061,13 +2164,13 @@ function showDiseaseDetail(d) {
       ${d.confidence ? `<div class="model-stat"><div class="val">${d.confidence}</div><div class="lbl">AlphaFold pLDDT</div></div>` : ''}
     </div>
 
-    <div style="padding:14px;background:rgba(214,64,112,0.04);border:1px solid rgba(214,64,112,0.15);border-radius:12px;margin-bottom:16px">
+    <div style="padding:14px;background:rgba(196,68,106,0.04);border:1px solid rgba(196,68,106,0.12);border-radius:12px;margin-bottom:16px">
       <div style="font-size:11px;font-weight:700;color:var(--text-tertiary);letter-spacing:1px;margin-bottom:8px">OPTIMIZATION TARGETS FOR THIS PROTEIN</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(214,64,112,0.08);color:var(--accent)">Lower Aggregation</span>
-        <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(214,64,112,0.08);color:var(--accent)">Improved Stability</span>
-        <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(214,64,112,0.08);color:var(--accent)">Higher Solubility</span>
-        <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(214,64,112,0.08);color:var(--accent)">Preserved Function</span>
+        <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(196,68,106,0.08);color:var(--accent)">Lower Aggregation</span>
+        <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(196,68,106,0.08);color:var(--accent)">Improved Stability</span>
+        <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(196,68,106,0.08);color:var(--accent)">Higher Solubility</span>
+        <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(196,68,106,0.08);color:var(--accent)">Preserved Function</span>
       </div>
     </div>
 
@@ -2115,7 +2218,7 @@ function updateDiseaseParam(type) {
     const v = parseInt(document.getElementById('stabNum').value);
     const el = document.getElementById('stabLabel');
     if (v <= 5) { el.textContent = 'Mild stabilization'; el.style.background = 'var(--surface)'; el.style.color = 'var(--text-tertiary)'; }
-    else if (v <= 15) { el.textContent = 'Moderate stabilization'; el.style.background = 'rgba(214,64,112,0.1)'; el.style.color = 'var(--success)'; }
+    else if (v <= 15) { el.textContent = 'Moderate stabilization'; el.style.background = 'rgba(196,68,106,0.1)'; el.style.color = 'var(--success)'; }
     else { el.textContent = 'Strong stabilization — aggressive mutations'; el.style.background = 'rgba(232,145,12,0.1)'; el.style.color = 'var(--warning)'; }
   }
 }
@@ -2124,30 +2227,31 @@ function updateDiseaseParam(type) {
 // Health Check
 // ═══════════════════════════════════════════════════════════
 let healthFailCount = 0;
+let healthOnce = false;
+let optimizing = false;
 async function checkHealth() {
   const badge = document.getElementById('statusBadge');
-  const urls = [API + '/health'];
-  for (const url of urls) {
-    try {
-      const r = await fetch(url, { signal: AbortSignal.timeout(5000) });
-      if (r.ok) {
-        badge.className = 'status-badge online';
-        badge.innerHTML = '<div class="status-dot"></div><span>ML Ready</span>';
-        healthFailCount = 0;
-        return;
-      }
-    } catch {}
-  }
+  // Skip health checks while optimization is running — server is busy, not down
+  if (optimizing) return;
+  try {
+    const r = await fetch(API + '/health', { signal: AbortSignal.timeout(5000) });
+    if (r.ok) {
+      badge.className = 'status-badge online';
+      badge.innerHTML = '<div class="status-dot"></div><span>ML Ready</span>';
+      healthFailCount = 0;
+      healthOnce = true;
+      return;
+    }
+  } catch {}
   healthFailCount++;
-  // Only show offline after 2 consecutive failures to avoid flicker
-  if (healthFailCount >= 2) {
+  if (healthOnce && healthFailCount < 5) return;
+  if (healthFailCount >= 4) {
     badge.className = 'status-badge offline';
     badge.innerHTML = '<div class="status-dot"></div><span>Offline</span>';
   }
 }
 checkHealth();
-// Check every 15s, and retry quickly on first load
-setInterval(checkHealth, 15000);
+setInterval(checkHealth, 20000);
 setTimeout(checkHealth, 3000);
 
 // ═══════════════════════════════════════════════════════════
@@ -2318,7 +2422,7 @@ function updateTemp(fromInput) {
   const el = document.getElementById('tempLabel');
   if (v <= 40) { el.textContent = 'Ambient \u2014 natural enzymes work here'; el.style.background = 'var(--surface)'; el.style.color = 'var(--text-tertiary)'; }
   else if (v <= 55) { el.textContent = 'Warm \u2014 enzymes start to struggle'; el.style.background = 'rgba(232,145,12,0.1)'; el.style.color = 'var(--warning)'; }
-  else if (v <= 65) { el.textContent = 'PET glass transition \u2014 ideal for recycling'; el.style.background = 'rgba(214,64,112,0.1)'; el.style.color = 'var(--success)'; }
+  else if (v <= 65) { el.textContent = 'PET glass transition \u2014 ideal for recycling'; el.style.background = 'rgba(196,68,106,0.1)'; el.style.color = 'var(--success)'; }
   else if (v <= 75) { el.textContent = 'High heat \u2014 aggressive recycling'; el.style.background = 'rgba(232,145,12,0.1)'; el.style.color = 'var(--warning)'; }
   else { el.textContent = 'Extreme \u2014 very challenging for enzymes'; el.style.background = 'rgba(214,64,69,0.06)'; el.style.color = 'var(--error)'; }
 }
@@ -2334,8 +2438,8 @@ function updateCryst(fromInput) {
   if (!fromInput) input.value = document.getElementById('crystSlider').value;
   const v = parseFloat(input.value) || 10;
   const el = document.getElementById('crystLabel');
-  if (v <= 10) { el.textContent = 'Amorphous PET film \u2014 easiest to degrade'; el.style.background = 'rgba(214,64,112,0.1)'; el.style.color = 'var(--success)'; }
-  else if (v <= 20) { el.textContent = 'Low crystallinity \u2014 typical recycled flake'; el.style.background = 'rgba(214,64,112,0.1)'; el.style.color = 'var(--success)'; }
+  if (v <= 10) { el.textContent = 'Amorphous PET film \u2014 easiest to degrade'; el.style.background = 'rgba(196,68,106,0.1)'; el.style.color = 'var(--success)'; }
+  else if (v <= 20) { el.textContent = 'Low crystallinity \u2014 typical recycled flake'; el.style.background = 'rgba(196,68,106,0.1)'; el.style.color = 'var(--success)'; }
   else if (v <= 30) { el.textContent = 'Bottle-grade PET \u2014 moderate difficulty'; el.style.background = 'rgba(232,145,12,0.1)'; el.style.color = 'var(--warning)'; }
   else if (v <= 40) { el.textContent = 'High crystallinity \u2014 very resistant'; el.style.background = 'rgba(214,64,69,0.06)'; el.style.color = 'var(--error)'; }
   else { el.textContent = 'Highly crystalline \u2014 extremely challenging'; el.style.background = 'rgba(214,64,69,0.1)'; el.style.color = 'var(--error)'; }
@@ -2358,7 +2462,7 @@ function updateContam(fromInput) {
   const v = parseFloat(input.value) || 0;
   const el = document.getElementById('contamLabel');
   if (v === 0) { el.textContent = 'No contamination \u2014 lab-grade sample'; el.style.background = 'var(--surface)'; el.style.color = 'var(--text-tertiary)'; }
-  else if (v <= 20) { el.textContent = 'Light contamination \u2014 pre-washed'; el.style.background = 'rgba(214,64,112,0.1)'; el.style.color = 'var(--success)'; }
+  else if (v <= 20) { el.textContent = 'Light contamination \u2014 pre-washed'; el.style.background = 'rgba(196,68,106,0.1)'; el.style.color = 'var(--success)'; }
   else if (v <= 40) { el.textContent = 'Moderate \u2014 typical municipal waste'; el.style.background = 'rgba(232,145,12,0.1)'; el.style.color = 'var(--warning)'; }
   else if (v <= 60) { el.textContent = 'Heavy \u2014 unsorted post-consumer'; el.style.background = 'rgba(214,64,69,0.06)'; el.style.color = 'var(--error)'; }
   else { el.textContent = 'Severe \u2014 raw landfill / ocean plastic'; el.style.background = 'rgba(214,64,69,0.1)'; el.style.color = 'var(--error)'; }
@@ -2388,7 +2492,7 @@ function updatePreheat(fromInput) {
   if (!fromInput) input.value = slider.value;
   const T = parseFloat(input.value) || 250;
   const el = document.getElementById('preheatLabel');
-  if (T < 120) { el.textContent = 'Mild anneal \u2014 partial relaxation'; el.style.background = 'rgba(214,64,112,0.1)'; el.style.color = 'var(--success)'; }
+  if (T < 120) { el.textContent = 'Mild anneal \u2014 partial relaxation'; el.style.background = 'rgba(196,68,106,0.1)'; el.style.color = 'var(--success)'; }
   else if (T < 200) { el.textContent = 'Moderate \u2014 good crystallinity reduction'; el.style.background = 'rgba(232,145,12,0.1)'; el.style.color = 'var(--warning)'; }
   else { el.textContent = 'Full melt \u2014 maximum amorphization'; el.style.background = 'rgba(214,64,69,0.06)'; el.style.color = 'var(--error)'; }
 
@@ -2415,6 +2519,7 @@ async function runOptimization() {
   btn.innerHTML = '<span class="spinner"></span>Running AI Optimization...';
 
   try {
+    optimizing = true;
     const r = await fetch(API + '/optimize', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -2451,6 +2556,7 @@ async function runOptimization() {
     errEl.textContent = 'Could not reach ML server. Is the backend running?';
     errEl.style.display = 'flex';
   } finally {
+    optimizing = false;
     btn.disabled = false;
     btn.innerHTML = 'Run AI Optimization';
   }
@@ -2569,7 +2675,7 @@ function renderResults() {
   const activityGain = factors.activityGain || 0;
 
   let html = `
-    ${thermalAdapted ? `<div style="padding:14px 18px;background:rgba(214,64,112,0.06);border:1px solid rgba(214,64,112,0.2);border-radius:12px;margin-bottom:16px;display:flex;align-items:center;gap:10px">
+    ${thermalAdapted ? `<div style="padding:14px 18px;background:rgba(196,68,106,0.06);border:1px solid rgba(196,68,106,0.15);border-radius:12px;margin-bottom:16px;display:flex;align-items:center;gap:10px">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 15c6.667-6 13.333 0 20-6"/><path d="M9 22c1.798-1.998 2.518-3.995 2.807-5.993"/><path d="M15 2c-1.798 1.998-2.518 3.995-2.807 5.993"/></svg>
       <div>
         <div style="font-weight:700;color:var(--success);font-size:14px">AI Thermal Adaptation</div>
@@ -2636,7 +2742,7 @@ function renderResults() {
         </div>
       </div>
 
-      <div style="padding:12px 16px;background:${factors.combined > 0.6 ? 'rgba(214,64,112,0.06)' : factors.combined > 0.3 ? 'rgba(232,145,12,0.06)' : 'rgba(214,64,69,0.06)'};border-radius:8px;border:1px solid ${factors.combined > 0.6 ? 'rgba(214,64,112,0.15)' : factors.combined > 0.3 ? 'rgba(232,145,12,0.15)' : 'rgba(214,64,69,0.15)'}">
+      <div style="padding:12px 16px;background:${factors.combined > 0.6 ? 'rgba(196,68,106,0.06)' : factors.combined > 0.3 ? 'rgba(232,145,12,0.06)' : 'rgba(214,64,69,0.06)'};border-radius:8px;border:1px solid ${factors.combined > 0.6 ? 'rgba(196,68,106,0.12)' : factors.combined > 0.3 ? 'rgba(232,145,12,0.15)' : 'rgba(214,64,69,0.15)'}">
         <div style="display:flex;align-items:center;justify-content:space-between">
           <div>
             <div style="font-size:12px;font-weight:700;color:var(--text-primary)">Combined Efficiency (Post-Optimization)</div>
@@ -2721,7 +2827,7 @@ function renderResults() {
         labels: R.candidates.map(c => '#' + c.rank),
         datasets: [{
           data: scores,
-          backgroundColor: scores.map((s, i) => s > wtScore ? (i === 0 ? '#4DA8DA' : 'rgba(77,168,218,0.7)') : 'rgba(245,166,35,0.7)'),
+          backgroundColor: scores.map((s, i) => s > wtScore ? (i === 0 ? '#7C8CF8' : 'rgba(124,140,248,0.7)') : 'rgba(212,160,74,0.7)'),
           borderRadius: 4,
         }]
       },
@@ -2835,9 +2941,9 @@ function renderCandidateCard(c, wtScore) {
       </div>
     </div>
     ${(hasLit || classOk || c.rank <= 3) ? `<div class="cand-badges">
-      ${c.rank <= 3 ? `<span class="badge" onclick="event.stopPropagation(); show3DViewer(${JSON.stringify(c.mutations).replace(/"/g,'&quot;')});" style="cursor:pointer;background:rgba(77,168,218,0.08);color:var(--primary);border:1px solid rgba(77,168,218,0.2)">View 3D</span>` : ''}
-      ${hasLit ? `<span class="badge" style="background:rgba(214,64,112,0.08);color:var(--success);border:1px solid rgba(214,64,112,0.2)">Validated</span>` : ''}
-      ${classOk ? `<span class="badge" style="background:rgba(214,64,112,0.08);color:var(--accent);border:1px solid rgba(214,64,112,0.2)">ML Confirmed ${(c.classifier_prediction.average_confidence*100).toFixed(0)}%</span>` : ''}
+      ${c.rank <= 3 ? `<span class="badge" onclick="event.stopPropagation(); show3DViewer(${JSON.stringify(c.mutations).replace(/"/g,'&quot;')});" style="cursor:pointer;background:rgba(124,140,248,0.08);color:var(--primary);border:1px solid rgba(124,140,248,0.15)">View 3D</span>` : ''}
+      ${hasLit ? `<span class="badge" style="background:rgba(196,68,106,0.08);color:var(--success);border:1px solid rgba(196,68,106,0.15)">Validated</span>` : ''}
+      ${classOk ? `<span class="badge" style="background:rgba(196,68,106,0.08);color:var(--accent);border:1px solid rgba(196,68,106,0.15)">ML Confirmed ${(c.classifier_prediction.average_confidence*100).toFixed(0)}%</span>` : ''}
     </div>` : ''}
   </div>`;
 }
@@ -2854,7 +2960,7 @@ function showCandidateDetail(c) {
         <span style="font-size:14px;font-weight:600;color:${rc}">${gradeLabel(c.combined_score)}</span>
       </div>
       <span style="font-size:10px;font-weight:800;padding:4px 10px;border-radius:8px;letter-spacing:0.5px;text-transform:uppercase;
-        background:${c.overall_strategy === 'thermostability-focused' ? 'rgba(0,0,255,0.1);color:blue' : c.overall_strategy === 'activity-focused' ? 'rgba(232,145,12,0.1);color:var(--warning)' : 'rgba(77,168,218,0.1);color:var(--primary)'}">
+        background:${c.overall_strategy === 'thermostability-focused' ? 'rgba(0,0,255,0.1);color:blue' : c.overall_strategy === 'activity-focused' ? 'rgba(232,145,12,0.1);color:var(--warning)' : 'rgba(124,140,248,0.1);color:var(--primary)'}">
         ${c.overall_strategy || 'balanced'}</span>
     </div>
 
@@ -2866,7 +2972,7 @@ function showCandidateDetail(c) {
 
   // Classifier
   if (cp) {
-    html += `<div class="classifier-section" style="background:${cp.all_beneficial ? 'rgba(214,64,112,0.04)' : 'var(--surface)'};border:1px solid ${cp.all_beneficial ? 'rgba(214,64,112,0.2)' : 'var(--border)'}">
+    html += `<div class="classifier-section" style="background:${cp.all_beneficial ? 'rgba(196,68,106,0.04)' : 'var(--surface)'};border:1px solid ${cp.all_beneficial ? 'rgba(196,68,106,0.15)' : 'var(--border)'}">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <span style="font-size:14px;font-weight:700">Trained Classifier</span>
         <span style="font-size:12px;font-weight:600;font-family:monospace;color:${cp.all_beneficial ? 'var(--accent)' : 'var(--text-tertiary)'}">${(cp.average_confidence*100).toFixed(1)}%</span>
@@ -2884,12 +2990,12 @@ function showCandidateDetail(c) {
     html += `<div class="lit-section">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <span style="font-size:14px;font-weight:700">Literature Validation</span>
-        <span style="font-size:11px;font-weight:700;color:var(--success);background:rgba(214,64,112,0.1);padding:2px 8px;border-radius:6px">${(lv.validation_score*100).toFixed(0)}% validated</span>
+        <span style="font-size:11px;font-weight:700;color:var(--success);background:rgba(196,68,106,0.1);padding:2px 8px;border-radius:6px">${(lv.validation_score*100).toFixed(0)}% validated</span>
       </div>
       <p style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;line-height:1.4">${lv.summary}</p>
       ${(lv.exact_matches || []).map(m => `<div style="background:var(--surface-3);border-radius:8px;padding:10px;margin-top:8px">
         <span style="font-family:monospace;font-weight:700;font-size:13px;color:var(--success)">${m.mutation}</span>
-        <span class="tag-chip" style="background:rgba(214,64,112,0.1);color:var(--success)">EXACT MATCH</span>
+        <span class="tag-chip" style="background:rgba(196,68,106,0.1);color:var(--success)">EXACT MATCH</span>
         <div style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-top:4px">${m.paper} (${m.journal})</div>
         ${m.improvement ? `<div style="font-size:11px;color:var(--text-tertiary)">${m.improvement}</div>` : ''}
       </div>`).join('')}
@@ -2909,7 +3015,7 @@ function showCandidateDetail(c) {
       <div>
         <span class="mut-label">${e.mutation}</span>
         ${e.near_active_site ? `<span class="tag-chip" style="background:rgba(232,145,12,0.1);color:var(--warning)">Active Site</span>` : ''}
-        ${e.thermostability_hotspot ? `<span class="tag-chip" style="background:rgba(214,64,112,0.1);color:var(--success)">Hotspot</span>` : ''}
+        ${e.thermostability_hotspot ? `<span class="tag-chip" style="background:rgba(196,68,106,0.1);color:var(--success)">Hotspot</span>` : ''}
       </div>
       <div class="summary">${e.summary}</div>
       ${(e.reasons || []).map(r => `<div class="reason">${r}</div>`).join('')}
@@ -2953,7 +3059,7 @@ function renderDetailBar(label, sub, score, color) {
 // ═══════════════════════════════════════════════════════════
 // Modals
 // ═══════════════════════════════════════════════════════════
-function closeModal() { document.getElementById('modal').classList.remove('show'); }
+function closeModal() { if (typeof _tourActive !== 'undefined' && _tourActive) endGuidedTour(); document.getElementById('modal').classList.remove('show'); }
 
 function showHowItWorks() {
   document.getElementById('modalContent').innerHTML = `
@@ -2976,6 +3082,12 @@ function showHowItWorks() {
 // Amino acid 3-letter codes
 const AA3 = {A:'ALA',R:'ARG',N:'ASN',D:'ASP',C:'CYS',E:'GLU',Q:'GLN',G:'GLY',H:'HIS',I:'ILE',
   L:'LEU',K:'LYS',M:'MET',F:'PHE',P:'PRO',S:'SER',T:'THR',W:'TRP',Y:'TYR',V:'VAL'};
+const AA_FULL = {A:'Alanine',R:'Arginine',N:'Asparagine',D:'Aspartic Acid',C:'Cysteine',E:'Glutamic Acid',Q:'Glutamine',G:'Glycine',H:'Histidine',I:'Isoleucine',
+  L:'Leucine',K:'Lysine',M:'Methionine',F:'Phenylalanine',P:'Proline',S:'Serine',T:'Threonine',W:'Tryptophan',Y:'Tyrosine',V:'Valine'};
+const AA_CAT = {A:'hydrophobic',V:'hydrophobic',I:'hydrophobic',L:'hydrophobic',M:'hydrophobic',
+  F:'aromatic',W:'aromatic',Y:'aromatic',P:'cyclic',G:'small',S:'polar',T:'polar',
+  C:'sulfur-containing',N:'polar amide',Q:'polar amide',
+  D:'negatively charged',E:'negatively charged',K:'positively charged',R:'positively charged',H:'positively charged'};
 
 // Parse mutation string like "N122Y" → {from:'N', pos:122, to:'Y', from3:'ASN', to3:'TYR'}
 function parseMutation(mut) {
@@ -3033,6 +3145,21 @@ function show3DViewer(mutations) {
         </div>
       </div>
 
+      <!-- Guided Tour Overlay -->
+      <div id="tourOverlay" style="display:none;position:absolute;bottom:0;left:0;right:0;background:linear-gradient(0deg,rgba(10,10,18,0.97) 0%,rgba(10,10,18,0.85) 70%,transparent 100%);padding:50px 16px 14px;z-index:20;pointer-events:auto">
+        <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px 16px;max-width:400px;margin:0 auto">
+          <div id="tourStepLabel" style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.35);text-transform:uppercase;margin-bottom:6px">STEP 1 OF 1</div>
+          <div id="tourTitle" style="font-size:17px;font-weight:800;color:#E8E8ED;letter-spacing:-0.3px;margin-bottom:3px"></div>
+          <div id="tourSubtitle" style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:8px"></div>
+          <div id="tourBody" style="font-size:12px;color:rgba(255,255,255,0.65);line-height:1.6"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)">
+            <button onclick="tourPrev()" id="tourPrevBtn" class="viewer-btn" style="font-size:11px">Back</button>
+            <div id="tourDots" style="display:flex;gap:4px;align-items:center"></div>
+            <button onclick="tourNext()" id="tourNextBtn" class="viewer-btn" style="font-size:11px;background:rgba(124,140,248,0.4);color:#fff;border-color:rgba(124,140,248,0.5)">Next</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Legend overlay -->
       <div id="viewer3dLegend" style="display:none;position:absolute;top:12px;left:12px;background:rgba(15,16,35,0.85);backdrop-filter:blur(8px);border-radius:8px;padding:10px 14px;font-size:11px;color:rgba(255,255,255,0.9);line-height:1.6;pointer-events:none">
         <div style="font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:rgba(255,255,255,0.5);margin-bottom:4px">${useESMFold ? 'AI-Predicted Structure' : 'Legend'}</div>
@@ -3053,6 +3180,7 @@ function show3DViewer(mutations) {
           <button onclick="toggleMutLabels()" id="btn3d_labels" class="viewer-btn viewer-btn-active" title="Toggle mutation labels">Labels</button>
           <button onclick="focusMutations()" class="viewer-btn" title="Zoom to mutation sites" style="background:rgba(231,76,69,0.3);color:#fff">Focus Mutations</button>
           <button onclick="resetView()" class="viewer-btn" title="Reset camera">Reset</button>
+          ${parsedMuts.length > 0 ? `<button onclick="startGuidedTour()" id="btn3d_tour" class="viewer-btn" title="Guided mutation tour" style="background:rgba(124,140,248,0.4);color:#fff;border-color:rgba(124,140,248,0.5)">Guided Tour</button>` : ''}
         </div>
       </div>
     </div>
@@ -3085,7 +3213,7 @@ function show3DViewer(mutations) {
     <style>
       .viewer-btn { padding:5px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.8);font-size:11px;font-weight:600;cursor:pointer;backdrop-filter:blur(4px);transition:all 0.15s }
       .viewer-btn:hover { background:rgba(255,255,255,0.18) }
-      .viewer-btn-active { background:rgba(77,168,218,0.5);color:#fff;border-color:rgba(77,168,218,0.6) }
+      .viewer-btn-active { background:rgba(124,140,248,0.4);color:#fff;border-color:rgba(124,140,248,0.5) }
       @keyframes spin { to { transform: rotate(360deg) } }
     </style>
   `;
@@ -3228,46 +3356,317 @@ function resetView() {
   window._3dviewer.render();
 }
 
-// Keyboard close
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+// ═══════════════════════════════════════════════════════════
+// Guided Tour
+// ═══════════════════════════════════════════════════════════
+let _tourSteps = [];
+let _tourIdx = -1;
+let _tourActive = false;
+
+function buildTourSteps() {
+  const muts = window._3dMutations;
+  const steps = [];
+
+  // Step 0: Overview
+  steps.push({
+    type: 'overview',
+    title: 'Protein Overview',
+    subtitle: muts.length + ' mutation' + (muts.length !== 1 ? 's' : '') + ' engineered',
+    body: 'This is the 3D structure of your protein. The rainbow ribbon traces the backbone from <strong>N-terminus</strong> (blue) to <strong>C-terminus</strong> (red). Red highlights mark AI-predicted mutation sites. Let\'s walk through each one.',
+    resi: null,
+  });
+
+  // One step per mutation
+  muts.forEach(m => {
+    const fromCat = AA_CAT[m.from] || 'unknown';
+    const toCat = AA_CAT[m.to] || 'unknown';
+    const fromFull = AA_FULL[m.from] || m.from;
+    const toFull = AA_FULL[m.to] || m.to;
+    let explanation = '';
+    if (fromCat !== toCat) {
+      explanation = 'This changes the residue from <strong>' + fromCat + '</strong> to <strong>' + toCat + '</strong>, ';
+      if (toCat === 'hydrophobic' || fromCat === 'hydrophobic') explanation += 'which can alter core packing and thermal stability.';
+      else if (toCat.indexOf('charged') >= 0 || fromCat.indexOf('charged') >= 0) explanation += 'which affects electrostatic interactions and solubility.';
+      else if (toCat === 'polar' || toCat === 'polar amide') explanation += 'which can improve hydrogen bonding at this site.';
+      else if (toCat === 'aromatic') explanation += 'which can introduce pi-stacking interactions.';
+      else if (toCat === 'cyclic') explanation += 'which rigidifies the backbone, often improving thermal stability.';
+      else explanation += 'which alters the local chemical environment.';
+    } else {
+      explanation = 'Both residues are <strong>' + fromCat + '</strong> — a conservative substitution that fine-tunes properties without disrupting the fold.';
+    }
+    explanation += '<div style="margin-top:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
+      + '<span style="display:inline-block;font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;background:rgba(255,100,100,0.12);color:#FF8888;text-decoration:line-through">' + m.from + ' ' + fromFull + '</span>'
+      + '<span style="color:rgba(255,255,255,0.3)">&rarr;</span>'
+      + '<span style="display:inline-block;font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;background:rgba(100,220,100,0.12);color:#88DD88">' + m.to + ' ' + toFull + '</span>'
+      + '</div>';
+
+    steps.push({
+      type: 'mutation',
+      title: m.label,
+      subtitle: fromFull + ' \u2192 ' + toFull + ' at position ' + m.pos,
+      body: explanation,
+      resi: m.pos,
+    });
+  });
+
+  // Summary step
+  if (muts.length > 1) {
+    steps.push({
+      type: 'summary',
+      title: 'All Mutations Together',
+      subtitle: muts.length + ' changes working in concert',
+      body: 'These mutations were selected by the AI to complement each other — optimizing stability, catalytic activity, and structural integrity as a group. The combined effect is predicted to outperform any single mutation alone.',
+      resi: null,
+    });
+  }
+  return steps;
+}
+
+function renderTourStep() {
+  const s = _tourSteps[_tourIdx];
+  const total = _tourSteps.length;
+  document.getElementById('tourStepLabel').textContent = 'STEP ' + (_tourIdx + 1) + ' OF ' + total;
+  document.getElementById('tourTitle').textContent = s.title;
+  document.getElementById('tourSubtitle').textContent = s.subtitle;
+  document.getElementById('tourBody').innerHTML = s.body;
+
+  // Dots
+  let dots = '';
+  for (let i = 0; i < total; i++) {
+    const active = i === _tourIdx;
+    dots += '<div style="width:' + (active ? '16px' : '6px') + ';height:6px;border-radius:' + (active ? '3px' : '50%') + ';background:' + (active ? '#7C8CF8' : 'rgba(255,255,255,0.15)') + ';transition:all 0.3s"></div>';
+  }
+  document.getElementById('tourDots').innerHTML = dots;
+  document.getElementById('tourPrevBtn').disabled = (_tourIdx === 0);
+  document.getElementById('tourNextBtn').textContent = (_tourIdx === total - 1) ? 'Done' : 'Next';
+
+  // Camera
+  const v = window._3dviewer;
+  if (!v) return;
+  if (s.type === 'overview') {
+    applyViewerStyle('cartoon');
+    v.zoomTo();
+    v.render();
+  } else if (s.type === 'summary') {
+    applyViewerStyle('cartoon');
+    v.zoomTo();
+    v.render();
+    v.spin('y', 0.4);
+  } else if (s.resi) {
+    // Zoom to this mutation
+    applyViewerStyle('cartoon');
+    v.zoomTo({ resi: s.resi });
+    v.render();
+    // Slight pull-back after zoom
+    setTimeout(() => { v.zoom(0.65, 500); }, 400);
+  }
+}
+
+function startGuidedTour() {
+  _tourSteps = buildTourSteps();
+  if (_tourSteps.length < 2) return;
+  _tourActive = true;
+  _tourIdx = 0;
+  const v = window._3dviewer;
+  if (v) v.spin(false);
+  document.getElementById('tourOverlay').style.display = 'block';
+  document.getElementById('viewer3dLegend').style.display = 'none';
+  renderTourStep();
+}
+
+function endGuidedTour() {
+  _tourActive = false;
+  _tourIdx = -1;
+  const v = window._3dviewer;
+  if (v) v.spin(false);
+  document.getElementById('tourOverlay').style.display = 'none';
+  document.getElementById('viewer3dLegend').style.display = 'block';
+  applyViewerStyle(window._3dCurrentStyle);
+  if (v) { v.zoomTo(); v.render(); }
+}
+
+function tourNext() {
+  if (_tourIdx >= _tourSteps.length - 1) { endGuidedTour(); return; }
+  _tourIdx++;
+  renderTourStep();
+}
+
+function tourPrev() {
+  if (_tourIdx <= 0) return;
+  _tourIdx--;
+  renderTourStep();
+}
+
+// Keyboard close + tour nav
+document.addEventListener('keydown', e => {
+  if (_tourActive) {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); tourNext(); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); tourPrev(); }
+    else if (e.key === 'Escape') { endGuidedTour(); }
+    return;
+  }
+  if (e.key === 'Escape') closeModal();
+});
 
 // ═══════════════════════════════════════════════════════════
-// Scroll Reveal (Intersection Observer)
+// Premium Scroll Animation System
 // ═══════════════════════════════════════════════════════════
+
+// 1. Core reveal observer (elements fade/slide in)
 const revealObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
       entry.target.classList.add('visible');
     }
   });
-}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+}, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
 
-document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale').forEach(el => {
-  revealObserver.observe(el);
-});
+function observeAllRevealElements() {
+  document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale, .section-eyebrow, .section-rule, .editorial-panel').forEach(el => {
+    revealObserver.observe(el);
+  });
+}
+observeAllRevealElements();
 
-// Re-observe when pages change (for dynamically shown pages)
+// Re-observe when pages change
 const _origShowPage = showPage;
 showPage = function(name) {
   _origShowPage(name);
-  setTimeout(() => {
-    document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale').forEach(el => {
-      revealObserver.observe(el);
-    });
-  }, 50);
+  setTimeout(observeAllRevealElements, 50);
 };
 
-// ═══════════════════════════════════════════════════════════
-// Header scroll effect — more opaque on scroll
-// ═══════════════════════════════════════════════════════════
-window.addEventListener('scroll', () => {
-  const header = document.querySelector('header');
-  if (window.scrollY > 50) {
-    header.style.background = 'rgba(13,13,20,0.95)';
-  } else {
-    header.style.background = 'rgba(13,13,20,0.8)';
+// 2. Hero parallax + fade on scroll
+(function heroParallax() {
+  const hero3d = document.querySelector('.hero-bg-3d');
+  const heroContent = document.querySelector('.hero-content');
+  const heroHint = document.querySelector('.hero-scroll-hint');
+  if (!hero3d) return;
+
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      const y = window.scrollY;
+      const vh = window.innerHeight;
+      if (y < vh) {
+        const progress = y / vh;
+        // Protein drifts up slowly, fades out
+        hero3d.style.transform = 'translateY(' + (-y * 0.15) + 'px)';
+        hero3d.style.opacity = 1 - progress * 0.6;
+        // Hero text parallax (slower)
+        if (heroContent) {
+          heroContent.style.transform = 'translateY(' + (y * 0.08) + 'px)';
+          heroContent.style.opacity = 1 - progress * 0.8;
+        }
+        // Scroll hint fades early
+        if (heroHint) {
+          heroHint.style.opacity = Math.max(0, 1 - progress * 4);
+        }
+      }
+      ticking = false;
+    });
+  }, { passive: true });
+})();
+
+// 3. Animated stat counters (count up when hero stats become visible)
+(function animateCounters() {
+  const stats = document.querySelectorAll('.hero-stat .value');
+  if (!stats.length) return;
+
+  function parseTarget(el) {
+    const text = el.textContent.trim();
+    const suffix = text.replace(/[\d,.]+/, '');
+    const numStr = text.replace(/[^\d.]/g, '');
+    return { num: parseFloat(numStr), suffix: suffix, decimals: numStr.includes('.') ? 1 : 0, original: text };
   }
-}, { passive: true });
+
+  function formatNum(n, decimals) {
+    if (n >= 1000) return n.toLocaleString('en-US', { maximumFractionDigits: decimals });
+    return decimals > 0 ? n.toFixed(decimals) : Math.round(n).toString();
+  }
+
+  const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting || entry.target.dataset.counted) return;
+      entry.target.dataset.counted = '1';
+      const { num, suffix, decimals } = parseTarget(entry.target);
+      const duration = 1800;
+      const start = performance.now();
+
+      function tick(now) {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / duration, 1);
+        // Ease out quartic
+        const eased = 1 - Math.pow(1 - progress, 4);
+        const current = num * eased;
+        entry.target.textContent = formatNum(current, decimals) + suffix;
+        if (progress < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    });
+  }, { threshold: 0.5 });
+
+  stats.forEach(s => counterObserver.observe(s));
+})();
+
+// 4. Timeline draw-in (progress line fills as you scroll through)
+(function timelineDraw() {
+  const timeline = document.getElementById('pipelineTimeline');
+  const progress = document.getElementById('timelineProgress');
+  if (!timeline || !progress) return;
+
+  const steps = timeline.querySelectorAll('.timeline-step');
+
+  function update() {
+    const rect = timeline.getBoundingClientRect();
+    const timelineTop = rect.top;
+    const timelineH = rect.height;
+    const trigger = window.innerHeight * 0.65;
+
+    // How far the trigger line has traveled through the timeline
+    const traveled = trigger - timelineTop;
+    const pct = Math.max(0, Math.min(1, traveled / timelineH));
+    progress.style.height = (pct * timelineH) + 'px';
+
+    // Activate steps as the line passes them
+    steps.forEach(function(step) {
+      const stepRect = step.getBoundingClientRect();
+      const stepMid = stepRect.top + 12;
+      if (stepMid < trigger) {
+        step.classList.add('active');
+      } else {
+        step.classList.remove('active');
+      }
+    });
+  }
+
+  let ticking = false;
+  window.addEventListener('scroll', function() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function() { update(); ticking = false; });
+  }, { passive: true });
+  update();
+})();
+
+// 5. Smooth header background on scroll
+(function headerScroll() {
+  const header = document.querySelector('header');
+  let ticking = false;
+  window.addEventListener('scroll', function() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function() {
+      if (window.scrollY > 50) {
+        header.style.background = 'rgba(8,8,15,0.95)';
+      } else {
+        header.style.background = 'rgba(8,8,15,0.7)';
+      }
+      ticking = false;
+    });
+  }, { passive: true });
+})();
 </script>
 </body>
 </html>

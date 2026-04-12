@@ -22,6 +22,28 @@ app = FastAPI(
     version="1.0.0",
 )
 
+
+@app.on_event("startup")
+def preload_models():
+    """Pre-load ML model and PDB cache at startup so first requests are fast."""
+    import sys
+    try:
+        print("[startup] Pre-loading trained classifier model...", file=sys.stderr)
+        trained_classifier.train_model()
+        print("[startup] Model loaded.", file=sys.stderr)
+    except Exception as e:
+        print(f"[startup] WARNING: Could not pre-load model: {e}", file=sys.stderr)
+    try:
+        print("[startup] Loading PDB cache from disk...", file=sys.stderr)
+        from .services.pdb_fetcher import _load_disk_cache
+        cached = _load_disk_cache()
+        if cached:
+            print(f"[startup] PDB disk cache loaded ({len(cached)} entries).", file=sys.stderr)
+        else:
+            print("[startup] No PDB disk cache found — first /pdb/search will fetch from network.", file=sys.stderr)
+    except Exception as e:
+        print(f"[startup] WARNING: PDB cache check failed: {e}", file=sys.stderr)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -355,6 +377,15 @@ async def structure_viewer(req: StructureRequest):
         'T': 'Threonine', 'W': 'Tryptophan', 'Y': 'Tyrosine', 'V': 'Valine',
     }
 
+    _AA_CATEGORIES = {
+        'A': 'hydrophobic', 'V': 'hydrophobic', 'I': 'hydrophobic', 'L': 'hydrophobic',
+        'M': 'hydrophobic', 'F': 'aromatic', 'W': 'aromatic', 'Y': 'aromatic',
+        'P': 'cyclic', 'G': 'small', 'S': 'polar', 'T': 'polar',
+        'C': 'sulfur-containing', 'N': 'polar amide', 'Q': 'polar amide',
+        'D': 'negatively charged', 'E': 'negatively charged',
+        'K': 'positively charged', 'R': 'positively charged', 'H': 'positively charged',
+    }
+
     # Parse mutations like "S121E,D186H,R280A"
     mut_list = [m.strip() for m in req.mutations.split(",") if m.strip()]
     mut_positions = []
@@ -367,6 +398,14 @@ async def structure_viewer(req: StructureRequest):
             mut_aa = m[-1]
             mut_positions.append(pos)
             mut_labels.append(m)
+            from_cat = _AA_CATEGORIES.get(wt_aa, 'unknown')
+            to_cat = _AA_CATEGORIES.get(mut_aa, 'unknown')
+            # Build a short explanation of the property change
+            change_note = ""
+            if from_cat != to_cat:
+                change_note = f"{from_cat} → {to_cat}"
+            else:
+                change_note = f"both {from_cat}"
             mut_details.append({
                 "label": m,
                 "position": pos,
@@ -374,6 +413,9 @@ async def structure_viewer(req: StructureRequest):
                 "to_code": mut_aa,
                 "from_name": _AA_NAMES.get(wt_aa, wt_aa),
                 "to_name": _AA_NAMES.get(mut_aa, mut_aa),
+                "from_category": from_cat,
+                "to_category": to_cat,
+                "change_note": change_note,
             })
         except (ValueError, IndexError):
             pass
@@ -425,6 +467,9 @@ async def structure_viewer(req: StructureRequest):
         }});
         """
 
+    # JS array of catalytic positions for tour highlight
+    catalytic_positions_js = ", ".join(str(p) for p in catalytic)
+
     display_title = req.title if req.title else "3D Structure"
 
     # Build mutation details HTML
@@ -453,6 +498,10 @@ async def structure_viewer(req: StructureRequest):
     # Escape PDB data for JS
     pdb_escaped = pdb_data.replace("\\", "\\\\").replace("`", "\\`").replace("$", "\\$")
 
+    # Build tour data JSON for JS
+    import json as _json
+    tour_data_json = _json.dumps(mut_details)
+
     html = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -461,226 +510,722 @@ async def structure_viewer(req: StructureRequest):
 <style>
   * {{ margin: 0; padding: 0; box-sizing: border-box; }}
   body {{
-    background: #1A1A2E;
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #08080f;
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
     color: white;
     overflow-x: hidden;
     overflow-y: auto;
   }}
+
+  /* ── Header ── */
   #header {{
     padding: 12px 16px 8px;
-    background: rgba(255,255,255,0.05);
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex; align-items: center; justify-content: space-between;
+    z-index: 30; position: relative;
   }}
-  #header h2 {{
-    font-size: 16px;
-    font-weight: 600;
-    color: #E0E8F0;
-    margin-bottom: 8px;
+  #header h2 {{ font-size: 15px; font-weight: 700; color: #E8E8ED; }}
+  #source-tag {{ font-size: 10px; color: #70708A; font-style: italic; margin-top: 2px; }}
+  #tour-btn {{
+    background: linear-gradient(135deg, #7C8CF8 0%, #6366F1 100%);
+    color: white; border: none; border-radius: 8px;
+    padding: 8px 18px; font-size: 12px; font-weight: 700; cursor: pointer;
+    letter-spacing: 0.4px; transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    display: {{'inline-flex' if mut_details else 'none'}};
+    align-items: center; gap: 6px;
+    box-shadow: 0 2px 12px rgba(124,140,248,0.3);
+  }}
+  #tour-btn:hover {{
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(124,140,248,0.5);
+  }}
+  #tour-btn svg {{ width: 14px; height: 14px; }}
+
+  /* ── Viewer ── */
+  #viewer-wrap {{
+    position: relative;
+    width: 100vw; height: 55vh; min-height: 320px;
+    transition: height 0.8s cubic-bezier(0.4,0,0.2,1);
+  }}
+  #viewer-wrap.tour-active {{ height: 100vh; min-height: 100vh; }}
+  #viewer-container {{ width: 100%; height: 100%; }}
+
+  /* ── Cinematic letterbox bars ── */
+  .cine-bar {{
+    position: absolute; left: 0; right: 0;
+    background: #08080f; height: 0;
+    transition: height 1s cubic-bezier(0.4,0,0.2,1);
+    z-index: 5; pointer-events: none;
+  }}
+  .cine-bar-top {{ top: 0; }}
+  .cine-bar-bot {{ bottom: 0; }}
+  #viewer-wrap.tour-active .cine-bar {{ height: 40px; }}
+
+  /* ── Vignette ── */
+  #tour-vignette {{
+    position: absolute; inset: 0; z-index: 4; pointer-events: none;
+    opacity: 0; transition: opacity 0.8s ease;
+    background: radial-gradient(ellipse at center, transparent 35%, rgba(8,8,15,0.55) 100%);
+  }}
+  #viewer-wrap.tour-active #tour-vignette {{ opacity: 1; }}
+
+  /* ── Timeline progress bar (thin bar along top) ── */
+  #tour-timeline {{
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    z-index: 15; pointer-events: none;
+  }}
+  #tour-timeline-fill {{
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, #6366F1, #7C8CF8, #FF6B35);
+    border-radius: 0 2px 2px 0;
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 0 12px rgba(124,140,248,0.5);
   }}
 
-  #source-tag {{
-    font-size: 10px;
-    color: #6B8AB5;
-    font-style: italic;
-    margin-top: 4px;
+  /* ── Mutation counter (top-right) ── */
+  #tour-counter {{
+    position: absolute; top: 52px; right: 20px; z-index: 12;
+    font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    color: rgba(255,255,255,0.0);
+    text-transform: uppercase;
+    transition: color 0.5s ease;
+  }}
+  #viewer-wrap.tour-active #tour-counter {{ color: rgba(255,255,255,0.3); }}
+
+  /* ── Info card (bottom-left, glass panel) ── */
+  #tour-card {{
+    position: absolute; bottom: 56px; left: 20px; z-index: 12;
+    max-width: 380px; width: calc(100% - 40px);
+    background: rgba(12,12,22,0.82);
+    -webkit-backdrop-filter: blur(20px) saturate(1.3);
+    backdrop-filter: blur(20px) saturate(1.3);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px;
+    padding: 0;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+    opacity: 0; transform: translateY(16px);
+    transition: opacity 0.5s cubic-bezier(0.4,0,0.2,1),
+                transform 0.5s cubic-bezier(0.4,0,0.2,1);
+    pointer-events: none;
+    overflow: hidden;
+  }}
+  #tour-card.visible {{
+    opacity: 1; transform: translateY(0); pointer-events: auto;
+  }}
+  #tour-card-phase {{
+    font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; padding: 12px 16px 0;
+    color: rgba(255,255,255,0.25);
+  }}
+  #tour-card-title {{
+    font-size: 18px; font-weight: 800; letter-spacing: -0.3px;
+    color: #F0F0F5; padding: 4px 16px 0;
+  }}
+  #tour-card-subtitle {{
+    font-size: 11px; color: #70708A; padding: 2px 16px 0; font-weight: 500;
+  }}
+  #tour-card-body {{
+    font-size: 12.5px; color: #AAB0CC; line-height: 1.6;
+    padding: 10px 16px 0;
+  }}
+  #tour-card-body strong {{ color: #D0D0E0; }}
+
+  /* ── Amino acid swap visual ── */
+  .aa-swap {{
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 16px 14px;
+  }}
+  .aa-chip {{
+    display: flex; flex-direction: column; align-items: center; gap: 1px;
+    padding: 6px 12px; border-radius: 8px; min-width: 56px;
+  }}
+  .aa-chip.wt {{
+    background: rgba(255,100,100,0.07); border: 1px solid rgba(255,100,100,0.14);
+  }}
+  .aa-chip.mt {{
+    background: rgba(100,220,140,0.07); border: 1px solid rgba(100,220,140,0.14);
+  }}
+  .aa-chip-code {{
+    font-family: 'SF Mono', Menlo, monospace;
+    font-size: 20px; font-weight: 800;
+  }}
+  .aa-chip.wt .aa-chip-code {{ color: #FF8888; }}
+  .aa-chip.mt .aa-chip-code {{ color: #7DDC8A; }}
+  .aa-chip-name {{
+    font-size: 8px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; color: rgba(255,255,255,0.3);
+  }}
+  .aa-arrow {{
+    color: rgba(255,255,255,0.15); font-size: 18px;
+    transition: color 0.3s;
+  }}
+  .aa-tag {{
+    margin-left: auto; font-size: 9px; font-weight: 600;
+    padding: 3px 8px; border-radius: 4px;
+    background: rgba(124,140,248,0.08); color: #9BA6FF;
+    white-space: nowrap; letter-spacing: 0.3px;
   }}
 
-  /* --- Color Key (below viewer) --- */
-  #color-key {{
-    padding: 14px 16px;
-    background: rgba(255,255,255,0.05);
-    border-top: 1px solid rgba(255,255,255,0.08);
+  /* ── Splash overlay ── */
+  #tour-splash {{
+    position: absolute; inset: 0; z-index: 20;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: rgba(8,8,15,0.88);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.6s ease;
   }}
-  .key-title {{
-    font-size: 13px;
-    font-weight: 600;
-    color: #C0D0E0;
-    margin-bottom: 10px;
+  #tour-splash.show {{ opacity: 1; pointer-events: auto; }}
+  .sp-line {{
+    opacity: 0; transform: translateY(14px);
+    animation: sp-in 0.7s cubic-bezier(0.4,0,0.2,1) forwards;
+  }}
+  .sp-line:nth-child(1) {{ animation-delay: 0.1s; }}
+  .sp-line:nth-child(2) {{ animation-delay: 0.25s; }}
+  .sp-line:nth-child(3) {{ animation-delay: 0.4s; }}
+  .sp-label {{
+    font-size: 11px; font-weight: 700; letter-spacing: 4px;
+    text-transform: uppercase; color: rgba(255,255,255,0.25);
+  }}
+  .sp-big {{
+    font-size: 48px; font-weight: 800; letter-spacing: -1.5px;
+    color: #E8E8ED; margin-top: 2px;
+  }}
+  .sp-big span {{ color: #FF6B35; }}
+  .sp-hint {{
+    font-size: 12px; color: rgba(255,255,255,0.2); margin-top: 6px;
+  }}
+  @keyframes sp-in {{
+    to {{ opacity: 1; transform: translateY(0); }}
+  }}
+
+  /* ── Stop button (appears during tour) ── */
+  #tour-stop {{
+    position: absolute; top: 48px; left: 20px; z-index: 15;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.5); border-radius: 8px;
+    padding: 6px 14px; font-size: 11px; font-weight: 600;
+    cursor: pointer; display: none; align-items: center; gap: 5px;
+    transition: all 0.25s ease;
     letter-spacing: 0.3px;
   }}
-  .key-grid {{
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+  #tour-stop:hover {{ background: rgba(255,255,255,0.1); color: white; }}
+  #tour-stop svg {{ width: 12px; height: 12px; }}
+
+  /* ── Color Key ── */
+  #color-key {{
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.02);
+    border-top: 1px solid rgba(255,255,255,0.06);
   }}
+  .key-title {{
+    font-size: 12px; font-weight: 700; color: #70708A;
+    margin-bottom: 10px; letter-spacing: 1px; text-transform: uppercase;
+  }}
+  .key-grid {{ display: flex; flex-direction: column; gap: 6px; }}
   .key-item {{
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 7px 10px;
-    border-radius: 8px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.06);
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 10px; border-radius: 6px;
+    background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04);
   }}
-  .key-swatch {{
-    width: 16px;
-    height: 16px;
-    border-radius: 4px;
-    flex-shrink: 0;
-  }}
-  .key-swatch-sphere {{
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }}
+  .key-swatch-sphere {{ width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }}
   .key-spectrum {{
-    width: 48px;
-    height: 16px;
-    border-radius: 4px;
+    width: 40px; height: 14px; border-radius: 3px;
     background: linear-gradient(90deg, #0000FF, #00FFFF, #00FF00, #FFFF00, #FF0000);
     flex-shrink: 0;
   }}
-  .key-label {{
-    font-size: 13px;
-    color: #AAB8C8;
-    font-weight: 500;
-  }}
-  .key-desc {{
-    font-size: 11px;
-    color: #667788;
-  }}
+  .key-label {{ font-size: 12px; color: #AAB0CC; font-weight: 500; }}
+  .key-desc {{ font-size: 10px; color: #555570; }}
 
-  /* --- Viewer --- */
-  #viewer-container {{
-    width: 100vw;
-    height: 55vh;
-    min-height: 320px;
-  }}
-
-  /* --- Mutations Panel --- */
+  /* ── Mutations Panel ── */
   #mutations-panel {{
     padding: 12px 16px 16px;
-    background: rgba(255,255,255,0.03);
-    border-top: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.02);
+    border-top: 1px solid rgba(255,255,255,0.06);
   }}
-  .panel-title {{
-    font-size: 13px;
-    font-weight: 600;
-    color: #C0D0E0;
-    margin-bottom: 10px;
-    letter-spacing: 0.3px;
-  }}
+  .panel-title {{ font-size: 12px; font-weight: 700; color: #70708A; margin-bottom: 10px; letter-spacing: 1px; text-transform: uppercase; }}
   .mut-row {{
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 10px;
-    margin-bottom: 6px;
-    background: rgba(255,107,53,0.08);
-    border: 1px solid rgba(255,107,53,0.2);
-    border-radius: 8px;
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; margin-bottom: 6px;
+    background: rgba(255,107,53,0.06); border: 1px solid rgba(255,107,53,0.12);
+    border-radius: 6px;
   }}
   .mut-badge {{
-    background: #FF6B35;
-    color: white;
-    font-size: 13px;
-    font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 5px;
-    font-family: 'SF Mono', Menlo, monospace;
-    letter-spacing: 0.5px;
-    white-space: nowrap;
+    background: #FF6B35; color: white; font-size: 12px; font-weight: 700;
+    padding: 3px 8px; border-radius: 4px;
+    font-family: 'SF Mono', Menlo, monospace; white-space: nowrap;
   }}
-  .mut-desc {{
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    flex-wrap: wrap;
-    font-size: 12px;
-  }}
-  .aa-from {{
-    color: #FF8888;
-    font-weight: 500;
-    text-decoration: line-through;
-    text-decoration-color: rgba(255,136,136,0.4);
-  }}
-  .mut-arrow {{
-    color: #556677;
-    font-size: 14px;
-  }}
-  .aa-to {{
-    color: #88DD88;
-    font-weight: 600;
-  }}
-  .mut-pos {{
-    color: #667788;
-    font-size: 11px;
-    margin-left: 4px;
-  }}
+  .mut-desc {{ display: flex; align-items: center; gap: 5px; flex-wrap: wrap; font-size: 12px; }}
+  .aa-from {{ color: #FF8888; font-weight: 500; text-decoration: line-through; text-decoration-color: rgba(255,136,136,0.3); }}
+  .mut-arrow {{ color: #555570; font-size: 13px; }}
+  .aa-to {{ color: #88DD88; font-weight: 600; }}
+  .mut-pos {{ color: #555570; font-size: 11px; margin-left: 4px; }}
 
   #tip {{
-    text-align: center;
-    padding: 8px;
-    font-size: 11px;
-    color: rgba(255,255,255,0.3);
+    text-align: center; padding: 8px;
+    font-size: 11px; color: rgba(255,255,255,0.2);
+  }}
+
+  /* Hide non-viewer content during tour */
+  body.touring #color-key,
+  body.touring #mutations-panel,
+  body.touring #tip,
+  body.touring #header {{
+    display: none;
   }}
 </style>
 <script src="https://3Dmol.org/build/3Dmol-min.js"></script>
 </head>
 <body>
 <div id="header">
-  <h2>{display_title}</h2>
-  <div id="source-tag">{source}</div>
+  <div>
+    <h2>{display_title}</h2>
+    <div id="source-tag">{source}</div>
+  </div>
+  <button id="tour-btn" onclick="startTour()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    Guided Tour
+  </button>
 </div>
-<div id="viewer-container"></div>
+<div id="viewer-wrap">
+  <div class="cine-bar cine-bar-top"></div>
+  <div class="cine-bar cine-bar-bot"></div>
+  <div id="tour-vignette"></div>
+  <div id="tour-timeline"><div id="tour-timeline-fill"></div></div>
+  <div id="tour-counter"></div>
+  <button id="tour-stop" onclick="endTour()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    Exit Tour
+  </button>
+  <div id="tour-card">
+    <div id="tour-card-phase"></div>
+    <div id="tour-card-title"></div>
+    <div id="tour-card-subtitle"></div>
+    <div id="tour-card-body"></div>
+    <div id="tour-card-swap"></div>
+  </div>
+  <div id="viewer-container"></div>
+  <div id="tour-splash">
+    <div class="sp-line"><span class="sp-label">Mutation Analysis</span></div>
+    <div class="sp-line"><span class="sp-big"><span>{len(mut_details)}</span> Mutation{'s' if len(mut_details) != 1 else ''}</span></div>
+    <div class="sp-line"><span class="sp-hint">Flying through structural impact</span></div>
+  </div>
+</div>
 {mut_detail_html}
 <div id="color-key">
   <div class="key-title">Color Key</div>
   <div class="key-grid">
     <div class="key-item">
       <span class="key-spectrum"></span>
-      <span><span class="key-label">Protein Backbone</span><br><span class="key-desc">Rainbow spectrum from N-terminus (blue) to C-terminus (red)</span></span>
+      <span><span class="key-label">Protein Backbone</span><br><span class="key-desc">Rainbow: N-terminus (blue) to C-terminus (red)</span></span>
     </div>
     <div class="key-item">
       <span class="key-swatch-sphere" style="background:#FF6B35"></span>
-      <span><span class="key-label">AI-Predicted Mutations</span><br><span class="key-desc">Orange spheres &amp; sticks — positions modified by the optimizer</span></span>
+      <span><span class="key-label">AI-Predicted Mutations</span><br><span class="key-desc">Orange spheres &mdash; positions modified by the optimizer</span></span>
     </div>
     <div class="key-item">
       <span class="key-swatch-sphere" style="background:#0FB5A2"></span>
-      <span><span class="key-label">Catalytic Triad</span><br><span class="key-desc">Aqua spheres — active site residues (Ser160, His206, Asp237)</span></span>
+      <span><span class="key-label">Catalytic Triad</span><br><span class="key-desc">Aqua &mdash; active site residues (Ser160, His206, Asp237)</span></span>
     </div>
   </div>
 </div>
 <div id="tip">Pinch to zoom &middot; Drag to rotate &middot; Two-finger drag to pan</div>
 <script>
-let viewer = $3Dmol.createViewer("viewer-container", {{
-  backgroundColor: "0x1A1A2E",
-  antialias: true,
-  cartoonQuality: 10
-}});
+/* ═══════════════════════════════════════════════════
+   Data & Viewer Init
+   ═══════════════════════════════════════════════════ */
+var tourData = {tour_data_json};
+var catalyticResidues = [{catalytic_positions_js}];
 
-let pdbData = `{pdb_escaped}`;
+var viewer = $3Dmol.createViewer("viewer-container", {{
+  backgroundColor: "0x08080f", antialias: true, cartoonQuality: 10
+}});
+var pdbData = `{pdb_escaped}`;
 viewer.addModel(pdbData, "pdb");
 
-// Base style: rainbow spectrum cartoon (blue=N-terminus → red=C-terminus)
-viewer.setStyle({{}}, {{
-  cartoon: {{
-    color: "spectrum",
-    opacity: 0.85,
-    thickness: 0.25
-  }}
-}});
-
-// Highlight mutations (orange sticks)
-{mut_selections_js}
-
-// Highlight catalytic residues (aqua sticks)
-{catalytic_js}
-
+function setDefaultView() {{
+  viewer.setStyle({{}}, {{ cartoon: {{ color: "spectrum", opacity: 0.85, thickness: 0.25 }} }});
+  {mut_selections_js}
+  {catalytic_js}
+  viewer.render();
+}}
+setDefaultView();
 viewer.zoomTo();
-viewer.spin(false);
 viewer.render();
 
-// Auto-spin slowly on load, stop on interaction
-let spinning = true;
+var spinning = true;
 viewer.spin("y", 0.5);
 document.getElementById("viewer-container").addEventListener("touchstart", function() {{
   if (spinning) {{ viewer.spin(false); spinning = false; }}
 }});
 document.getElementById("viewer-container").addEventListener("mousedown", function() {{
   if (spinning) {{ viewer.spin(false); spinning = false; }}
+}});
+
+
+/* ═══════════════════════════════════════════════════
+   Cinematic Auto-Playing Tour
+   ═══════════════════════════════════════════════════ */
+var tourActive = false;
+var tourTimers = [];
+
+function clearTimers() {{
+  tourTimers.forEach(function(t) {{ clearTimeout(t); }});
+  tourTimers = [];
+}}
+function at(fn, ms) {{
+  tourTimers.push(setTimeout(fn, ms));
+}}
+
+/* Generate explanation text for a mutation */
+function explainMutation(m) {{
+  if (m.from_category !== m.to_category) {{
+    var reason = "";
+    var fc = m.from_category, tc = m.to_category;
+    if (tc === "hydrophobic" || fc === "hydrophobic")
+      reason = "This alters core packing — hydrophobic changes directly affect protein stability and folding energetics.";
+    else if (tc.indexOf("charged") >= 0 || fc.indexOf("charged") >= 0)
+      reason = "Charge modification affects salt bridges, electrostatic networks, and solvent interactions at this site.";
+    else if (tc === "polar" || tc === "polar amide")
+      reason = "Introducing polarity here can form new hydrogen bonds, stabilizing local secondary structure.";
+    else if (tc === "aromatic")
+      reason = "Aromatic residues enable pi-stacking interactions that anchor nearby structural elements.";
+    else if (tc === "cyclic")
+      reason = "Proline rigidifies the backbone, reducing conformational entropy — a classic thermostability strategy.";
+    else
+      reason = "This substitution modifies the local chemical environment to favor enhanced catalytic geometry.";
+    return "<strong>" + fc + " &rarr; " + tc + "</strong> &mdash; " + reason;
+  }}
+  return "A conservative <strong>" + m.from_category + "</strong> substitution — fine-tuning properties while preserving the fold architecture.";
+}}
+
+
+/* ── Phase helpers (each returns the time it takes) ── */
+
+/* Phase: Intro — splash + wide establishing shot */
+function phaseIntro(t0) {{
+  var splash = document.getElementById("tour-splash");
+  splash.classList.add("show");
+  viewer.spin(false);
+  viewer.zoomTo({{}}, 2000);
+  at(function() {{ viewer.zoom(0.75, 1800); }}, 200);
+
+  // Fade splash out
+  at(function() {{ splash.classList.remove("show"); }}, 2200);
+
+  // Slow panoramic spin with all mutations visible
+  at(function() {{
+    viewer.spin("y", 0.3);
+  }}, 2400);
+
+  // Show overview card
+  at(function() {{
+    showCard(
+      "Overview",
+      "Protein Structure",
+      tourData.length + " AI-predicted mutation" + (tourData.length !== 1 ? "s" : ""),
+      "Scanning the full backbone from <strong>N-terminus</strong> to <strong>C-terminus</strong>. The optimizer identified " + tourData.length + " positions where substitutions improve stability and catalytic performance."
+    );
+  }}, 2800);
+
+  // Stop spin, prepare for first mutation
+  at(function() {{
+    viewer.spin(false);
+  }}, 5800);
+
+  return 6200;  // total duration of intro phase
+}}
+
+/* Phase: Fly to a single mutation, highlight it, explain it */
+function phaseMutation(t0, m, index) {{
+  var total = tourData.length;
+
+  // Update timeline
+  at(function() {{
+    var pct = ((index + 1) / (total + 1)) * 100;
+    document.getElementById("tour-timeline-fill").style.width = pct + "%";
+    document.getElementById("tour-counter").textContent = "MUTATION " + (index + 1) + " OF " + total;
+  }}, t0);
+
+  // Fade card out before moving
+  at(function() {{
+    document.getElementById("tour-card").classList.remove("visible");
+  }}, t0);
+
+  // Clean up previous highlights but keep already-visited mutations dimmed
+  at(function() {{
+    viewer.removeAllLabels();
+    viewer.setStyle({{}}, {{ cartoon: {{ color: "spectrum", opacity: 0.85, thickness: 0.25 }} }});
+
+    // Show previously visited mutations as persistent but subtle
+    for (var p = 0; p < index; p++) {{
+      var prev = tourData[p];
+      viewer.addStyle({{resi: prev.position}}, {{
+        stick: {{ color: '#FF6B35', radius: 0.12 }},
+        sphere: {{ color: '#FF6B35', opacity: 0.2, radius: 0.7 }}
+      }});
+    }}
+    viewer.render();
+  }}, t0 + 300);
+
+  // Camera: pull back slightly from wherever we are
+  at(function() {{
+    viewer.zoom(0.82, 500);
+  }}, t0 + 400);
+
+  // Camera: fly to the mutation residue
+  at(function() {{
+    viewer.zoomTo({{resi: m.position}}, 1400);
+  }}, t0 + 1000);
+
+  // Camera: push in for close-up
+  at(function() {{
+    viewer.zoom(0.6, 900);
+  }}, t0 + 2500);
+
+  // Stage 1: Dim surroundings, highlight backbone at mutation
+  at(function() {{
+    viewer.addStyle({{resi: m.position, not: true}}, {{
+      cartoon: {{ color: "spectrum", opacity: 0.25, thickness: 0.18 }}
+    }});
+    // Re-render previously visited with same dim
+    for (var p = 0; p < index; p++) {{
+      var prev = tourData[p];
+      viewer.addStyle({{resi: prev.position}}, {{
+        stick: {{ color: '#FF6B35', radius: 0.12 }},
+        sphere: {{ color: '#FF6B35', opacity: 0.15, radius: 0.6 }}
+      }});
+    }}
+    viewer.addStyle({{resi: m.position}}, {{
+      cartoon: {{ color: "#FF6B35", opacity: 1.0, thickness: 0.45 }}
+    }});
+    viewer.render();
+  }}, t0 + 2800);
+
+  // Stage 2: Sticks and sphere appear
+  at(function() {{
+    viewer.addStyle({{resi: m.position}}, {{
+      stick: {{ color: '#FF6B35', radius: 0.25 }},
+      sphere: {{ color: '#FF6B35', opacity: 0.55, radius: 1.2 }}
+    }});
+    viewer.render();
+  }}, t0 + 3200);
+
+  // Stage 3: 3D label
+  at(function() {{
+    viewer.addLabel(m.label, {{
+      position: {{resi: m.position}},
+      backgroundColor: 'rgba(255,107,53,0.92)',
+      fontColor: 'white', fontSize: 14, fontWeight: 'bold',
+      padding: 5, borderRadius: 8,
+      borderColor: '#FF8855', borderThickness: 1.5,
+      showBackground: true
+    }});
+
+    // Show nearby catalytic residues for context
+    catalyticResidues.forEach(function(cpos) {{
+      if (Math.abs(cpos - m.position) < 80) {{
+        viewer.addStyle({{resi: cpos}}, {{
+          stick: {{ color: '#0FB5A2', radius: 0.12 }},
+          sphere: {{ color: '#0FB5A2', opacity: 0.25, radius: 0.65 }}
+        }});
+        viewer.addLabel("Cat " + cpos, {{
+          position: {{resi: cpos}},
+          backgroundColor: 'rgba(15,181,162,0.7)',
+          fontColor: 'white', fontSize: 9, padding: 3,
+          borderRadius: 5, showBackground: true
+        }});
+      }}
+    }});
+    viewer.render();
+  }}, t0 + 3500);
+
+  // Show explanation card
+  at(function() {{
+    showCard(
+      "Mutation " + (index + 1) + " of " + total,
+      m.from_name + " &rarr; " + m.to_name,
+      "Position " + m.position + " &mdash; " + m.label,
+      explainMutation(m),
+      m
+    );
+  }}, t0 + 3600);
+
+  // Gentle slow orbit around the site while card is visible
+  at(function() {{
+    viewer.spin("y", 0.15);
+  }}, t0 + 4000);
+
+  at(function() {{
+    viewer.spin(false);
+  }}, t0 + 7000);
+
+  return 7400;  // duration per mutation
+}}
+
+/* Phase: Finale — zoom out, reveal all, slow orbit */
+function phaseFinale(t0) {{
+  at(function() {{
+    document.getElementById("tour-card").classList.remove("visible");
+    document.getElementById("tour-timeline-fill").style.width = "100%";
+    document.getElementById("tour-counter").textContent = "COMPLETE";
+  }}, t0);
+
+  // Reset to full view
+  at(function() {{
+    viewer.removeAllLabels();
+    viewer.spin(false);
+    viewer.setStyle({{}}, {{ cartoon: {{ color: "spectrum", opacity: 0.85, thickness: 0.25 }} }});
+    viewer.render();
+    viewer.zoomTo({{}}, 1800);
+  }}, t0 + 400);
+
+  // Staggered reveal of ALL mutations simultaneously
+  tourData.forEach(function(m, i) {{
+    at(function() {{
+      viewer.addStyle({{resi: m.position}}, {{
+        stick: {{ color: '#FF6B35', radius: 0.2 }},
+        sphere: {{ color: '#FF6B35', opacity: 0.6, radius: 1.1 }}
+      }});
+      viewer.addLabel(m.label, {{
+        position: {{resi: m.position}},
+        backgroundColor: 'rgba(255,107,53,0.85)',
+        fontColor: 'white', fontSize: 11, fontWeight: 'bold',
+        padding: 4, borderRadius: 6, showBackground: true
+      }});
+      viewer.render();
+    }}, t0 + 1800 + i * 300);
+  }});
+
+  var afterReveals = t0 + 1800 + tourData.length * 300 + 200;
+
+  // Show catalytic triad
+  at(function() {{
+    catalyticResidues.forEach(function(cpos) {{
+      viewer.addStyle({{resi: cpos}}, {{
+        stick: {{ color: '#0FB5A2', radius: 0.16 }},
+        sphere: {{ color: '#0FB5A2', opacity: 0.35, radius: 0.8 }}
+      }});
+    }});
+    viewer.render();
+  }}, afterReveals);
+
+  // Summary card
+  at(function() {{
+    showCard(
+      "Summary",
+      tourData.length + " Synergistic Mutations",
+      "Combined structural optimization",
+      "Each mutation was selected to complement the others &mdash; collectively optimizing thermostability, catalytic geometry, and fold integrity beyond what any single substitution achieves."
+    );
+  }}, afterReveals + 300);
+
+  // Triumphant slow orbit
+  at(function() {{
+    viewer.spin("y", 0.2);
+  }}, afterReveals + 500);
+
+  // End tour after a few seconds of the finale
+  at(function() {{
+    endTour();
+  }}, afterReveals + 5500);
+
+  return afterReveals + 5500 - t0;
+}}
+
+/* ── Card helper ── */
+function showCard(phase, title, subtitle, body, mutData) {{
+  var card = document.getElementById("tour-card");
+  card.classList.remove("visible");
+
+  // Small delay for re-entrance animation
+  setTimeout(function() {{
+    document.getElementById("tour-card-phase").textContent = phase;
+    document.getElementById("tour-card-title").innerHTML = title;
+    document.getElementById("tour-card-subtitle").innerHTML = subtitle;
+    document.getElementById("tour-card-body").innerHTML = body;
+
+    var swapEl = document.getElementById("tour-card-swap");
+    if (mutData) {{
+      swapEl.innerHTML = '<div class="aa-swap">'
+        + '<div class="aa-chip wt"><span class="aa-chip-code">' + mutData.from_code + '</span><span class="aa-chip-name">' + mutData.from_name + '</span></div>'
+        + '<span class="aa-arrow">&rarr;</span>'
+        + '<div class="aa-chip mt"><span class="aa-chip-code">' + mutData.to_code + '</span><span class="aa-chip-name">' + mutData.to_name + '</span></div>'
+        + '<span class="aa-tag">' + mutData.change_note + '</span>'
+        + '</div>';
+    }} else {{
+      swapEl.innerHTML = '';
+    }}
+
+    card.classList.add("visible");
+  }}, 120);
+}}
+
+
+/* ═══════════════════════════════════════════════════
+   Tour Lifecycle
+   ═══════════════════════════════════════════════════ */
+
+function startTour() {{
+  if (tourActive || tourData.length === 0) return;
+  tourActive = true;
+  clearTimers();
+
+  // Enter cinematic mode
+  if (spinning) {{ viewer.spin(false); spinning = false; }}
+  document.body.classList.add("touring");
+  document.getElementById("viewer-wrap").classList.add("tour-active");
+  document.getElementById("tour-stop").style.display = "inline-flex";
+  document.getElementById("tour-timeline-fill").style.width = "0%";
+
+  // Schedule the entire animation chain
+  var t = 0;
+
+  // Intro phase
+  t += phaseIntro(t);
+
+  // Each mutation
+  tourData.forEach(function(m, i) {{
+    var dur = phaseMutation(t, m, i);
+    t += dur;
+  }});
+
+  // Finale
+  phaseFinale(t);
+}}
+
+function endTour() {{
+  if (!tourActive) return;
+  clearTimers();
+  tourActive = false;
+
+  // Hide tour UI
+  document.getElementById("tour-card").classList.remove("visible");
+  document.getElementById("tour-splash").classList.remove("show");
+  document.getElementById("tour-stop").style.display = "none";
+  document.getElementById("tour-counter").textContent = "";
+  document.getElementById("tour-timeline-fill").style.width = "0%";
+
+  // Exit cinematic mode
+  document.body.classList.remove("touring");
+  document.getElementById("viewer-wrap").classList.remove("tour-active");
+
+  // Restore default view
+  viewer.spin(false);
+  viewer.removeAllLabels();
+  setDefaultView();
+  viewer.zoomTo({{}}, 1200);
+
+  // Resume idle spin
+  setTimeout(function() {{
+    viewer.spin("y", 0.5);
+    spinning = true;
+  }}, 1300);
+}}
+
+// Keyboard: Escape to exit
+document.addEventListener("keydown", function(e) {{
+  if (tourActive && e.key === "Escape") endTour();
 }});
 </script>
 </body>
