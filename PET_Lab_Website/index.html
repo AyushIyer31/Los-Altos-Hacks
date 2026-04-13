@@ -2538,7 +2538,10 @@ function showPDBDetail(d) {
 }
 
 function selectSequenceForOptimize(seq) {
-  document.getElementById('seqInput').value = seq;
+  // Strip non-standard residues before loading into the optimizer
+  const validAA = new Set('ACDEFGHIKLMNPQRSTVWY');
+  const cleaned = seq.toUpperCase().split('').filter(c => validAA.has(c)).join('');
+  document.getElementById('seqInput').value = cleaned;
   updateSeqLength();
   selectedPreset = null;
   renderPresets();
@@ -2666,12 +2669,26 @@ function updatePreheat(fromInput) {
 }
 
 async function runOptimization() {
-  const seq = document.getElementById('seqInput').value.replace(/\s/g, '');
+  const rawSeq = document.getElementById('seqInput').value.replace(/\s/g, '').toUpperCase();
   const errEl = document.getElementById('optError');
   errEl.style.display = 'none';
 
-  if (seq.length < 10) { errEl.textContent = 'Sequence too short. Paste at least 10 amino acids.'; errEl.style.display = 'flex'; return; }
-  if (!/^[ACDEFGHIKLMNPQRSTVWY]+$/.test(seq)) { errEl.textContent = 'Invalid characters. Use only the 20 standard amino acid letters.'; errEl.style.display = 'flex'; return; }
+  // Strip non-standard amino acid characters (X, B, Z, U, O, J, etc.)
+  const validAA = new Set('ACDEFGHIKLMNPQRSTVWY');
+  const seq = rawSeq.split('').filter(c => validAA.has(c)).join('');
+  const stripped = rawSeq.length - seq.length;
+  if (stripped > 0) {
+    document.getElementById('seqInput').value = seq;
+    updateSeqLength();
+    errEl.textContent = `${stripped} non-standard residue(s) (e.g. X, B, Z) removed. Running optimization on ${seq.length} valid amino acids.`;
+    errEl.style.display = 'flex';
+    errEl.style.background = 'rgba(16,185,129,0.06)';
+    errEl.style.borderColor = 'rgba(16,185,129,0.2)';
+    errEl.style.color = 'var(--success)';
+    // Don't return — continue with cleaned sequence
+  }
+
+  if (seq.length < 10) { errEl.textContent = 'Sequence too short — need at least 10 amino acids after removing non-standard residues.'; errEl.style.display = 'flex'; errEl.style.background = ''; errEl.style.borderColor = ''; errEl.style.color = ''; return; }
 
   currentSequence = seq;
   const btn = document.getElementById('runBtn');
