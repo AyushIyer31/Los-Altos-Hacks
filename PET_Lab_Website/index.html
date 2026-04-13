@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NOVA Lab - AI-Powered Protein Optimization</title>
+<title>PET Lab - AI-Powered PET Degradation Enzyme Optimization</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -13,10 +13,10 @@
 /* ── Reset & Base ── */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
-  --primary: #7C8CF8;
-  --primary-light: #9BA6FF;
-  --accent: #C4446A;
-  --accent-light: #D4607F;
+  --primary: #3B6FF5;
+  --primary-light: #5B8CFF;
+  --accent: #E63946;
+  --accent-light: #FF5A66;
   --surface: #08080f;
   --surface-2: #0c0c15;
   --surface-3: #111119;
@@ -27,11 +27,11 @@
   --border: rgba(255,255,255,0.06);
   --warning: #D4A04A;
   --error: #D45555;
-  --success: #7C8CF8;
+  --success: #3B6FF5;
   --radius: 10px;
   --radius-sm: 6px;
-  --glow-primary: rgba(124,140,248,0.08);
-  --glow-accent: rgba(196,68,106,0.08);
+  --glow-primary: rgba(59,111,245,0.08);
+  --glow-accent: rgba(230,57,70,0.08);
 }
 html { scroll-behavior: smooth; }
 body {
@@ -274,7 +274,7 @@ button {
 #splash.transitioning .splash-text { opacity: 0; transform: translateY(-20px); }
 #splash h1 {
   font-size: 64px; font-weight: 900; letter-spacing: 10px;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 30%, #FFFFFF 50%, var(--accent-light) 70%, var(--accent) 100%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   opacity: 0; transform: translateY(16px);
   transition: opacity 0.9s ease, transform 0.9s ease;
@@ -444,7 +444,7 @@ nav button.active {
   color: var(--text-primary);
 }
 .hero-title .gradient-text {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 40%, var(--accent) 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 30%, #FFFFFF 50%, var(--accent-light) 70%, var(--accent) 100%);
   background-size: 200% 200%;
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -1095,9 +1095,9 @@ footer {
   <div class="splash-bg"></div>
   <canvas id="helixCanvas" width="200" height="280"></canvas>
   <div class="splash-text">
-    <h1 id="splashTitle">NOVA</h1>
+    <h1 id="splashTitle">PET</h1>
     <h2 id="splashSub">LAB</h2>
-    <p id="splashTag">AI-Powered Protein Optimization</p>
+    <p id="splashTag">AI-Powered PET Degradation Enzyme Optimization</p>
   </div>
 </div>
 
@@ -1110,8 +1110,8 @@ footer {
       </div>
     </div>
     <div class="logo-text" onclick="showPage('home')" style="cursor:pointer">
-      <h3>NOVA Lab</h3>
-      <span>AI-Powered Protein Optimization</span>
+      <h3>PET Lab</h3>
+      <span>AI-Powered PET Degradation Enzyme Optimization</span>
     </div>
     <nav>
       <button class="active" onclick="showPage('home')">Home</button>
@@ -1149,9 +1149,9 @@ footer {
       <div id="heroProteinViewer"></div>
     </div>
     <div class="hero-content">
-      <div class="hero-tag reveal reveal-delay-1"><span class="accent">NOVA Lab</span> &mdash; Protein Engineering Platform</div>
-      <h1 class="hero-title reveal reveal-delay-2"><span class="gradient-text">Redesign<br>proteins.<br>Save lives.</span></h1>
-      <p class="hero-subtitle reveal reveal-delay-3">AI-driven protein optimization that adapts its criteria to the biological goal &mdash; from plastic degradation to disease therapeutics.</p>
+      <div class="hero-tag reveal reveal-delay-1"><span class="accent">PET Lab</span> &mdash; Plastic Degradation Enzyme Platform</div>
+      <h1 class="hero-title reveal reveal-delay-2"><span class="gradient-text">Redesign<br>enzymes.<br>End plastic waste.</span></h1>
+      <p class="hero-subtitle reveal reveal-delay-3">AI-driven engineering of PETase variants optimized for catalytic activity, thermal stability, and binding at industrial recycling temperatures.</p>
       <div class="hero-cta-row reveal reveal-delay-4">
         <button class="hero-cta hero-cta-primary" onclick="showPage('optimize')">Start designing</button>
         <button class="hero-cta hero-cta-secondary" onclick="showPage('browse')">Explore database</button>
@@ -1173,42 +1173,6 @@ footer {
     <div class="hero-scroll-hint">
       <span>SCROLL</span>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-    </div>
-  </div>
-
-  <!-- ── SECTION: Application Pathways (Editorial Split Panels) ── -->
-  <div class="home-section">
-    <div class="container">
-      <div class="reveal" style="text-align:center;margin-bottom:56px">
-        <div class="section-eyebrow" style="color:var(--primary)">Application Pathways</div>
-        <h2 class="section-title" style="text-align:center">Two modes. One platform.</h2>
-        <div class="section-rule center"></div>
-        <p class="section-subtitle center">The system adapts its optimization criteria to match the biological goal.</p>
-      </div>
-      <div class="editorial-panel reveal">
-        <div class="editorial-panel-item" onclick="setAppMode('pet');showPage('browse')">
-          <div class="panel-eyebrow" style="color:var(--primary)">PET Plastic</div>
-          <h3>Degradation enzymes</h3>
-          <p>Optimize PETase variants for catalytic activity, thermal stability, and substrate binding at industrial temperatures.</p>
-          <div class="panel-tags">
-            <span class="panel-tag" style="background:rgba(124,140,248,0.08);color:var(--primary)">Catalytic Activity</span>
-            <span class="panel-tag" style="background:rgba(124,140,248,0.08);color:var(--primary)">Thermal Stability</span>
-            <span class="panel-tag" style="background:rgba(124,140,248,0.08);color:var(--primary)">PET Binding</span>
-          </div>
-          <div class="panel-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m9 18 6-6-6-6"/></svg></div>
-        </div>
-        <div class="editorial-panel-item" onclick="setAppMode('disease');showPage('browse')">
-          <div class="panel-eyebrow" style="color:var(--accent)">Disease Proteins</div>
-          <h3>Therapeutic optimization</h3>
-          <p>Reduce aggregation, improve structural stability, and increase solubility in disease-related proteins like SOD1.</p>
-          <div class="panel-tags">
-            <span class="panel-tag" style="background:rgba(196,68,106,0.08);color:var(--accent)">Aggregation</span>
-            <span class="panel-tag" style="background:rgba(196,68,106,0.08);color:var(--accent)">Stability</span>
-            <span class="panel-tag" style="background:rgba(196,68,106,0.08);color:var(--accent)">Solubility</span>
-          </div>
-          <div class="panel-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m9 18 6-6-6-6"/></svg></div>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -1236,7 +1200,7 @@ footer {
         <div class="timeline-step reveal reveal-delay-3">
           <div class="timeline-dot"></div>
           <h4>Score every mutation</h4>
-          <p>6,000+ amino acid swaps scored with context-specific criteria &mdash; thermal stability for PET, aggregation for disease.</p>
+          <p>6,000+ amino acid swaps scored for thermal stability, catalytic activity, and PET binding affinity.</p>
         </div>
         <div class="timeline-step reveal reveal-delay-4">
           <div class="timeline-dot"></div>
@@ -1262,13 +1226,13 @@ footer {
       <div style="max-width:600px;margin:0 auto">
         <div class="action-card reveal reveal-delay-1" onclick="showPage('browse')">
           <div class="action-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div>
-          <div><h4>Browse Database</h4><p>Explore proteins across PET degradation and disease contexts</p></div>
+          <div><h4>Browse Database</h4><p>Explore PET-degrading enzymes from RCSB PDB</p></div>
           <div class="action-trail">200+</div>
           <div class="action-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m9 18 6-6-6-6"/></svg></div>
         </div>
         <div class="action-card reveal reveal-delay-2" onclick="showPage('optimize')">
           <div class="action-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v8"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m8 6 4-4 4 4"/><path d="M16 18a4 4 0 0 0-8 0"/></svg></div>
-          <div><h4>Design Protein</h4><p>AI-powered mutation optimization for your application context</p></div>
+          <div><h4>Design Enzyme</h4><p>AI-powered mutation optimization for PET degradation</p></div>
           <div class="action-trail">ESM-2</div>
           <div class="action-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m9 18 6-6-6-6"/></svg></div>
         </div>
@@ -1282,35 +1246,11 @@ footer {
     </div>
   </div>
 
-  <!-- ── SECTION: Why Two Modes ── -->
-  <div class="home-section" style="border-top:1px solid var(--border)">
-    <div class="container" style="max-width:800px">
-      <div class="reveal" style="text-align:center;margin-bottom:48px">
-        <div class="section-eyebrow">Context Matters</div>
-        <h2 class="section-title" style="text-align:center">Context changes<br>everything.</h2>
-        <div class="section-rule center"></div>
-      </div>
-      <div class="feature-grid reveal">
-        <div class="feature-card">
-          <div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 19H4.815a1.83 1.83 0 0 1-1.57-.881 1.785 1.785 0 0 1-.004-1.784L7.196 9.5"/><path d="M11 19h8.203a1.83 1.83 0 0 0 1.556-.89 1.784 1.784 0 0 0 0-1.775l-1.226-2.12"/><path d="m14 16-3 3 3 3"/><path d="M8.293 13.596 7.196 9.5 3.1 10.598"/><path d="m9.344 5.811 1.093-1.892A1.83 1.83 0 0 1 12 3a1.83 1.83 0 0 1 1.563.91l3.904 6.59"/><path d="m21 13.5-2.7-1.6"/></svg></div>
-          <h4>PET Plastic</h4>
-          <p>Natural PETase denatures above 40&deg;C. Industrial recycling requires 60&ndash;70&deg;C. The AI targets catalytic activity, thermal stability, and PET binding affinity.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 15c6.667-6 13.333 0 20-6"/><path d="M9 22c1.798-1.998 2.518-3.995 2.807-5.993"/><path d="M15 2c-1.798 1.998-2.518 3.995-2.807 5.993"/><path d="m17 6-2.5-2.5"/><path d="m14 8-1-1"/><path d="m7 18 2.5 2.5"/><path d="m3.5 14.5.5.5"/><path d="m20 9 .5.5"/></svg></div>
-          <h4>Disease Proteins</h4>
-          <p>SOD1 misfolds and aggregates in ALS. The AI targets reduced aggregation, improved structural stability, and preserved native function.</p>
-        </div>
-      </div>
-      <p class="reveal" style="font-size:13px;color:var(--text-tertiary);line-height:1.7;text-align:center;margin-top:32px;max-width:520px;margin-left:auto;margin-right:auto">Switching application context changes the scoring criteria to match the biological goal &mdash; one platform, purpose-built for both.</p>
-    </div>
-  </div>
-
   <!-- ── FOOTER CTA (minimal closing) ── -->
   <div class="home-section" style="padding:100px 24px;text-align:center;border-top:1px solid var(--border)">
     <div class="container reveal">
       <div class="section-eyebrow" style="margin-bottom:16px">Built by high school researchers</div>
-      <h2 style="font-size:clamp(24px,3vw,34px);font-weight:800;letter-spacing:-1px;margin-bottom:28px;color:var(--text-primary)">Meet the team behind NOVA Lab</h2>
+      <h2 style="font-size:clamp(24px,3vw,34px);font-weight:800;letter-spacing:-1px;margin-bottom:28px;color:var(--text-primary)">Meet the team behind PET Lab</h2>
       <button class="hero-cta hero-cta-secondary" onclick="showPage('about')" style="display:inline-block">About us</button>
     </div>
   </div>
@@ -1325,17 +1265,7 @@ footer {
       <div id="pdbCount" style="font-size:12px;font-weight:700;color:var(--primary);background:rgba(124,140,248,0.08);padding:4px 10px;border-radius:8px"></div>
     </div>
 
-    <!-- Context Switch -->
-    <div id="browseContextSwitch" style="display:flex;gap:4px;padding:4px;background:var(--surface);border-radius:12px;margin-bottom:16px;border:1px solid var(--border)">
-      <button id="ctxBtn_pet" onclick="switchBrowseContext('pet')" style="flex:1;padding:10px 16px;border-radius:10px;border:none;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;background:var(--primary);color:white">
-        PET Plastic
-      </button>
-      <button id="ctxBtn_disease" onclick="switchBrowseContext('disease')" style="flex:1;padding:10px 16px;border-radius:10px;border:none;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;background:transparent;color:var(--text-secondary)">
-        Disease
-      </button>
-    </div>
-
-    <!-- PET Plastic content (default) -->
+    <!-- PET Plastic content -->
     <div id="browseContent_pet">
       <div style="position:relative">
         <input class="search-bar" id="pdbSearch" placeholder="Search local database or type to search RCSB PDB live..." oninput="filterPDB()" onkeydown="if(event.key==='Enter')searchRCSBLive()">
@@ -1347,36 +1277,14 @@ footer {
       <div id="pdbLoading" class="loading-center"><div class="spinner-lg"></div><span>Fetching from RCSB Protein Data Bank...</span></div>
     </div>
 
-    <!-- Disease content -->
-    <div id="browseContent_disease" style="display:none">
-      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;line-height:1.5">Disease-related proteins with optimization targets for stability, solubility, and function preservation.</p>
-
-      <div id="diseaseSearch" style="position:relative;margin-bottom:16px">
-        <input class="search-bar" id="diseaseSearchInput" placeholder="Search disease proteins..." oninput="filterDiseaseProteins()">
-      </div>
-
-      <div class="filter-chips" id="diseaseFilterChips"></div>
-      <div id="diseaseResultCount" style="font-size:12px;font-weight:600;color:var(--text-tertiary);margin-bottom:12px"></div>
-      <div class="pdb-grid" id="diseaseGrid"></div>
-    </div>
   </div>
 </div>
 
 <!-- ════════ OPTIMIZE PAGE ════════ -->
 <div id="page-optimize" class="page">
   <div class="container">
-    <h2 style="font-size:22px;font-weight:700;margin-bottom:4px" id="optimizeTitle">Design Better Protein</h2>
-    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px" id="optimizeSubtitle">Optimization criteria adapt to your selected application context.</p>
-
-    <!-- Optimize Mode Switch -->
-    <div id="optimizeContextSwitch" style="display:flex;gap:4px;padding:4px;background:var(--surface);border-radius:12px;margin-bottom:16px;border:1px solid var(--border)">
-      <button id="optCtxBtn_pet" onclick="switchOptimizeContext('pet')" style="flex:1;padding:10px 16px;border-radius:10px;border:none;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;background:var(--primary);color:white">
-        PET Plastic
-      </button>
-      <button id="optCtxBtn_disease" onclick="switchOptimizeContext('disease')" style="flex:1;padding:10px 16px;border-radius:10px;border:none;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;background:transparent;color:var(--text-secondary)">
-        Disease
-      </button>
-    </div>
+    <h2 style="font-size:22px;font-weight:700;margin-bottom:4px" id="optimizeTitle">Design Better PETase</h2>
+    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px" id="optimizeSubtitle">Optimize for catalytic activity, thermal stability, and PET binding.</p>
 
     <!-- Scoring criteria display -->
     <div id="scoringCriteria" class="card" style="margin-bottom:16px;padding:14px 18px;background:rgba(124,140,248,0.04);border:1px solid rgba(124,140,248,0.12)">
@@ -1479,8 +1387,8 @@ footer {
 
     </div><!-- end petConditions -->
 
-    <!-- Disease-specific conditions -->
-    <div id="diseaseConditions" style="display:none">
+    <!-- Disease-specific conditions (removed) -->
+    <div id="diseaseConditions" style="display:none" hidden>
       <div class="section-label" style="margin-top:24px">OPTIMIZATION PARAMETERS</div>
       <p style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;line-height:1.4">Configure optimization targets for disease-related protein engineering.</p>
 
@@ -1557,7 +1465,7 @@ footer {
   <div class="container">
     <div class="about-header">
       <h2>Meet the Team</h2>
-      <p>High school researchers building a context-aware protein engineering platform for both environmental and biomedical applications.</p>
+      <p>High school researchers building an AI-powered platform to engineer PET-degrading enzymes for industrial plastic recycling.</p>
     </div>
 
     <div class="team-grid">
@@ -1565,19 +1473,19 @@ footer {
         <img src="images/ayush.png" alt="Ayush Iyer" class="team-photo">
         <h3>Ayush Iyer</h3>
         <div class="team-role">CO-FOUNDER</div>
-        <p class="team-bio">High school researcher and developer focused on applying artificial intelligence to solve real-world challenges in biotechnology. As the founder of NOVA Lab, Ayush built a context-aware protein engineering platform using protein language models and machine learning to optimize proteins for different biological goals &mdash; from engineering thermostable PETase enzymes for plastic recycling to stabilizing disease-related proteins like SOD1. His work focuses on bridging computational modeling with both environmental and biomedical applications, reducing the time required for protein optimization from years to seconds. Beyond NOVA Lab, Ayush has led multiple technology projects, including a firefighter tracking system and a youth-focused sports platform, reflecting his passion for building scalable, impact-driven solutions.</p>
+        <p class="team-bio">High school researcher and developer focused on applying artificial intelligence to solve real-world challenges in biotechnology. As the founder of PET Lab, Ayush built a protein engineering platform using protein language models and machine learning to engineer thermostable PETase enzymes for industrial plastic recycling. His work focuses on bridging computational modeling with environmental applications, reducing the time required for enzyme optimization from years to seconds. Beyond PET Lab, Ayush has led multiple technology projects, including a firefighter tracking system and a youth-focused sports platform, reflecting his passion for building scalable, impact-driven solutions.</p>
       </div>
       <div class="team-card">
         <img src="images/abhinav.jpeg" alt="Abhinav Iyer" class="team-photo">
         <h3>Abhinav Iyer</h3>
         <div class="team-role">CO-FOUNDER</div>
-        <p class="team-bio">Computational biology researcher interested in applying advanced modeling techniques to biological systems. As the co-founder of NOVA Lab, Abhinav contributes a strong foundation in data analysis, scientific modeling, and biological systems understanding to guide protein design and validation across both environmental and disease contexts. He has conducted research in computational chemistry and genomics, including molecular dynamics simulations of protein structures and analysis of viral RNA for therapeutic targeting. His work integrates principles from biology, chemistry, and computation, with the goal of developing innovative solutions to complex biomedical and environmental challenges.</p>
+        <p class="team-bio">Computational biology researcher interested in applying advanced modeling techniques to biological systems. As the co-founder of PET Lab, Abhinav contributes a strong foundation in data analysis, scientific modeling, and biological systems understanding to guide enzyme design and validation for PET degradation. He has conducted research in computational chemistry and genomics, including molecular dynamics simulations of protein structures. His work integrates principles from biology, chemistry, and computation, with the goal of developing innovative solutions to environmental challenges through protein engineering.</p>
       </div>
     </div>
 
     <div class="about-mission">
       <h3>Our Mission</h3>
-      <p>NOVA Lab is a context-aware protein optimization platform designed for both environmental and biomedical applications. Rather than optimizing every protein with the same fixed criteria, we change our evaluation strategy depending on the selected biological context. For plastic degradation, we engineer thermostable PETase enzymes for industrial-scale recycling. For disease applications, we optimize proteins like SOD1 for stability, solubility, and preserved function &mdash; addressing challenges in diseases like ALS. One platform, two impact pathways.</p>
+      <p>PET Lab is an AI-powered enzyme engineering platform focused on the global plastic waste crisis. We design thermostable PETase variants for industrial-scale recycling &mdash; optimizing catalytic activity, thermal stability, and PET binding at the temperatures real recycling plants operate at. By fusing protein language models with gradient-boosted mutation scoring, we compress years of wet-lab iteration into seconds of compute.</p>
       <div class="about-highlights">
         <div class="about-highlight"><div class="val">80%</div><div class="lbl">ML Accuracy</div></div>
         <div class="about-highlight"><div class="val">52,275</div><div class="lbl">Training Mutations</div></div>
@@ -1616,10 +1524,10 @@ const PRESETS = [
 ];
 
 const FAMILY_COLORS = {
-  'PETase': '#1A7FC4', 'Cutinase': '#1B98E0', 'LCC Variant': '#9B59B6',
+  'PETase': '#1A7FC4', 'Cutinase': '#1B98E0', 'LCC Variant': '#E63946',
   'Ancestral PETase': '#E67E22', 'Thermostable Hydrolase': '#E74C3C',
   'Novel PET Hydrolase': '#2ECC71', 'MHETase': '#F39C12',
-  'Lipase / Esterase': '#16A085', 'PHB Depolymerase': '#8E44AD',
+  'Lipase / Esterase': '#16A085', 'PHB Depolymerase': '#C1121F',
   'Feruloyl Esterase': '#D35400', 'Related Hydrolase': '#9AA5B4',
 };
 
@@ -1665,12 +1573,12 @@ const DISEASE_PRESETS = [
 
 const DISEASE_FAMILIES = {
   'ALS': '#E74C3C',
-  'Cancer': '#9B59B6',
+  'Cancer': '#E63946',
   "Parkinson's": '#E67E22',
   "Alzheimer's": '#3498DB',
   'Cystic Fibrosis': '#2ECC71',
   'Sickle Cell': '#C0392B',
-  'Prion Disease': '#8E44AD',
+  'Prion Disease': '#C1121F',
   'Diabetes': '#F39C12',
   "Gaucher's": '#16A085',
   'PKU': '#D35400',
@@ -1847,7 +1755,7 @@ let chartInstance = null;
   const CONNECT_DIST = 140;
   const colors = [
     [124, 140, 248],  // primary blue
-    [167, 139, 250],  // purple
+    [230, 57, 70],  // red
     [196, 68, 106],   // pink
     [56, 189, 248],   // cyan
     [52, 211, 153],   // green
@@ -1948,7 +1856,7 @@ let chartInstance = null;
 // ═══════════════════════════════════════════════════════════
 (function animateSplash() {
   // ── Shared helix drawing function ──
-  const red = '#C4446A', blue = '#7C8CF8';
+  const red = '#E63946', blue = '#3B6FF5';
 
   function drawHelix(ctx, W, H, phase, opts) {
     const cx = W / 2;
@@ -1964,8 +1872,8 @@ let chartInstance = null;
     // Soft center glow
     if (opts.glow) {
       const g = ctx.createRadialGradient(cx, H * 0.45, 0, cx, H * 0.45, opts.glow);
-      g.addColorStop(0, 'rgba(124,140,248,0.1)');
-      g.addColorStop(1, 'rgba(124,140,248,0)');
+      g.addColorStop(0, 'rgba(59,111,245,0.1)');
+      g.addColorStop(1, 'rgba(59,111,245,0)');
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, W, H);
     }
@@ -1980,7 +1888,7 @@ let chartInstance = null;
         ctx.beginPath();
         ctx.moveTo(cx + w, y);
         ctx.lineTo(cx - w, y);
-        ctx.strokeStyle = 'rgba(124,140,248,0.2)';
+        ctx.strokeStyle = 'rgba(59,111,245,0.2)';
         ctx.lineWidth = bondW;
         ctx.stroke();
       }
@@ -2134,7 +2042,7 @@ function startLogoHelix() {
   if (!c) return;
   const ctx = c.getContext('2d');
   const W = c.width, H = c.height;
-  const rose = '#C4446A', indigo = '#7C8CF8';
+  const rose = '#E63946', indigo = '#3B6FF5';
   let phase = 0;
 
   function tick() {
@@ -2152,8 +2060,8 @@ function startLogoHelix() {
       const angle = t * Math.PI * twists * 2 + phase;
       const sinA = Math.sin(angle);
       const cosA = Math.cos(angle);
-      points.push({ x: cx + sinA * amp, y, depth: cosA, color: rose, glow: 'rgba(196,68,106,0.35)', strand: 0, t });
-      points.push({ x: cx - sinA * amp, y, depth: -cosA, color: indigo, glow: 'rgba(124,140,248,0.35)', strand: 1, t });
+      points.push({ x: cx + sinA * amp, y, depth: cosA, color: rose, glow: 'rgba(230,57,70,0.35)', strand: 0, t });
+      points.push({ x: cx - sinA * amp, y, depth: -cosA, color: indigo, glow: 'rgba(59,111,245,0.35)', strand: 1, t });
     }
 
     // Draw bonds (rungs) between strands
@@ -2181,7 +2089,7 @@ function startLogoHelix() {
           else ctx.lineTo(p.x, p.y);
         }
         const baseColor = si === 0 ? rose : indigo;
-        const glowColor = si === 0 ? 'rgba(196,68,106,0.3)' : 'rgba(124,140,248,0.3)';
+        const glowColor = si === 0 ? 'rgba(230,57,70,0.3)' : 'rgba(59,111,245,0.3)';
         ctx.strokeStyle = baseColor;
         ctx.lineWidth = pass ? 4.5 : 2.5;
         ctx.globalAlpha = pass ? 1.0 : 0.35;
@@ -2228,8 +2136,7 @@ function showPage(name) {
   const mIdx = { home: 0, browse: 1, optimize: 2, about: 3 }[name];
   if (mIdx !== undefined) document.querySelectorAll('.mobile-nav button')[mIdx]?.classList.add('active');
   if (name === 'browse') {
-    if (appMode === 'pet' && pdbData.length === 0) loadPDB();
-    if (appMode === 'disease') renderDiseaseProteins();
+    if (pdbData.length === 0) loadPDB();
   }
   window.scrollTo(0, 0);
 }
@@ -2238,95 +2145,18 @@ function mobileNav(name, btn) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// App Mode Switching
+// App Mode (PET-only)
 // ═══════════════════════════════════════════════════════════
-function setAppMode(mode) {
-  appMode = mode;
-  // Sync browse context
-  switchBrowseContext(mode);
-  // Sync optimize context
-  switchOptimizeContext(mode);
-}
-
-function switchBrowseContext(mode) {
-  appMode = mode;
-  const petBtn = document.getElementById('ctxBtn_pet');
-  const diseaseBtn = document.getElementById('ctxBtn_disease');
-  const petContent = document.getElementById('browseContent_pet');
-  const diseaseContent = document.getElementById('browseContent_disease');
-
-  if (mode === 'pet') {
-    petBtn.style.background = 'var(--primary)'; petBtn.style.color = 'white';
-    diseaseBtn.style.background = 'transparent'; diseaseBtn.style.color = 'var(--text-secondary)';
-    petContent.style.display = 'block'; diseaseContent.style.display = 'none';
-    if (pdbData.length === 0) loadPDB();
-  } else {
-    diseaseBtn.style.background = 'var(--accent)'; diseaseBtn.style.color = 'white';
-    petBtn.style.background = 'transparent'; petBtn.style.color = 'var(--text-secondary)';
-    petContent.style.display = 'none'; diseaseContent.style.display = 'block';
-    renderDiseaseProteins();
-  }
-  // Sync optimize context
-  syncOptimizeContext(mode);
-}
-
-function switchOptimizeContext(mode) {
-  appMode = mode;
-  syncOptimizeContext(mode);
-  // Also sync browse context buttons
-  const petBtn = document.getElementById('ctxBtn_pet');
-  const diseaseBtn = document.getElementById('ctxBtn_disease');
-  if (mode === 'pet') {
-    petBtn.style.background = 'var(--primary)'; petBtn.style.color = 'white';
-    diseaseBtn.style.background = 'transparent'; diseaseBtn.style.color = 'var(--text-secondary)';
-  } else {
-    diseaseBtn.style.background = 'var(--accent)'; diseaseBtn.style.color = 'white';
-    petBtn.style.background = 'transparent'; petBtn.style.color = 'var(--text-secondary)';
-  }
-}
-
-function syncOptimizeContext(mode) {
-  const optPetBtn = document.getElementById('optCtxBtn_pet');
-  const optDiseaseBtn = document.getElementById('optCtxBtn_disease');
-  const petConds = document.getElementById('petConditions');
-  const diseaseConds = document.getElementById('diseaseConditions');
-  const scoringTags = document.getElementById('scoringTags');
-  const scoringCard = document.getElementById('scoringCriteria');
-  const presetHint = document.getElementById('presetHint');
-
-  if (mode === 'pet') {
-    optPetBtn.style.background = 'var(--primary)'; optPetBtn.style.color = 'white';
-    optDiseaseBtn.style.background = 'transparent'; optDiseaseBtn.style.color = 'var(--text-secondary)';
-    petConds.style.display = 'block'; diseaseConds.style.display = 'none';
-    scoringCard.style.background = 'rgba(124,140,248,0.04)'; scoringCard.style.borderColor = 'rgba(124,140,248,0.12)';
-    scoringTags.innerHTML = `
-      <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(124,140,248,0.08);color:var(--primary)">Catalytic Activity</span>
-      <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(124,140,248,0.08);color:var(--primary)">Thermal Stability</span>
-      <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(124,140,248,0.08);color:var(--primary)">pH Tolerance</span>
-      <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(124,140,248,0.08);color:var(--primary)">PET Binding</span>`;
-    presetHint.textContent = 'Pick a known enzyme or paste your own sequence below';
-    selectedPreset = null;
-    renderPresets();
-  } else {
-    optDiseaseBtn.style.background = 'var(--accent)'; optDiseaseBtn.style.color = 'white';
-    optPetBtn.style.background = 'transparent'; optPetBtn.style.color = 'var(--text-secondary)';
-    petConds.style.display = 'none'; diseaseConds.style.display = 'block';
-    scoringCard.style.background = 'rgba(196,68,106,0.04)'; scoringCard.style.borderColor = 'rgba(196,68,106,0.12)';
-    scoringTags.innerHTML = `
-      <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(196,68,106,0.08);color:var(--accent)">Aggregation Reduction</span>
-      <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(196,68,106,0.08);color:var(--accent)">Structural Stability</span>
-      <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(196,68,106,0.08);color:var(--accent)">Solubility</span>
-      <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(196,68,106,0.08);color:var(--accent)">Function Preservation</span>`;
-    presetHint.textContent = 'Pick a disease-related protein or paste your own sequence below';
-    selectedPreset = null;
-    renderDiseasePresets();
-  }
-}
+function setAppMode(mode) { appMode = 'pet'; }
+function switchBrowseContext(mode) { if (pdbData.length === 0) loadPDB(); }
+function switchOptimizeContext(mode) {}
+function syncOptimizeContext(mode) {}
 
 // ═══════════════════════════════════════════════════════════
-// Disease Protein Browser
+// Disease Protein Browser (disabled — PET-only build)
 // ═══════════════════════════════════════════════════════════
-function renderDiseaseProteins() {
+function renderDiseaseProteins() { return;
+  // legacy:
   const q = (document.getElementById('diseaseSearchInput')?.value || '').toLowerCase();
   const filtered = DISEASE_PRESETS.filter(d => {
     const matchFam = selectedDiseaseFamily === 'All' || d.disease === selectedDiseaseFamily;
@@ -2486,18 +2316,19 @@ fetch(API + '/classifier/info').catch(() => {});
 // PDB Browser
 // ═══════════════════════════════════════════════════════════
 async function loadPDB() {
-  if (pdbData.length > 0) return; // already loaded
+  if (pdbData.length > 0) return;
   document.getElementById('pdbLoading').style.display = 'flex';
+  document.getElementById('pdbLoading').querySelector('span').textContent = 'Fetching PET-degrading enzymes live from RCSB Protein Data Bank...';
   document.getElementById('pdbGrid').innerHTML = '';
   try {
-    // Load from static JSON file — no backend needed
-    const r = await fetch('pdb_data.json');
+    const r = await fetch(API + '/pdb/search');
+    if (!r.ok) throw new Error('Backend returned ' + r.status);
     pdbData = await r.json();
-    document.getElementById('pdbCount').textContent = pdbData.length + ' structures';
+    document.getElementById('pdbCount').textContent = pdbData.length + ' live structures';
     buildFamilyChips();
     renderPDB();
   } catch (e) {
-    document.getElementById('pdbGrid').innerHTML = '<div class="loading-center" style="grid-column:1/-1"><p>Could not load protein database.</p></div>';
+    document.getElementById('pdbGrid').innerHTML = '<div class="loading-center" style="grid-column:1/-1"><p>Could not reach RCSB via backend. Ensure the API server is running at ' + API + '.</p></div>';
   }
   document.getElementById('pdbLoading').style.display = 'none';
 }
@@ -2891,7 +2722,7 @@ function renderResults() {
   const seqLen = R.original_sequence.length;
   const totalScanned = seqLen * 19;
   const info = R.classifier_info || {};
-  const isDiseaseMode = appMode === 'disease';
+  const isDiseaseMode = false;
 
   // Environmental simulation — factors account for AI mutations
   const env = R._env || { temperature: 60, crystallinity: 0.1, contaminant_level: 0, contaminant_type: 'none' };
@@ -3323,10 +3154,10 @@ function showHowItWorks() {
     <div class="modal-handle"></div>
     <h3 style="font-size:22px;font-weight:800;letter-spacing:-0.5px;margin-bottom:6px">How the Pipeline Works</h3>
     <p style="font-size:14px;color:var(--text-secondary);margin-bottom:28px">From raw protein data to engineered enzymes in 5 steps</p>
-    <div class="pipeline-step"><div class="pipeline-num">1</div><div><h5>Collect Known Proteins</h5><p>Pull real protein structures from the RCSB Protein Data Bank &mdash; 200,000+ structures worldwide. The platform supports both plastic-degrading enzymes and disease-related proteins.</p></div></div>
+    <div class="pipeline-step"><div class="pipeline-num">1</div><div><h5>Collect Known Proteins</h5><p>Pull real protein structures from the RCSB Protein Data Bank &mdash; 200,000+ structures worldwide. The platform focuses on plastic-degrading enzymes like PETase, cutinase, and LCC.</p></div></div>
     <div class="pipeline-step"><div class="pipeline-num">2</div><div><h5>Understand with AI</h5><p>Meta's ESM-2 (650M parameters, trained on 250M proteins) reads the amino acid sequence and learns how each residue contributes to function.</p></div></div>
-    <div class="pipeline-step"><div class="pipeline-num">3</div><div><h5>Find Helpful Mutations</h5><p>The AI scores every possible amino acid swap &mdash; 6,000+ options for a typical protein. Scoring criteria adapt to the selected application (PET degradation vs. disease protein optimization).</p></div></div>
-    <div class="pipeline-step"><div class="pipeline-num">4</div><div><h5>Combine and Rank</h5><p>Top mutations are combined into multi-mutation candidates scored using context-specific criteria: thermal stability and catalytic speed for PET, or aggregation reduction and solubility for disease.</p></div></div>
+    <div class="pipeline-step"><div class="pipeline-num">3</div><div><h5>Find Helpful Mutations</h5><p>The AI scores every possible amino acid swap &mdash; 6,000+ options for a typical protein. Scoring criteria target thermal stability, catalytic activity, and PET binding affinity.</p></div></div>
+    <div class="pipeline-step"><div class="pipeline-num">4</div><div><h5>Combine and Rank</h5><p>Top mutations are combined into multi-mutation candidates scored on thermal stability and catalytic speed for PET degradation.</p></div></div>
     <div class="pipeline-step"><div class="pipeline-num">5</div><div><h5>Output for the Lab</h5><p>Top-ranked candidates are returned with full sequences ready for gene synthesis and experimental validation.</p></div></div>
   `;
   document.getElementById('modal').classList.add('show');
@@ -3462,7 +3293,7 @@ function show3DViewer(mutations) {
       <strong style="color:var(--text-secondary)">Structure source:</strong> ${useESMFold
         ? 'ESMFold AI prediction (Lin et al., 2023). Structure predicted from amino acid sequence using Meta\'s ESM-2 protein language model.'
         : 'RCSB Protein Data Bank (rcsb.org), PDB ID: ' + validPdb.toUpperCase() + '.'}
-      Visualized with 3Dmol.js (Rego & Koes, 2015). Mutation sites predicted by NOVA Lab ML pipeline.
+      Visualized with 3Dmol.js (Rego & Koes, 2015). Mutation sites predicted by PET Lab ML pipeline.
     </div>
 
     <p style="font-size:11px;color:var(--text-tertiary);margin-top:8px;text-align:center">Drag to rotate &middot; Scroll to zoom &middot; Right-drag to pan</p>
