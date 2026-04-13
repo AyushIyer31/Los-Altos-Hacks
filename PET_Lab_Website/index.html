@@ -3368,6 +3368,7 @@ function show3DViewer(mutations) {
           <button onclick="focusMutations()" class="viewer-btn" title="Zoom to mutation sites" style="background:rgba(231,76,69,0.3);color:#fff">Focus Mutations</button>
           <button onclick="resetView()" class="viewer-btn" title="Reset camera">Reset</button>
           ${parsedMuts.length > 0 ? `<button onclick="startGuidedTour()" id="btn3d_tour" class="viewer-btn" title="Guided mutation tour" style="background:rgba(59,111,245,0.4);color:#fff;border-color:rgba(59,111,245,0.5)">Guided Tour</button>` : ''}
+          <button onclick="downloadPDB()" class="viewer-btn" title="Download structure as PDB file" style="background:rgba(16,185,129,0.35);color:#fff;border-color:rgba(16,185,129,0.5)">&#8681; Download PDB</button>
         </div>
       </div>
     </div>
@@ -3452,6 +3453,25 @@ function show3DViewer(mutations) {
         }
       });
   }, 100);
+}
+
+function downloadPDB() {
+  const data = window._3dPdbData;
+  if (!data) {
+    alert('Structure not loaded yet — please wait for the 3D model to finish loading.');
+    return;
+  }
+  const muts = (window._3dMutations || []).map(m => m.label).join('_') || 'wildtype';
+  const preset = PRESETS.find(p => p.name === selectedPreset);
+  const enzyme = preset ? preset.name.replace(/\s+/g, '_') : 'enzyme';
+  const filename = `${enzyme}_${muts}.pdb`;
+  const blob = new Blob([data], { type: 'chemical/x-pdb' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function applyViewerStyle(style) {
