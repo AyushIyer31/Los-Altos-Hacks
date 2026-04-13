@@ -3780,9 +3780,11 @@ showPage = function(name) {
 
   function parseTarget(el) {
     const text = el.textContent.trim();
-    const suffix = text.replace(/[\d,.]+/, '');
-    const numStr = text.replace(/[^\d.]/g, '');
-    return { num: parseFloat(numStr), suffix, decimals: numStr.includes('.') ? 1 : 0 };
+    const prefix = text.match(/^[^\d]*/)?.[0] || '';
+    const rest = text.slice(prefix.length);
+    const suffix = rest.replace(/[\d,.]+/, '');
+    const numStr = rest.replace(/[^\d.]/g, '');
+    return { num: parseFloat(numStr), prefix, suffix, decimals: numStr.includes('.') ? 1 : 0 };
   }
 
   function formatNum(n, decimals) {
@@ -3800,7 +3802,7 @@ showPage = function(name) {
     entries.forEach(entry => {
       if (!entry.isIntersecting || entry.target.dataset.counted) return;
       entry.target.dataset.counted = '1';
-      const { num, suffix, decimals } = parseTarget(entry.target);
+      const { num, prefix, suffix, decimals } = parseTarget(entry.target);
       const duration = 2200;
       const start = performance.now();
 
@@ -3809,11 +3811,11 @@ showPage = function(name) {
         const progress = Math.min(elapsed / duration, 1);
         const eased = springEase(progress);
         const current = num * Math.min(eased, 1.15); // allow slight overshoot visual
-        entry.target.textContent = formatNum(Math.min(current, num * 1.08), decimals) + suffix;
+        entry.target.textContent = prefix + formatNum(Math.min(current, num * 1.08), decimals) + suffix;
         if (progress < 1) {
           requestAnimationFrame(tick);
         } else {
-          entry.target.textContent = formatNum(num, decimals) + suffix;
+          entry.target.textContent = prefix + formatNum(num, decimals) + suffix;
         }
       }
       requestAnimationFrame(tick);
