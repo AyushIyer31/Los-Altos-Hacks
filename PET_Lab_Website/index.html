@@ -25,7 +25,7 @@
   --text-secondary: #70708A;
   --text-tertiary: #444460;
   --border: rgba(255,255,255,0.06);
-  --warning: #D4A04A;
+  --warning: #E8621A;
   --error: #D45555;
   --success: #3B6FF5;
   --radius: 10px;
@@ -33,6 +33,7 @@
   --glow-primary: rgba(59,111,245,0.08);
   --glow-accent: rgba(230,57,70,0.08);
 }
+
 html { scroll-behavior: smooth; }
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -403,20 +404,104 @@ nav button.active {
   display: flex; align-items: center;
   position: relative; overflow: hidden;
   padding: 140px 0 100px;
-  background: var(--surface);
+  background: linear-gradient(135deg, #060612 0%, #08080f 50%, #0f0610 100%);
+}
+
+/* Floating gradient orbs */
+.hero-orb {
+  position: absolute; border-radius: 50%;
+  pointer-events: none;
+  will-change: transform;
+}
+/* Blue core glow — sits centered on the protein */
+.hero-orb-1 {
+  width: 580px; height: 580px;
+  background: radial-gradient(circle, rgba(59,111,245,0.30) 0%, rgba(59,111,245,0.08) 50%, transparent 70%);
+  top: 50%; right: 15%; transform: translateY(-50%);
+  z-index: 1; filter: blur(55px);
+  animation: orbPulse1 9s ease-in-out infinite;
+}
+/* Red accent — upper right of protein */
+.hero-orb-2 {
+  width: 380px; height: 380px;
+  background: radial-gradient(circle, rgba(230,57,70,0.26) 0%, rgba(230,57,70,0.06) 50%, transparent 70%);
+  top: 8%; right: 10%;
+  z-index: 1; filter: blur(50px);
+  animation: orbPulse2 12s ease-in-out infinite;
+}
+/* Deep blue halo — lower right */
+.hero-orb-3 {
+  width: 460px; height: 460px;
+  background: radial-gradient(circle, rgba(29,78,216,0.22) 0%, rgba(29,78,216,0.05) 50%, transparent 70%);
+  bottom: 5%; right: 8%;
+  z-index: 1; filter: blur(65px);
+  animation: orbPulse3 15s ease-in-out infinite;
+}
+@keyframes orbPulse1 {
+  0%,100% { opacity:0.85; transform:translateY(-50%) scale(1); }
+  50%     { opacity:1;    transform:translateY(-52%) scale(1.07); }
+}
+@keyframes orbPulse2 {
+  0%,100% { opacity:0.7; transform:translate(0,0) scale(1); }
+  50%     { opacity:1;   transform:translate(-15px,12px) scale(1.09); }
+}
+@keyframes orbPulse3 {
+  0%,100% { opacity:0.65; transform:scale(1); }
+  50%     { opacity:0.95; transform:scale(1.08) translate(8px,-8px); }
+}
+@keyframes orbDrift {
+  0%   { transform: translate(0, 0) scale(1); }
+  25%  { transform: translate(40px, -30px) scale(1.05); }
+  50%  { transform: translate(20px, 50px) scale(0.97); }
+  75%  { transform: translate(-30px, 20px) scale(1.03); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+/* Perspective grid at hero bottom */
+.hero-grid {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 280px; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(124,140,248,0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124,140,248,0.07) 1px, transparent 1px);
+  background-size: 60px 60px;
+  -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 100%);
+  mask-image: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 100%);
+  transform: perspective(400px) rotateX(40deg);
+  transform-origin: bottom center;
+}
+
+/* Noise scanline overlay */
+.hero-noise {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 200px;
+}
+
+/* Glowing CTA pulse */
+@keyframes ctaGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(196,68,106,0.3), 0 0 60px rgba(196,68,106,0.1); }
+  50%       { box-shadow: 0 0 40px rgba(196,68,106,0.5), 0 0 100px rgba(196,68,106,0.2); }
+}
+.hero-cta-primary {
+  animation: ctaGlow 3s ease-in-out infinite;
 }
 .hero-bg-3d {
-  position: absolute; top: 0; right: 0; width: 55%; height: 100%;
+  position: absolute; top: 0; right: 0; width: 65%; height: 100%;
   z-index: 0; pointer-events: none;
+  opacity: 0.9;
+  transition: opacity 1.5s ease;
 }
+.hero-bg-3d.loaded { opacity: 1; }
 .hero-bg-3d #heroProteinViewer {
   width: 100% !important; height: 100% !important;
 }
 .hero-bg-3d::after {
   content: ''; position: absolute; inset: 0; z-index: 1;
   background:
-    linear-gradient(90deg, var(--surface) 0%, rgba(8,8,15,0.9) 25%, rgba(8,8,15,0.15) 65%, rgba(8,8,15,0.3) 100%),
-    linear-gradient(180deg, var(--surface) 0%, transparent 12%, transparent 88%, var(--surface) 100%);
+    linear-gradient(90deg, rgba(8,8,15,1) 0%, rgba(8,8,15,0.7) 20%, rgba(8,8,15,0.05) 60%, transparent 100%),
+    linear-gradient(180deg, rgba(8,8,15,0.6) 0%, transparent 15%, transparent 85%, rgba(8,8,15,0.6) 100%);
   pointer-events: none;
 }
 .hero-content {
@@ -1144,9 +1229,15 @@ footer {
 
   <!-- ── HERO: Cinematic editorial ── -->
   <div class="hero-section">
+    <div class="hero-noise"></div>
+    <div class="hero-grid"></div>
     <canvas id="heroParticles"></canvas>
     <div class="hero-bg-3d">
+      <div class="hero-orb hero-orb-1"></div>
+      <div class="hero-orb hero-orb-2"></div>
+      <div class="hero-orb hero-orb-3"></div>
       <div id="heroProteinViewer"></div>
+      <canvas id="proteinOverlay" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3;"></canvas>
     </div>
     <div class="hero-content">
       <div class="hero-tag reveal reveal-delay-1"><span class="accent">PET Lab</span> &mdash; Plastic Degradation Enzyme Platform</div>
@@ -1157,11 +1248,11 @@ footer {
         <button class="hero-cta hero-cta-secondary" onclick="showPage('browse')">Explore database</button>
       </div>
       <div class="hero-stats reveal reveal-delay-4">
-        <div class="hero-stat"><div class="value">6,000+</div><div class="label">Variants screened</div></div>
+        <div class="hero-stat"><div class="value">5,510</div><div class="label">Variants screened</div></div>
         <div class="hero-divider"></div>
-        <div class="hero-stat"><div class="value">80%</div><div class="label">ML accuracy</div></div>
+        <div class="hero-stat"><div class="value">76%</div><div class="label">ML accuracy</div></div>
         <div class="hero-divider"></div>
-        <div class="hero-stat"><div class="value">9K+</div><div class="label">Training mutations</div></div>
+        <div class="hero-stat"><div class="value">9,752</div><div class="label">Training mutations</div></div>
       </div>
       <div class="powered-by reveal reveal-delay-4" style="margin-top:32px;display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,0.45);letter-spacing:0.5px">
         <span>Powered by</span>
@@ -1200,12 +1291,12 @@ footer {
         <div class="timeline-step reveal reveal-delay-3">
           <div class="timeline-dot"></div>
           <h4>Score every mutation</h4>
-          <p>6,000+ amino acid swaps scored for thermal stability, catalytic activity, and PET binding affinity.</p>
+          <p>5,510 amino acid swaps scored per sequence for thermal stability, catalytic activity, and PET binding affinity.</p>
         </div>
         <div class="timeline-step reveal reveal-delay-4">
           <div class="timeline-dot"></div>
           <h4>Combine and rank</h4>
-          <p>Top mutations combined into multi-mutation candidates, verified by a gradient boosting classifier at 80% CV accuracy.</p>
+          <p>Top mutations combined into multi-mutation candidates, verified by a gradient boosting ensemble at 76% cross-validated accuracy (AUC 0.67, S669 benchmark).</p>
         </div>
         <div class="timeline-step reveal">
           <div class="timeline-dot"></div>
@@ -1373,7 +1464,7 @@ footer {
       <div id="preprocessOptions" style="display:none">
         <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:6px">
           <div class="temp-display"><input type="number" class="num-input" id="preheatNum" value="250" min="80" max="270" step="0.01" oninput="document.getElementById('preheatSlider').value=Math.round(this.value);updatePreheat(true)"><span class="unit">&deg;C</span></div>
-          <div class="temp-label" id="preheatLabel" style="background:rgba(232,145,12,0.1);color:var(--warning)">Full melt &mdash; maximum amorphization</div>
+          <div class="temp-label" id="preheatLabel" style="background:rgba(232,98,26,0.1);color:var(--warning)">Full melt &mdash; maximum amorphization</div>
         </div>
         <input type="range" id="preheatSlider" min="80" max="270" step="1" value="250" oninput="updatePreheat()">
         <div style="margin-top:8px;padding:8px 10px;border-radius:var(--radius-sm);background:rgba(77,168,218,0.06)">
@@ -1751,26 +1842,26 @@ let chartInstance = null;
   });
   canvas.parentElement.addEventListener('mouseleave', () => { mouse.x = -1000; mouse.y = -1000; });
 
-  const PARTICLE_COUNT = 80;
-  const CONNECT_DIST = 140;
+  const PARTICLE_COUNT = 130;
+  const CONNECT_DIST = 180;
   const colors = [
-    [124, 140, 248],  // primary blue
-    [230, 57, 70],  // red
-    [196, 68, 106],   // pink
-    [56, 189, 248],   // cyan
-    [52, 211, 153],   // green
+    [29, 78, 216],    // blue
+    [29, 78, 216],    // blue
+    [220, 38, 38],    // red
+    [220, 38, 38],    // red
+    [59, 111, 245],   // light blue
   ];
 
   for (let i = 0; i < PARTICLE_COUNT; i++) {
     particles.push({
       x: Math.random() * 2000,
       y: Math.random() * 1200,
-      vx: (Math.random() - 0.5) * 0.4,
-      vy: (Math.random() - 0.5) * 0.4,
-      r: 1.5 + Math.random() * 2.5,
+      vx: (Math.random() - 0.5) * 0.6,
+      vy: (Math.random() - 0.5) * 0.6,
+      r: 1.2 + Math.random() * 2.8,
       color: colors[Math.floor(Math.random() * colors.length)],
       phase: Math.random() * Math.PI * 2,
-      pulseSpeed: 0.01 + Math.random() * 0.02,
+      pulseSpeed: 0.015 + Math.random() * 0.025,
     });
   }
 
@@ -1797,17 +1888,22 @@ let chartInstance = null;
         const dx = a.x - b.x, dy = a.y - b.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist < CONNECT_DIST) {
-          const alpha = (1 - dist / CONNECT_DIST) * 0.15;
+          const alpha = (1 - dist / CONNECT_DIST) * 0.25;
           // Check if near mouse for highlight
           const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
           const mDist = Math.sqrt((mx - mouse.x) ** 2 + (my - mouse.y) ** 2);
           const boost = mDist < 200 ? (1 - mDist / 200) * 0.3 : 0;
 
+          // Gradient line from a→b color
+          const grad = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
+          const [ar,ag,ab2] = a.color, [br,bg,bb] = b.color;
+          grad.addColorStop(0, `rgba(${ar},${ag},${ab2},${alpha + boost})`);
+          grad.addColorStop(1, `rgba(${br},${bg},${bb},${alpha + boost})`);
           ctx.beginPath();
           ctx.moveTo(a.x, a.y);
           ctx.lineTo(b.x, b.y);
-          ctx.strokeStyle = `rgba(124,140,248,${alpha + boost})`;
-          ctx.lineWidth = 0.6 + boost * 2;
+          ctx.strokeStyle = grad;
+          ctx.lineWidth = 0.8 + boost * 2.5;
           ctx.stroke();
         }
       }
@@ -2005,22 +2101,31 @@ let chartInstance = null;
       .then(r => r.text())
       .then(pdbData => {
         const viewer = $3Dmol.createViewer(el, {
-          backgroundColor: 'rgb(8,8,15)',
+          backgroundColor: '0x08080f',
           antialias: true,
           disableFog: true,
         });
         viewer.addModel(pdbData, 'pdb');
-        // Semi-transparent cartoon for ambient background feel
-        viewer.setStyle({}, { cartoon: { color: 'spectrum', opacity: 0.7, thickness: 0.4 } });
+        // Purple-blue-pink palette matching the orbs
+        viewer.setStyle({}, { cartoon: {
+          colorfunc: function(atom) {
+            const t = (atom.resi % 60) / 60;
+            if (t < 0.5) return '#3B6FF5';  // blue
+            else return '#E63946';           // red
+          },
+          opacity: 0.85, thickness: 0.5
+        }});
         viewer.zoomTo();
-        viewer.zoom(0.65);
+        viewer.zoom(0.7);
         viewer.render();
         // Slow auto-rotate
-        viewer.spin('y', 0.25);
+        viewer.spin('y', 0.2);
         window._heroViewer = viewer;
+        // Mark loaded for smooth fade-in
+        el.parentElement.classList.add('loaded');
         // Disable mouse interaction
         const canvas = el.querySelector('canvas');
-        if (canvas) canvas.style.pointerEvents = 'none';
+        if (canvas) { canvas.style.pointerEvents = 'none'; canvas.style.background = 'transparent'; }
 
         // Handle window resize
         window.addEventListener('resize', () => {
@@ -2271,7 +2376,7 @@ function updateDiseaseParam(type) {
     const el = document.getElementById('stabLabel');
     if (v <= 5) { el.textContent = 'Mild stabilization'; el.style.background = 'var(--surface)'; el.style.color = 'var(--text-tertiary)'; }
     else if (v <= 15) { el.textContent = 'Moderate stabilization'; el.style.background = 'rgba(196,68,106,0.1)'; el.style.color = 'var(--success)'; }
-    else { el.textContent = 'Strong stabilization — aggressive mutations'; el.style.background = 'rgba(232,145,12,0.1)'; el.style.color = 'var(--warning)'; }
+    else { el.textContent = 'Strong stabilization — aggressive mutations'; el.style.background = 'rgba(232,98,26,0.1)'; el.style.color = 'var(--warning)'; }
   }
 }
 
@@ -2482,9 +2587,9 @@ function updateTemp(fromInput) {
   const v = parseFloat(input.value) || 60;
   const el = document.getElementById('tempLabel');
   if (v <= 40) { el.textContent = 'Ambient \u2014 natural enzymes work here'; el.style.background = 'var(--surface)'; el.style.color = 'var(--text-tertiary)'; }
-  else if (v <= 55) { el.textContent = 'Warm \u2014 enzymes start to struggle'; el.style.background = 'rgba(232,145,12,0.1)'; el.style.color = 'var(--warning)'; }
+  else if (v <= 55) { el.textContent = 'Warm \u2014 enzymes start to struggle'; el.style.background = 'rgba(232,98,26,0.1)'; el.style.color = 'var(--warning)'; }
   else if (v <= 65) { el.textContent = 'PET glass transition \u2014 ideal for recycling'; el.style.background = 'rgba(196,68,106,0.1)'; el.style.color = 'var(--success)'; }
-  else if (v <= 75) { el.textContent = 'High heat \u2014 aggressive recycling'; el.style.background = 'rgba(232,145,12,0.1)'; el.style.color = 'var(--warning)'; }
+  else if (v <= 75) { el.textContent = 'High heat \u2014 aggressive recycling'; el.style.background = 'rgba(232,98,26,0.1)'; el.style.color = 'var(--warning)'; }
   else { el.textContent = 'Extreme \u2014 very challenging for enzymes'; el.style.background = 'rgba(214,64,69,0.06)'; el.style.color = 'var(--error)'; }
 }
 
@@ -2501,7 +2606,7 @@ function updateCryst(fromInput) {
   const el = document.getElementById('crystLabel');
   if (v <= 10) { el.textContent = 'Amorphous PET film \u2014 easiest to degrade'; el.style.background = 'rgba(196,68,106,0.1)'; el.style.color = 'var(--success)'; }
   else if (v <= 20) { el.textContent = 'Low crystallinity \u2014 typical recycled flake'; el.style.background = 'rgba(196,68,106,0.1)'; el.style.color = 'var(--success)'; }
-  else if (v <= 30) { el.textContent = 'Bottle-grade PET \u2014 moderate difficulty'; el.style.background = 'rgba(232,145,12,0.1)'; el.style.color = 'var(--warning)'; }
+  else if (v <= 30) { el.textContent = 'Bottle-grade PET \u2014 moderate difficulty'; el.style.background = 'rgba(232,98,26,0.1)'; el.style.color = 'var(--warning)'; }
   else if (v <= 40) { el.textContent = 'High crystallinity \u2014 very resistant'; el.style.background = 'rgba(214,64,69,0.06)'; el.style.color = 'var(--error)'; }
   else { el.textContent = 'Highly crystalline \u2014 extremely challenging'; el.style.background = 'rgba(214,64,69,0.1)'; el.style.color = 'var(--error)'; }
 }
@@ -2524,7 +2629,7 @@ function updateContam(fromInput) {
   const el = document.getElementById('contamLabel');
   if (v === 0) { el.textContent = 'No contamination \u2014 lab-grade sample'; el.style.background = 'var(--surface)'; el.style.color = 'var(--text-tertiary)'; }
   else if (v <= 20) { el.textContent = 'Light contamination \u2014 pre-washed'; el.style.background = 'rgba(196,68,106,0.1)'; el.style.color = 'var(--success)'; }
-  else if (v <= 40) { el.textContent = 'Moderate \u2014 typical municipal waste'; el.style.background = 'rgba(232,145,12,0.1)'; el.style.color = 'var(--warning)'; }
+  else if (v <= 40) { el.textContent = 'Moderate \u2014 typical municipal waste'; el.style.background = 'rgba(232,98,26,0.1)'; el.style.color = 'var(--warning)'; }
   else if (v <= 60) { el.textContent = 'Heavy \u2014 unsorted post-consumer'; el.style.background = 'rgba(214,64,69,0.06)'; el.style.color = 'var(--error)'; }
   else { el.textContent = 'Severe \u2014 raw landfill / ocean plastic'; el.style.background = 'rgba(214,64,69,0.1)'; el.style.color = 'var(--error)'; }
 
@@ -2554,7 +2659,7 @@ function updatePreheat(fromInput) {
   const T = parseFloat(input.value) || 250;
   const el = document.getElementById('preheatLabel');
   if (T < 120) { el.textContent = 'Mild anneal \u2014 partial relaxation'; el.style.background = 'rgba(196,68,106,0.1)'; el.style.color = 'var(--success)'; }
-  else if (T < 200) { el.textContent = 'Moderate \u2014 good crystallinity reduction'; el.style.background = 'rgba(232,145,12,0.1)'; el.style.color = 'var(--warning)'; }
+  else if (T < 200) { el.textContent = 'Moderate \u2014 good crystallinity reduction'; el.style.background = 'rgba(232,98,26,0.1)'; el.style.color = 'var(--warning)'; }
   else { el.textContent = 'Full melt \u2014 maximum amorphization'; el.style.background = 'rgba(214,64,69,0.06)'; el.style.color = 'var(--error)'; }
 
   // Compute effective crystallinity after preprocessing
@@ -3048,7 +3153,7 @@ function showCandidateDetail(c) {
         <span style="font-size:14px;font-weight:600;color:${rc}">${gradeLabel(c.combined_score)}</span>
       </div>
       <span style="font-size:10px;font-weight:800;padding:4px 10px;border-radius:8px;letter-spacing:0.5px;text-transform:uppercase;
-        background:${c.overall_strategy === 'thermostability-focused' ? 'rgba(0,0,255,0.1);color:blue' : c.overall_strategy === 'activity-focused' ? 'rgba(232,145,12,0.1);color:var(--warning)' : 'rgba(124,140,248,0.1);color:var(--primary)'}">
+        background:${c.overall_strategy === 'thermostability-focused' ? 'rgba(0,0,255,0.1);color:blue' : c.overall_strategy === 'activity-focused' ? 'rgba(232,98,26,0.1);color:var(--warning)' : 'rgba(124,140,248,0.1);color:var(--primary)'}">
         ${c.overall_strategy || 'balanced'}</span>
     </div>
 
@@ -3089,7 +3194,7 @@ function showCandidateDetail(c) {
       </div>`).join('')}
       ${(lv.position_matches || []).map(m => `<div style="background:var(--surface-3);border-radius:8px;padding:10px;margin-top:8px">
         <span style="font-family:monospace;font-weight:700;font-size:13px;color:var(--warning)">${m.mutation}</span>
-        <span class="tag-chip" style="background:rgba(232,145,12,0.1);color:var(--warning)">SAME POSITION</span>
+        <span class="tag-chip" style="background:rgba(232,98,26,0.1);color:var(--warning)">SAME POSITION</span>
         ${m.detail ? `<div style="font-size:11px;color:var(--text-secondary);margin-top:4px;line-height:1.3">${m.detail}</div>` : ''}
       </div>`).join('')}
     </div>`;
@@ -3102,7 +3207,7 @@ function showCandidateDetail(c) {
     html += c.explanations.map(e => `<div class="explanation-card">
       <div>
         <span class="mut-label">${e.mutation}</span>
-        ${e.near_active_site ? `<span class="tag-chip" style="background:rgba(232,145,12,0.1);color:var(--warning)">Active Site</span>` : ''}
+        ${e.near_active_site ? `<span class="tag-chip" style="background:rgba(232,98,26,0.1);color:var(--warning)">Active Site</span>` : ''}
         ${e.thermostability_hotspot ? `<span class="tag-chip" style="background:rgba(196,68,106,0.1);color:var(--success)">Hotspot</span>` : ''}
       </div>
       <div class="summary">${e.summary}</div>
@@ -3850,6 +3955,368 @@ showPage = function(name) {
       card.style.transform = '';
     });
   });
+})();
+
+// ── Dark / Light mode toggle ──
+
+// ── Professional protein overlay: scan rings + data readouts ──
+(function proteinOverlay() {
+  const canvas = document.getElementById('proteinOverlay');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  function resize() {
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  let t = 0;
+
+  // Data readout lines — static anchors around protein center
+  const readouts = [
+    { angle: -0.3,  r: 180, label: 'Thr: 0.84',  sub: 'Thermostability' },
+    { angle:  0.5,  r: 210, label: 'ΔΔG: −1.44', sub: 'Binding Energy' },
+    { angle:  1.2,  r: 190, label: 'Act: 0.81',  sub: 'Catalytic Score' },
+    { angle: -1.1,  r: 200, label: 'ESM: 0.808', sub: 'Language Model' },
+    { angle:  2.2,  r: 175, label: 'Conf: 70.8%',sub: 'Confidence' },
+  ];
+
+  function draw() {
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    // Protein center (right-center of the container)
+    const cx = W * 0.52, cy = H * 0.48;
+
+    // ── Rotating scan rings ──
+    for (let i = 0; i < 3; i++) {
+      const baseR = 130 + i * 55;
+      const spin  = t * (0.004 - i * 0.001) * (i % 2 === 0 ? 1 : -1);
+      const alpha = 0.18 - i * 0.04;
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(spin);
+
+      // Dashed ring
+      ctx.beginPath();
+      ctx.arc(0, 0, baseR, 0, Math.PI * 2);
+      ctx.strokeStyle = i === 0
+        ? `rgba(59,111,245,${alpha})`
+        : `rgba(230,57,70,${alpha * 0.8})`;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([6, 14]);
+      ctx.lineDashOffset = -t * 0.5;
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Small tick marks on ring
+      for (let j = 0; j < 8; j++) {
+        const a = (j / 8) * Math.PI * 2;
+        const x1 = Math.cos(a) * (baseR - 4);
+        const y1 = Math.sin(a) * (baseR - 4);
+        const x2 = Math.cos(a) * (baseR + 4);
+        const y2 = Math.sin(a) * (baseR + 4);
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.strokeStyle = i === 0
+          ? `rgba(59,111,245,${alpha * 2})`
+          : `rgba(230,57,70,${alpha * 1.5})`;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // ── Pulsing core circle ──
+    const pulse = 0.5 + 0.5 * Math.sin(t * 0.03);
+    const coreR = 38 + pulse * 8;
+    const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreR);
+    coreGrad.addColorStop(0, `rgba(59,111,245,${0.18 + pulse * 0.12})`);
+    coreGrad.addColorStop(1, 'transparent');
+    ctx.beginPath();
+    ctx.arc(cx, cy, coreR, 0, Math.PI * 2);
+    ctx.fillStyle = coreGrad;
+    ctx.fill();
+
+    // ── Coordinate crosshair ──
+    const crossLen = 22;
+    ctx.strokeStyle = 'rgba(59,111,245,0.35)';
+    ctx.lineWidth = 1;
+    [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy]) => {
+      ctx.beginPath();
+      ctx.moveTo(cx + dx*6, cy + dy*6);
+      ctx.lineTo(cx + dx*(6+crossLen), cy + dy*(6+crossLen));
+      ctx.stroke();
+    });
+
+    // ── Data readout lines ──
+    readouts.forEach((rd, i) => {
+      const drift = Math.sin(t * 0.018 + i) * 6;
+      const x0 = cx + Math.cos(rd.angle) * 90;
+      const y0 = cy + Math.sin(rd.angle) * 90;
+      const x1 = cx + Math.cos(rd.angle) * (rd.r + drift);
+      const y1 = cy + Math.sin(rd.angle) * (rd.r + drift);
+      const lineLen = 60;
+      const dir = x1 > cx ? 1 : -1;
+      const x2 = x1 + dir * lineLen;
+
+      const fade = 0.55 + 0.35 * Math.sin(t * 0.02 + i * 1.3);
+      const blue = `rgba(59,111,245,${fade})`;
+      const red  = `rgba(230,57,70,${fade})`;
+      const col  = i % 2 === 0 ? blue : red;
+
+      // Connector line from ring to label
+      ctx.beginPath();
+      ctx.moveTo(x0, y0);
+      ctx.lineTo(x1, y1);
+      ctx.lineTo(x2, y1);
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Dot at elbow
+      ctx.beginPath();
+      ctx.arc(x1, y1, 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = col;
+      ctx.fill();
+
+      // Label text
+      ctx.textAlign = dir > 0 ? 'left' : 'right';
+      ctx.font = 'bold 11px "SF Mono", Menlo, monospace';
+      ctx.fillStyle = `rgba(232,232,237,${fade + 0.15})`;
+      ctx.fillText(rd.label, x2 + dir * 6, y1 - 2);
+      ctx.font = '9px "SF Mono", Menlo, monospace';
+      ctx.fillStyle = `rgba(112,112,138,${fade})`;
+      ctx.fillText(rd.sub, x2 + dir * 6, y1 + 10);
+    });
+
+    // ── Scanning horizontal sweep line ──
+    const sweepY = cy + Math.sin(t * 0.015) * 110;
+    const sweepGrad = ctx.createLinearGradient(cx - 170, sweepY, cx + 170, sweepY);
+    sweepGrad.addColorStop(0,   'transparent');
+    sweepGrad.addColorStop(0.3, 'rgba(59,111,245,0.12)');
+    sweepGrad.addColorStop(0.5, 'rgba(59,111,245,0.22)');
+    sweepGrad.addColorStop(0.7, 'rgba(59,111,245,0.12)');
+    sweepGrad.addColorStop(1,   'transparent');
+    ctx.beginPath();
+    ctx.rect(cx - 170, sweepY - 1, 340, 2);
+    ctx.fillStyle = sweepGrad;
+    ctx.fill();
+
+    t++;
+    requestAnimationFrame(draw);
+  }
+  // Start after protein loads
+  setTimeout(() => requestAnimationFrame(draw), 4000);
+})();
+
+// ═══════════════════════════════════════════════════════
+// MAJOR SCROLL ANIMATION UPGRADES
+// ═══════════════════════════════════════════════════════
+
+// 9. Word-split stagger animation on all section headings
+(function wordSplitHeadings() {
+  // Split each h2 inside home-sections into word spans
+  document.querySelectorAll('.home-section h2, .home-section .section-title').forEach(function(h) {
+    if (h.dataset.split) return;
+    h.dataset.split = '1';
+    const html = h.innerHTML;
+    // Split on spaces and <br> tags
+    const parts = html.split(/(\s+|<br>)/);
+    h.innerHTML = parts.map(function(word) {
+      if (!word.trim() || word === '<br>') return word;
+      return `<span class="word-wrap"><span class="word-inner">${word}</span></span>`;
+    }).join('');
+    h.classList.add('words-split');
+  });
+
+  // CSS injection
+  const style = document.createElement('style');
+  style.textContent = `
+    .word-wrap { display: inline-block; overflow: hidden; vertical-align: bottom; }
+    .word-inner {
+      display: inline-block;
+      transform: translateY(110%) skewY(4deg);
+      opacity: 0;
+      transition: transform 0.75s cubic-bezier(0.16,1,0.3,1), opacity 0.5s ease;
+    }
+    .words-split.words-visible .word-inner { transform: translateY(0) skewY(0deg); opacity: 1; }
+    .words-split .word-wrap:nth-child(1)  .word-inner { transition-delay: 0.00s; }
+    .words-split .word-wrap:nth-child(2)  .word-inner { transition-delay: 0.07s; }
+    .words-split .word-wrap:nth-child(3)  .word-inner { transition-delay: 0.14s; }
+    .words-split .word-wrap:nth-child(4)  .word-inner { transition-delay: 0.21s; }
+    .words-split .word-wrap:nth-child(5)  .word-inner { transition-delay: 0.28s; }
+    .words-split .word-wrap:nth-child(6)  .word-inner { transition-delay: 0.35s; }
+    .words-split .word-wrap:nth-child(7)  .word-inner { transition-delay: 0.42s; }
+    .words-split .word-wrap:nth-child(8)  .word-inner { transition-delay: 0.49s; }
+    .words-split .word-wrap:nth-child(n+9) .word-inner { transition-delay: 0.56s; }
+  `;
+  document.head.appendChild(style);
+
+  const obs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) { e.target.classList.add('words-visible'); obs.unobserve(e.target); }
+    });
+  }, { threshold: 0.2 });
+  document.querySelectorAll('.words-split').forEach(function(el) { obs.observe(el); });
+})();
+
+// 10. 3D Perspective section entry — sections tilt in from below on entry
+(function sectionTiltEntry() {
+  const style = document.createElement('style');
+  style.textContent = `
+    .home-section.tilt-ready {
+      transform: perspective(1000px) rotateX(4deg) translateY(50px);
+      opacity: 0;
+      transition: transform 1.1s cubic-bezier(0.16,1,0.3,1), opacity 0.9s ease;
+      will-change: transform, opacity;
+    }
+    .home-section.tilt-in {
+      transform: perspective(1000px) rotateX(0deg) translateY(0) !important;
+      opacity: 1 !important;
+    }
+  `;
+  document.head.appendChild(style);
+
+  const sections = document.querySelectorAll('.home-section');
+  sections.forEach(function(s) {
+    const rect = s.getBoundingClientRect();
+    // Only animate sections not already in view
+    if (rect.top > window.innerHeight * 0.8) {
+      s.classList.add('tilt-ready');
+    } else {
+      s.classList.add('tilt-in');
+    }
+  });
+
+  const obs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) {
+        e.target.classList.add('tilt-in');
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.06, rootMargin: '0px 0px -20px 0px' });
+  sections.forEach(function(s) { if (s.classList.contains('tilt-ready')) obs.observe(s); });
+})();
+
+// 11. Scroll velocity — motion blur on fast scroll
+(function scrollVelocityBlur() {
+  let lastY = window.scrollY, lastT = performance.now(), velocity = 0, blurRAF = 0;
+  const target = document.querySelector('#page-home');
+  if (!target) return;
+
+  window.addEventListener('scroll', function() {
+    const now = performance.now();
+    const dy = window.scrollY - lastY;
+    const dt = Math.max(now - lastT, 1);
+    velocity = Math.abs(dy / dt);
+    lastY = window.scrollY;
+    lastT = now;
+
+    cancelAnimationFrame(blurRAF);
+    blurRAF = requestAnimationFrame(function() {
+      const blur = Math.min(velocity * 18, 6);
+      target.style.filter = blur > 0.3 ? `blur(${blur.toFixed(1)}px)` : '';
+    });
+  }, { passive: true });
+
+  // Decay blur when scroll stops
+  (function decayLoop() {
+    velocity *= 0.85;
+    if (velocity < 0.01) { target.style.filter = ''; }
+    else {
+      const blur = Math.min(velocity * 18, 6);
+      target.style.filter = `blur(${blur.toFixed(1)}px)`;
+    }
+    requestAnimationFrame(decayLoop);
+  })();
+})();
+
+// 12. Slide-up reveal on action cards
+(function slideRevealCards() {
+  const style = document.createElement('style');
+  style.textContent = `
+    .action-card { opacity: 1; transform: none; }
+    .action-card.card-hidden { opacity: 0; transform: translateY(40px); transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.16,1,0.3,1); }
+    .action-card.card-visible { opacity: 1 !important; transform: translateY(0) !important; }
+    .action-card.card-hidden:nth-child(1) { transition-delay: 0.0s; }
+    .action-card.card-hidden:nth-child(2) { transition-delay: 0.12s; }
+    .action-card.card-hidden:nth-child(3) { transition-delay: 0.24s; }
+  `;
+  document.head.appendChild(style);
+
+  const cards = document.querySelectorAll('.action-card');
+  cards.forEach(function(c) {
+    const rect = c.getBoundingClientRect();
+    if (rect.top > window.innerHeight * 0.85) {
+      c.classList.add('card-hidden');
+    }
+  });
+
+  const obs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) { e.target.classList.add('card-visible'); obs.unobserve(e.target); }
+    });
+  }, { threshold: 0.1 });
+  cards.forEach(function(c) { if (c.classList.contains('card-hidden')) obs.observe(c); });
+})();
+
+// 13. Dynamic background gradient morph as you scroll between sections
+(function bgGradientMorph() {
+  const gradients = [
+    'radial-gradient(ellipse 80% 60% at 20% 20%, rgba(124,140,248,0.06) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 80% 80%, rgba(196,68,106,0.05) 0%, transparent 60%)',
+    'radial-gradient(ellipse 70% 60% at 80% 20%, rgba(56,189,248,0.07) 0%, transparent 60%), radial-gradient(ellipse 70% 50% at 20% 80%, rgba(124,140,248,0.06) 0%, transparent 60%)',
+    'radial-gradient(ellipse 90% 60% at 50% 30%, rgba(196,68,106,0.06) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 60% 80%, rgba(52,211,153,0.04) 0%, transparent 60%)',
+    'radial-gradient(ellipse 80% 80% at 10% 50%, rgba(167,139,250,0.07) 0%, transparent 60%), radial-gradient(ellipse 60% 60% at 90% 50%, rgba(56,189,248,0.05) 0%, transparent 60%)',
+  ];
+
+  let bgEl = document.createElement('div');
+  bgEl.style.cssText = 'position:fixed;inset:0;z-index:-1;pointer-events:none;transition:background 1.5s ease;';
+  document.body.appendChild(bgEl);
+
+  const sections = document.querySelectorAll('.home-section');
+  const obs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (!e.isIntersecting) return;
+      const idx = Array.from(sections).indexOf(e.target);
+      if (idx >= 0) bgEl.style.background = gradients[idx % gradients.length];
+    });
+  }, { threshold: 0.4 });
+  sections.forEach(function(s) { obs.observe(s); });
+})();
+
+// 14. Timeline steps: slide in from alternating LEFT and RIGHT
+(function timelineAlternating() {
+  const style = document.createElement('style');
+  style.textContent = `
+    .timeline-step {
+      opacity: 0;
+      transition: opacity 0.8s ease, transform 0.9s cubic-bezier(0.16,1,0.3,1);
+    }
+    .timeline-step.from-left  { transform: translateX(-80px) scale(0.95); }
+    .timeline-step.from-right { transform: translateX(80px) scale(0.95); }
+    .timeline-step.slide-in   { opacity: 1; transform: translateX(0) scale(1); }
+  `;
+  document.head.appendChild(style);
+
+  document.querySelectorAll('.timeline-step').forEach(function(s, i) {
+    s.classList.add(i % 2 === 0 ? 'from-left' : 'from-right');
+  });
+
+  const obs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) {
+        setTimeout(function() { e.target.classList.add('slide-in'); }, 0);
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.2 });
+  document.querySelectorAll('.timeline-step').forEach(function(s) { obs.observe(s); });
 })();
 </script>
 </body>
