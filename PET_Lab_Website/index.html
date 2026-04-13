@@ -15,8 +15,8 @@
 :root {
   --primary: #3B6FF5;
   --primary-light: #5B8CFF;
-  --accent: #E63946;
-  --accent-light: #FF5A66;
+  --accent: #10B981;
+  --accent-light: #34D399;
   --surface: #08080f;
   --surface-2: #0c0c15;
   --surface-3: #111119;
@@ -27,11 +27,11 @@
   --border: rgba(255,255,255,0.06);
   --warning: #E8621A;
   --error: #D45555;
-  --success: #3B6FF5;
+  --success: #10B981;
   --radius: 10px;
   --radius-sm: 6px;
   --glow-primary: rgba(59,111,245,0.08);
-  --glow-accent: rgba(230,57,70,0.08);
+  --glow-accent: rgba(16,185,129,0.08);
 }
 
 html { scroll-behavior: smooth; }
@@ -130,7 +130,7 @@ button {
 }
 .action-card:hover, .editorial-panel-item:hover, .feature-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 20px 60px rgba(124,140,248,0.08), 0 0 0 1px rgba(124,140,248,0.1);
+  box-shadow: 0 20px 60px rgba(59,111,245,0.08), 0 0 0 1px rgba(59,111,245,0.1);
 }
 
 /* ── Gradient text shimmer for section titles ── */
@@ -154,7 +154,7 @@ button {
   transition: box-shadow 0.6s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), background 0.4s ease;
 }
 .timeline-step.active .timeline-dot {
-  box-shadow: 0 0 16px rgba(124,140,248,0.5), 0 0 40px rgba(124,140,248,0.2);
+  box-shadow: 0 0 16px rgba(59,111,245,0.5), 0 0 40px rgba(59,111,245,0.2);
   transform: scale(1.3);
 }
 
@@ -163,7 +163,7 @@ button {
   transition: text-shadow 0.6s ease;
 }
 .hero-stat:hover .value {
-  text-shadow: 0 0 20px rgba(124,140,248,0.4), 0 0 60px rgba(124,140,248,0.15);
+  text-shadow: 0 0 20px rgba(59,111,245,0.4), 0 0 60px rgba(59,111,245,0.15);
 }
 
 /* ── Scroll progress bar at top of page ── */
@@ -172,7 +172,7 @@ button {
   background: linear-gradient(90deg, var(--primary), var(--accent), #38BDF8);
   width: 0%; transition: none;
   pointer-events: none;
-  box-shadow: 0 0 10px rgba(124,140,248,0.5);
+  box-shadow: 0 0 10px rgba(59,111,245,0.5);
 }
 
 /* ── Hero parallax (controlled via JS scroll) ── */
@@ -204,7 +204,7 @@ button {
 .timeline-step.active .timeline-dot {
   border-color: var(--primary);
   background: var(--primary);
-  box-shadow: 0 0 12px rgba(124,140,248,0.3);
+  box-shadow: 0 0 12px rgba(59,111,245,0.3);
 }
 
 /* ── Editorial panel stagger (left slides from left, right from right) ── */
@@ -321,7 +321,7 @@ header.logo-arrived .logo-wrap { opacity: 1; }
 .logo-box canvas { width: 38px; height: 38px; }
 .logo-box::after {
   content: ''; position: absolute; inset: 0; border-radius: 12px;
-  border: 1px solid rgba(124,140,248,0.08);
+  border: 1px solid rgba(59,111,245,0.08);
   pointer-events: none;
 }
 
@@ -333,7 +333,7 @@ header.logo-arrived .logo-wrap { opacity: 1; }
 header.logo-arrived .logo-text { opacity: 1; transform: translateX(0); }
 .logo-text h3 {
   font-size: 17px; font-weight: 800; letter-spacing: -0.3px; line-height: 1.2;
-  background: linear-gradient(135deg, #A78BFA, #7C8CF8, #C4446A);
+  background: linear-gradient(135deg, #3B6FF5, #5B8CFF, #10B981);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
 }
@@ -355,7 +355,7 @@ header.logo-arrived .logo-text { opacity: 1; transform: translateX(0); }
   display: flex; align-items: center; gap: 6px;
   padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
 }
-.status-badge.online { background: rgba(124,140,248,0.06); color: var(--success); }
+.status-badge.online { background: rgba(59,111,245,0.06); color: var(--success); }
 .status-badge.offline { background: rgba(212,85,85,0.06); color: var(--error); }
 .status-badge.checking { background: var(--surface-3); color: var(--text-tertiary); }
 .status-dot { width: 7px; height: 7px; border-radius: 50%; }
@@ -394,7 +394,7 @@ nav button.active {
   margin-bottom: 16px;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
-.card:hover { border-color: rgba(124,140,248,0.12); }
+.card:hover { border-color: rgba(59,111,245,0.12); }
 .card-header { font-size: 18px; font-weight: 700; margin-bottom: 12px; letter-spacing: -0.3px; }
 .card-sub { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.5; }
 
@@ -404,7 +404,7 @@ nav button.active {
   display: flex; align-items: center;
   position: relative; overflow: hidden;
   padding: 140px 0 100px;
-  background: linear-gradient(135deg, #060612 0%, #08080f 50%, #0f0610 100%);
+  background: linear-gradient(135deg, #060612 0%, #08080f 50%, #060f0a 100%);
 }
 
 /* Floating gradient orbs */
@@ -421,10 +421,10 @@ nav button.active {
   z-index: 1; filter: blur(55px);
   animation: orbPulse1 9s ease-in-out infinite;
 }
-/* Red accent — upper right of protein */
+/* Green accent — upper right of protein */
 .hero-orb-2 {
   width: 380px; height: 380px;
-  background: radial-gradient(circle, rgba(230,57,70,0.26) 0%, rgba(230,57,70,0.06) 50%, transparent 70%);
+  background: radial-gradient(circle, rgba(16,185,129,0.26) 0%, rgba(16,185,129,0.06) 50%, transparent 70%);
   top: 8%; right: 10%;
   z-index: 1; filter: blur(50px);
   animation: orbPulse2 12s ease-in-out infinite;
@@ -462,8 +462,8 @@ nav button.active {
   position: absolute; bottom: 0; left: 0; right: 0;
   height: 280px; z-index: 0; pointer-events: none;
   background-image:
-    linear-gradient(rgba(124,140,248,0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(124,140,248,0.07) 1px, transparent 1px);
+    linear-gradient(rgba(59,111,245,0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59,111,245,0.07) 1px, transparent 1px);
   background-size: 60px 60px;
   -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 100%);
   mask-image: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 100%);
@@ -481,8 +481,8 @@ nav button.active {
 
 /* Glowing CTA pulse */
 @keyframes ctaGlow {
-  0%, 100% { box-shadow: 0 0 20px rgba(196,68,106,0.3), 0 0 60px rgba(196,68,106,0.1); }
-  50%       { box-shadow: 0 0 40px rgba(196,68,106,0.5), 0 0 100px rgba(196,68,106,0.2); }
+  0%, 100% { box-shadow: 0 0 20px rgba(16,185,129,0.3), 0 0 60px rgba(16,185,129,0.1); }
+  50%       { box-shadow: 0 0 40px rgba(16,185,129,0.5), 0 0 100px rgba(16,185,129,0.2); }
 }
 .hero-cta-primary {
   animation: ctaGlow 3s ease-in-out infinite;
@@ -518,7 +518,7 @@ nav button.active {
 }
 .hero-tag .accent {
   font-size: 28px; font-weight: 900; letter-spacing: 3px;
-  background: linear-gradient(135deg, #A78BFA 0%, #7C8CF8 30%, #C4446A 70%, #E54D5D 100%);
+  background: linear-gradient(135deg, #3B6FF5 0%, #5B8CFF 30%, #10B981 70%, #34D399 100%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
   text-shadow: none;
@@ -862,7 +862,7 @@ input[type="range"]::-webkit-slider-thumb {
   transition: all 0.2s; margin-top: 24px;
   letter-spacing: -0.2px;
 }
-.btn-primary:hover { background: #b33d5e; box-shadow: 0 4px 16px rgba(196,68,106,0.2); }
+.btn-primary:hover { background: #059669; box-shadow: 0 4px 16px rgba(16,185,129,0.2); }
 .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .error-box {
@@ -900,7 +900,7 @@ input[type="range"]::-webkit-slider-thumb {
 .model-stat .lbl { font-size: 11px; color: var(--text-tertiary); }
 .model-tag {
   display: inline-block; padding: 3px 8px; border-radius: 6px;
-  background: rgba(196,68,106,0.1); color: var(--accent);
+  background: rgba(16,185,129,0.1); color: var(--accent);
   font-size: 10px; font-weight: 800; letter-spacing: 0.8px; margin-right: 10px;
 }
 
@@ -909,7 +909,7 @@ input[type="range"]::-webkit-slider-thumb {
 .mutations-wrap { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
 .mut-chip {
   font-family: 'SF Mono', Menlo, monospace; font-size: 13px; font-weight: 700;
-  color: var(--primary); background: rgba(124,140,248,0.07);
+  color: var(--primary); background: rgba(59,111,245,0.07);
   padding: 5px 10px; border-radius: 6px;
 }
 
@@ -919,7 +919,7 @@ input[type="range"]::-webkit-slider-thumb {
   border-radius: var(--radius); padding: 18px;
   margin-bottom: 10px; cursor: pointer; transition: all 0.2s;
 }
-.candidate-card:hover { border-color: var(--primary); box-shadow: 0 2px 8px rgba(124,140,248,0.1); }
+.candidate-card:hover { border-color: var(--primary); box-shadow: 0 2px 8px rgba(59,111,245,0.1); }
 .cand-header { display: flex; align-items: center; gap: 14px; }
 .rank-badge {
   width: 38px; height: 38px; border-radius: 10px;
@@ -967,7 +967,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 .lit-section {
   padding: 16px; border-radius: 12px; margin-top: 16px;
-  background: rgba(196,68,106,0.04); border: 1px solid rgba(196,68,106,0.15);
+  background: rgba(16,185,129,0.04); border: 1px solid rgba(16,185,129,0.15);
 }
 
 .explanation-card {
@@ -1018,7 +1018,7 @@ input[type="range"]::-webkit-slider-thumb {
 .pipeline-step { display: flex; gap: 14px; margin-bottom: 22px; }
 .pipeline-num {
   width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
-  background: rgba(124,140,248,0.1); color: var(--primary);
+  background: rgba(59,111,245,0.1); color: var(--primary);
   display: flex; align-items: center; justify-content: center;
   font-weight: 700; font-size: 14px;
 }
@@ -1353,7 +1353,7 @@ footer {
   <div class="container">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       <h2 style="font-size:22px;font-weight:700">Protein Database</h2>
-      <div id="pdbCount" style="font-size:12px;font-weight:700;color:var(--primary);background:rgba(124,140,248,0.08);padding:4px 10px;border-radius:8px"></div>
+      <div id="pdbCount" style="font-size:12px;font-weight:700;color:var(--primary);background:rgba(59,111,245,0.08);padding:4px 10px;border-radius:8px"></div>
     </div>
 
     <!-- PET Plastic content -->
@@ -1378,13 +1378,13 @@ footer {
     <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px" id="optimizeSubtitle">Optimize for catalytic activity, thermal stability, and PET binding.</p>
 
     <!-- Scoring criteria display -->
-    <div id="scoringCriteria" class="card" style="margin-bottom:16px;padding:14px 18px;background:rgba(124,140,248,0.04);border:1px solid rgba(124,140,248,0.12)">
+    <div id="scoringCriteria" class="card" style="margin-bottom:16px;padding:14px 18px;background:rgba(59,111,245,0.04);border:1px solid rgba(59,111,245,0.12)">
       <div style="font-size:11px;font-weight:700;color:var(--text-tertiary);letter-spacing:1px;margin-bottom:8px">OPTIMIZATION TARGETS</div>
       <div id="scoringTags" style="display:flex;gap:6px;flex-wrap:wrap">
-        <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(124,140,248,0.08);color:var(--primary)">Catalytic Activity</span>
-        <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(124,140,248,0.08);color:var(--primary)">Thermal Stability</span>
-        <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(124,140,248,0.08);color:var(--primary)">pH Tolerance</span>
-        <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(124,140,248,0.08);color:var(--primary)">PET Binding</span>
+        <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(59,111,245,0.08);color:var(--primary)">Catalytic Activity</span>
+        <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(59,111,245,0.08);color:var(--primary)">Thermal Stability</span>
+        <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(59,111,245,0.08);color:var(--primary)">pH Tolerance</span>
+        <span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(59,111,245,0.08);color:var(--primary)">PET Binding</span>
       </div>
     </div>
 
@@ -1394,7 +1394,7 @@ footer {
 
     <div class="section-label" style="display:flex;align-items:center;gap:8px">
       SEQUENCE
-      <span id="seqLength" style="font-size:10px;font-weight:600;color:var(--success);background:rgba(196,68,106,0.1);padding:2px 6px;border-radius:4px;display:none"></span>
+      <span id="seqLength" style="font-size:10px;font-weight:600;color:var(--success);background:rgba(16,185,129,0.1);padding:2px 6px;border-radius:4px;display:none"></span>
     </div>
     <textarea class="seq-input" id="seqInput" placeholder="Select a preset above or paste a sequence..." oninput="updateSeqLength()"></textarea>
 
@@ -1411,7 +1411,7 @@ footer {
       <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:10px">Higher temp speeds up recycling but enzymes denature. Near the glass transition (70&deg;C) PET chains loosen.</p>
       <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px">
         <div class="temp-display"><input type="number" class="num-input" id="tempNum" value="60" min="30" max="90" step="0.01" oninput="document.getElementById('tempSlider').value=Math.round(this.value);updateTemp(true)"><span class="unit">&deg;C</span></div>
-        <div class="temp-label" id="tempLabel" style="background:rgba(196,68,106,0.1);color:var(--success)">PET glass transition &mdash; ideal for recycling</div>
+        <div class="temp-label" id="tempLabel" style="background:rgba(16,185,129,0.1);color:var(--success)">PET glass transition &mdash; ideal for recycling</div>
       </div>
       <input type="range" id="tempSlider" min="30" max="90" step="1" value="60" oninput="updateTemp()">
     </div>
@@ -1425,7 +1425,7 @@ footer {
       <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:10px">Amorphous PET (~7%) degrades easily. Bottle-grade PET (~30%) is tightly packed and much harder to break down.</p>
       <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px">
         <div class="temp-display"><input type="number" class="num-input" id="crystNum" value="10" min="1" max="45" step="0.01" oninput="document.getElementById('crystSlider').value=Math.round(this.value);updateCryst(true)"><span class="unit">%</span></div>
-        <div class="temp-label" id="crystLabel" style="background:rgba(196,68,106,0.1);color:var(--success)">Amorphous PET film &mdash; easiest to degrade</div>
+        <div class="temp-label" id="crystLabel" style="background:rgba(16,185,129,0.1);color:var(--success)">Amorphous PET film &mdash; easiest to degrade</div>
       </div>
       <input type="range" id="crystSlider" min="1" max="45" step="1" value="10" oninput="updateCryst()">
     </div>
@@ -1505,7 +1505,7 @@ footer {
         <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:10px">Target melting temperature increase (&Delta;T<sub>m</sub>) for the optimized protein.</p>
         <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px">
           <div class="temp-display"><input type="number" class="num-input" id="stabNum" value="10" min="2" max="30" step="1" oninput="document.getElementById('stabSlider').value=this.value"><span class="unit">&deg;C</span></div>
-          <div class="temp-label" id="stabLabel" style="background:rgba(196,68,106,0.1);color:var(--success)">Moderate stabilization</div>
+          <div class="temp-label" id="stabLabel" style="background:rgba(16,185,129,0.1);color:var(--success)">Moderate stabilization</div>
         </div>
         <input type="range" id="stabSlider" min="2" max="30" step="1" value="10" oninput="document.getElementById('stabNum').value=this.value;updateDiseaseParam('stab')">
       </div>
@@ -1615,7 +1615,7 @@ const PRESETS = [
 ];
 
 const FAMILY_COLORS = {
-  'PETase': '#1A7FC4', 'Cutinase': '#1B98E0', 'LCC Variant': '#E63946',
+  'PETase': '#1A7FC4', 'Cutinase': '#1B98E0', 'LCC Variant': '#10B981',
   'Ancestral PETase': '#E67E22', 'Thermostable Hydrolase': '#E74C3C',
   'Novel PET Hydrolase': '#2ECC71', 'MHETase': '#F39C12',
   'Lipase / Esterase': '#16A085', 'PHB Depolymerase': '#C1121F',
@@ -1664,7 +1664,7 @@ const DISEASE_PRESETS = [
 
 const DISEASE_FAMILIES = {
   'ALS': '#E74C3C',
-  'Cancer': '#E63946',
+  'Cancer': '#10B981',
   "Parkinson's": '#E67E22',
   "Alzheimer's": '#3498DB',
   'Cystic Fibrosis': '#2ECC71',
@@ -1699,7 +1699,7 @@ let chartInstance = null;
   let t = 0;
 
   const HELIX_R = 16, HELIX_LEN = 12, ATOM_R = 3.2;
-  const colors = ['#7C8CF8','#A78BFA','#C4446A','#E54D5D','#38BDF8','#34D399'];
+  const colors = ['#5B8CFF','#3B6FF5','#10B981','#34D399','#38BDF8','#34D399'];
 
   function draw() {
     ctx.clearRect(0, 0, W, H);
@@ -1770,15 +1770,15 @@ let chartInstance = null;
         ctx.beginPath();
         ctx.moveTo(cx + item.a.x, cy + item.a.y);
         ctx.lineTo(cx + item.b.x, cy + item.b.y);
-        ctx.strokeStyle = `rgba(124,140,248,${alpha * 0.5})`;
+        ctx.strokeStyle = `rgba(59,111,245,${alpha * 0.5})`;
         ctx.lineWidth = 0.8 + depth;
         ctx.lineCap = 'round';
         ctx.stroke();
       } else if (item.type === 'rung') {
         // Glowing cross-rungs
         const grad = ctx.createLinearGradient(cx + item.a.x, cy + item.a.y, cx + item.b.x, cy + item.b.y);
-        grad.addColorStop(0, `rgba(124,140,248,${alpha * 0.6})`);
-        grad.addColorStop(0.5, `rgba(196,68,106,${alpha * 0.8})`);
+        grad.addColorStop(0, `rgba(59,111,245,${alpha * 0.6})`);
+        grad.addColorStop(0.5, `rgba(16,185,129,${alpha * 0.8})`);
         grad.addColorStop(1, `rgba(52,211,153,${alpha * 0.6})`);
         ctx.beginPath();
         ctx.moveTo(cx + item.a.x, cy + item.a.y);
@@ -1952,7 +1952,7 @@ let chartInstance = null;
 // ═══════════════════════════════════════════════════════════
 (function animateSplash() {
   // ── Shared helix drawing function ──
-  const red = '#E63946', blue = '#3B6FF5';
+  const red = '#10B981', blue = '#3B6FF5';
 
   function drawHelix(ctx, W, H, phase, opts) {
     const cx = W / 2;
@@ -2111,7 +2111,7 @@ let chartInstance = null;
           colorfunc: function(atom) {
             const t = (atom.resi % 60) / 60;
             if (t < 0.5) return '#3B6FF5';  // blue
-            else return '#E63946';           // red
+            else return '#10B981';           // red
           },
           opacity: 0.85, thickness: 0.5
         }});
@@ -2147,7 +2147,7 @@ function startLogoHelix() {
   if (!c) return;
   const ctx = c.getContext('2d');
   const W = c.width, H = c.height;
-  const rose = '#E63946', indigo = '#3B6FF5';
+  const rose = '#10B981', indigo = '#3B6FF5';
   let phase = 0;
 
   function tick() {
@@ -2165,7 +2165,7 @@ function startLogoHelix() {
       const angle = t * Math.PI * twists * 2 + phase;
       const sinA = Math.sin(angle);
       const cosA = Math.cos(angle);
-      points.push({ x: cx + sinA * amp, y, depth: cosA, color: rose, glow: 'rgba(230,57,70,0.35)', strand: 0, t });
+      points.push({ x: cx + sinA * amp, y, depth: cosA, color: rose, glow: 'rgba(16,185,129,0.35)', strand: 0, t });
       points.push({ x: cx - sinA * amp, y, depth: -cosA, color: indigo, glow: 'rgba(59,111,245,0.35)', strand: 1, t });
     }
 
@@ -2194,7 +2194,7 @@ function startLogoHelix() {
           else ctx.lineTo(p.x, p.y);
         }
         const baseColor = si === 0 ? rose : indigo;
-        const glowColor = si === 0 ? 'rgba(230,57,70,0.3)' : 'rgba(59,111,245,0.3)';
+        const glowColor = si === 0 ? 'rgba(16,185,129,0.3)' : 'rgba(59,111,245,0.3)';
         ctx.strokeStyle = baseColor;
         ctx.lineWidth = pass ? 4.5 : 2.5;
         ctx.globalAlpha = pass ? 1.0 : 0.35;
@@ -2321,13 +2321,13 @@ function showDiseaseDetail(d) {
       ${d.confidence ? `<div class="model-stat"><div class="val">${d.confidence}</div><div class="lbl">AlphaFold pLDDT</div></div>` : ''}
     </div>
 
-    <div style="padding:14px;background:rgba(196,68,106,0.04);border:1px solid rgba(196,68,106,0.12);border-radius:12px;margin-bottom:16px">
+    <div style="padding:14px;background:rgba(16,185,129,0.04);border:1px solid rgba(16,185,129,0.12);border-radius:12px;margin-bottom:16px">
       <div style="font-size:11px;font-weight:700;color:var(--text-tertiary);letter-spacing:1px;margin-bottom:8px">OPTIMIZATION TARGETS FOR THIS PROTEIN</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(196,68,106,0.08);color:var(--accent)">Lower Aggregation</span>
-        <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(196,68,106,0.08);color:var(--accent)">Improved Stability</span>
-        <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(196,68,106,0.08);color:var(--accent)">Higher Solubility</span>
-        <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(196,68,106,0.08);color:var(--accent)">Preserved Function</span>
+        <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(16,185,129,0.08);color:var(--accent)">Lower Aggregation</span>
+        <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(16,185,129,0.08);color:var(--accent)">Improved Stability</span>
+        <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(16,185,129,0.08);color:var(--accent)">Higher Solubility</span>
+        <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(16,185,129,0.08);color:var(--accent)">Preserved Function</span>
       </div>
     </div>
 
@@ -2375,7 +2375,7 @@ function updateDiseaseParam(type) {
     const v = parseInt(document.getElementById('stabNum').value);
     const el = document.getElementById('stabLabel');
     if (v <= 5) { el.textContent = 'Mild stabilization'; el.style.background = 'var(--surface)'; el.style.color = 'var(--text-tertiary)'; }
-    else if (v <= 15) { el.textContent = 'Moderate stabilization'; el.style.background = 'rgba(196,68,106,0.1)'; el.style.color = 'var(--success)'; }
+    else if (v <= 15) { el.textContent = 'Moderate stabilization'; el.style.background = 'rgba(16,185,129,0.1)'; el.style.color = 'var(--success)'; }
     else { el.textContent = 'Strong stabilization — aggressive mutations'; el.style.background = 'rgba(232,98,26,0.1)'; el.style.color = 'var(--warning)'; }
   }
 }
@@ -2588,7 +2588,7 @@ function updateTemp(fromInput) {
   const el = document.getElementById('tempLabel');
   if (v <= 40) { el.textContent = 'Ambient \u2014 natural enzymes work here'; el.style.background = 'var(--surface)'; el.style.color = 'var(--text-tertiary)'; }
   else if (v <= 55) { el.textContent = 'Warm \u2014 enzymes start to struggle'; el.style.background = 'rgba(232,98,26,0.1)'; el.style.color = 'var(--warning)'; }
-  else if (v <= 65) { el.textContent = 'PET glass transition \u2014 ideal for recycling'; el.style.background = 'rgba(196,68,106,0.1)'; el.style.color = 'var(--success)'; }
+  else if (v <= 65) { el.textContent = 'PET glass transition \u2014 ideal for recycling'; el.style.background = 'rgba(16,185,129,0.1)'; el.style.color = 'var(--success)'; }
   else if (v <= 75) { el.textContent = 'High heat \u2014 aggressive recycling'; el.style.background = 'rgba(232,98,26,0.1)'; el.style.color = 'var(--warning)'; }
   else { el.textContent = 'Extreme \u2014 very challenging for enzymes'; el.style.background = 'rgba(214,64,69,0.06)'; el.style.color = 'var(--error)'; }
 }
@@ -2604,8 +2604,8 @@ function updateCryst(fromInput) {
   if (!fromInput) input.value = document.getElementById('crystSlider').value;
   const v = parseFloat(input.value) || 10;
   const el = document.getElementById('crystLabel');
-  if (v <= 10) { el.textContent = 'Amorphous PET film \u2014 easiest to degrade'; el.style.background = 'rgba(196,68,106,0.1)'; el.style.color = 'var(--success)'; }
-  else if (v <= 20) { el.textContent = 'Low crystallinity \u2014 typical recycled flake'; el.style.background = 'rgba(196,68,106,0.1)'; el.style.color = 'var(--success)'; }
+  if (v <= 10) { el.textContent = 'Amorphous PET film \u2014 easiest to degrade'; el.style.background = 'rgba(16,185,129,0.1)'; el.style.color = 'var(--success)'; }
+  else if (v <= 20) { el.textContent = 'Low crystallinity \u2014 typical recycled flake'; el.style.background = 'rgba(16,185,129,0.1)'; el.style.color = 'var(--success)'; }
   else if (v <= 30) { el.textContent = 'Bottle-grade PET \u2014 moderate difficulty'; el.style.background = 'rgba(232,98,26,0.1)'; el.style.color = 'var(--warning)'; }
   else if (v <= 40) { el.textContent = 'High crystallinity \u2014 very resistant'; el.style.background = 'rgba(214,64,69,0.06)'; el.style.color = 'var(--error)'; }
   else { el.textContent = 'Highly crystalline \u2014 extremely challenging'; el.style.background = 'rgba(214,64,69,0.1)'; el.style.color = 'var(--error)'; }
@@ -2628,7 +2628,7 @@ function updateContam(fromInput) {
   const v = parseFloat(input.value) || 0;
   const el = document.getElementById('contamLabel');
   if (v === 0) { el.textContent = 'No contamination \u2014 lab-grade sample'; el.style.background = 'var(--surface)'; el.style.color = 'var(--text-tertiary)'; }
-  else if (v <= 20) { el.textContent = 'Light contamination \u2014 pre-washed'; el.style.background = 'rgba(196,68,106,0.1)'; el.style.color = 'var(--success)'; }
+  else if (v <= 20) { el.textContent = 'Light contamination \u2014 pre-washed'; el.style.background = 'rgba(16,185,129,0.1)'; el.style.color = 'var(--success)'; }
   else if (v <= 40) { el.textContent = 'Moderate \u2014 typical municipal waste'; el.style.background = 'rgba(232,98,26,0.1)'; el.style.color = 'var(--warning)'; }
   else if (v <= 60) { el.textContent = 'Heavy \u2014 unsorted post-consumer'; el.style.background = 'rgba(214,64,69,0.06)'; el.style.color = 'var(--error)'; }
   else { el.textContent = 'Severe \u2014 raw landfill / ocean plastic'; el.style.background = 'rgba(214,64,69,0.1)'; el.style.color = 'var(--error)'; }
@@ -2658,7 +2658,7 @@ function updatePreheat(fromInput) {
   if (!fromInput) input.value = slider.value;
   const T = parseFloat(input.value) || 250;
   const el = document.getElementById('preheatLabel');
-  if (T < 120) { el.textContent = 'Mild anneal \u2014 partial relaxation'; el.style.background = 'rgba(196,68,106,0.1)'; el.style.color = 'var(--success)'; }
+  if (T < 120) { el.textContent = 'Mild anneal \u2014 partial relaxation'; el.style.background = 'rgba(16,185,129,0.1)'; el.style.color = 'var(--success)'; }
   else if (T < 200) { el.textContent = 'Moderate \u2014 good crystallinity reduction'; el.style.background = 'rgba(232,98,26,0.1)'; el.style.color = 'var(--warning)'; }
   else { el.textContent = 'Full melt \u2014 maximum amorphization'; el.style.background = 'rgba(214,64,69,0.06)'; el.style.color = 'var(--error)'; }
 
@@ -2851,7 +2851,7 @@ function renderResults() {
   const activityGain = factors.activityGain || 0;
 
   let html = `
-    ${thermalAdapted ? `<div style="padding:14px 18px;background:rgba(196,68,106,0.06);border:1px solid rgba(196,68,106,0.15);border-radius:12px;margin-bottom:16px;display:flex;align-items:center;gap:10px">
+    ${thermalAdapted ? `<div style="padding:14px 18px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.15);border-radius:12px;margin-bottom:16px;display:flex;align-items:center;gap:10px">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 15c6.667-6 13.333 0 20-6"/><path d="M9 22c1.798-1.998 2.518-3.995 2.807-5.993"/><path d="M15 2c-1.798 1.998-2.518 3.995-2.807 5.993"/></svg>
       <div>
         <div style="font-weight:700;color:var(--success);font-size:14px">AI Thermal Adaptation</div>
@@ -2863,7 +2863,7 @@ function renderResults() {
       </div>
     </div>` : ''}
 
-    ${isDiseaseMode ? `<div style="padding:14px 18px;background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.15);border-radius:12px;margin-bottom:16px;display:flex;align-items:center;gap:10px">
+    ${isDiseaseMode ? `<div style="padding:14px 18px;background:rgba(59,111,245,0.06);border:1px solid rgba(59,111,245,0.15);border-radius:12px;margin-bottom:16px;display:flex;align-items:center;gap:10px">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 15c6.667-6 13.333 0 20-6"/><path d="M9 22c1.798-1.998 2.518-3.995 2.807-5.993"/><path d="M15 2c-1.798 1.998-2.518 3.995-2.807 5.993"/></svg>
       <div>
         <div style="font-weight:700;color:var(--accent);font-size:14px">Disease Protein Optimization</div>
@@ -2930,7 +2930,7 @@ function renderResults() {
         </div>
       </div>
 
-      <div style="padding:12px 16px;background:${factors.combined > 0.6 ? 'rgba(196,68,106,0.06)' : factors.combined > 0.3 ? 'rgba(232,145,12,0.06)' : 'rgba(214,64,69,0.06)'};border-radius:8px;border:1px solid ${factors.combined > 0.6 ? 'rgba(196,68,106,0.12)' : factors.combined > 0.3 ? 'rgba(232,145,12,0.15)' : 'rgba(214,64,69,0.15)'}">
+      <div style="padding:12px 16px;background:${factors.combined > 0.6 ? 'rgba(16,185,129,0.06)' : factors.combined > 0.3 ? 'rgba(232,145,12,0.06)' : 'rgba(214,64,69,0.06)'};border-radius:8px;border:1px solid ${factors.combined > 0.6 ? 'rgba(16,185,129,0.12)' : factors.combined > 0.3 ? 'rgba(232,145,12,0.15)' : 'rgba(214,64,69,0.15)'}">
         <div style="display:flex;align-items:center;justify-content:space-between">
           <div>
             <div style="font-size:12px;font-weight:700;color:var(--text-primary)">${isDiseaseMode ? 'Overall Therapeutic Score' : 'Combined Efficiency (Post-Optimization)'}</div>
@@ -3020,7 +3020,7 @@ function renderResults() {
         labels: R.candidates.map(c => '#' + c.rank),
         datasets: [{
           data: scores,
-          backgroundColor: scores.map((s, i) => s > wtScore ? (i === 0 ? '#7C8CF8' : 'rgba(124,140,248,0.7)') : 'rgba(212,160,74,0.7)'),
+          backgroundColor: scores.map((s, i) => s > wtScore ? (i === 0 ? '#5B8CFF' : 'rgba(59,111,245,0.7)') : 'rgba(212,160,74,0.7)'),
           borderRadius: 4,
         }]
       },
@@ -3055,10 +3055,10 @@ function renderResults() {
           const ctx = chart.ctx;
           ctx.save();
           ctx.setLineDash([6, 4]);
-          ctx.strokeStyle = '#E54D5D';
+          ctx.strokeStyle = '#34D399';
           ctx.lineWidth = 2;
           ctx.beginPath(); ctx.moveTo(chart.chartArea.left, y); ctx.lineTo(chart.chartArea.right, y); ctx.stroke();
-          ctx.fillStyle = '#E54D5D';
+          ctx.fillStyle = '#34D399';
           ctx.font = 'bold 9px sans-serif';
           ctx.fillText('Wild-type', chart.chartArea.right - 50, y - 5);
           ctx.restore();
@@ -3134,9 +3134,9 @@ function renderCandidateCard(c, wtScore) {
       </div>
     </div>
     ${(hasLit || classOk || c.rank <= 3) ? `<div class="cand-badges">
-      ${c.rank <= 3 ? `<span class="badge" onclick="event.stopPropagation(); show3DViewer(${JSON.stringify(c.mutations).replace(/"/g,'&quot;')});" style="cursor:pointer;background:rgba(124,140,248,0.08);color:var(--primary);border:1px solid rgba(124,140,248,0.15)">View 3D</span>` : ''}
-      ${hasLit ? `<span class="badge" style="background:rgba(196,68,106,0.08);color:var(--success);border:1px solid rgba(196,68,106,0.15)">Validated</span>` : ''}
-      ${classOk ? `<span class="badge" style="background:rgba(196,68,106,0.08);color:var(--accent);border:1px solid rgba(196,68,106,0.15)">ML Confirmed ${(c.classifier_prediction.average_confidence*100).toFixed(0)}%</span>` : ''}
+      ${c.rank <= 3 ? `<span class="badge" onclick="event.stopPropagation(); show3DViewer(${JSON.stringify(c.mutations).replace(/"/g,'&quot;')});" style="cursor:pointer;background:rgba(59,111,245,0.08);color:var(--primary);border:1px solid rgba(59,111,245,0.15)">View 3D</span>` : ''}
+      ${hasLit ? `<span class="badge" style="background:rgba(16,185,129,0.08);color:var(--success);border:1px solid rgba(16,185,129,0.15)">Validated</span>` : ''}
+      ${classOk ? `<span class="badge" style="background:rgba(16,185,129,0.08);color:var(--accent);border:1px solid rgba(16,185,129,0.15)">ML Confirmed ${(c.classifier_prediction.average_confidence*100).toFixed(0)}%</span>` : ''}
     </div>` : ''}
   </div>`;
 }
@@ -3153,7 +3153,7 @@ function showCandidateDetail(c) {
         <span style="font-size:14px;font-weight:600;color:${rc}">${gradeLabel(c.combined_score)}</span>
       </div>
       <span style="font-size:10px;font-weight:800;padding:4px 10px;border-radius:8px;letter-spacing:0.5px;text-transform:uppercase;
-        background:${c.overall_strategy === 'thermostability-focused' ? 'rgba(0,0,255,0.1);color:blue' : c.overall_strategy === 'activity-focused' ? 'rgba(232,98,26,0.1);color:var(--warning)' : 'rgba(124,140,248,0.1);color:var(--primary)'}">
+        background:${c.overall_strategy === 'thermostability-focused' ? 'rgba(0,0,255,0.1);color:blue' : c.overall_strategy === 'activity-focused' ? 'rgba(232,98,26,0.1);color:var(--warning)' : 'rgba(59,111,245,0.1);color:var(--primary)'}">
         ${c.overall_strategy || 'balanced'}</span>
     </div>
 
@@ -3165,7 +3165,7 @@ function showCandidateDetail(c) {
 
   // Classifier
   if (cp) {
-    html += `<div class="classifier-section" style="background:${cp.all_beneficial ? 'rgba(196,68,106,0.04)' : 'var(--surface)'};border:1px solid ${cp.all_beneficial ? 'rgba(196,68,106,0.15)' : 'var(--border)'}">
+    html += `<div class="classifier-section" style="background:${cp.all_beneficial ? 'rgba(16,185,129,0.04)' : 'var(--surface)'};border:1px solid ${cp.all_beneficial ? 'rgba(16,185,129,0.15)' : 'var(--border)'}">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <span style="font-size:14px;font-weight:700">Trained Classifier</span>
         <span style="font-size:12px;font-weight:600;font-family:monospace;color:${cp.all_beneficial ? 'var(--accent)' : 'var(--text-tertiary)'}">${(cp.average_confidence*100).toFixed(1)}%</span>
@@ -3183,12 +3183,12 @@ function showCandidateDetail(c) {
     html += `<div class="lit-section">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <span style="font-size:14px;font-weight:700">Literature Validation</span>
-        <span style="font-size:11px;font-weight:700;color:var(--success);background:rgba(196,68,106,0.1);padding:2px 8px;border-radius:6px">${(lv.validation_score*100).toFixed(0)}% validated</span>
+        <span style="font-size:11px;font-weight:700;color:var(--success);background:rgba(16,185,129,0.1);padding:2px 8px;border-radius:6px">${(lv.validation_score*100).toFixed(0)}% validated</span>
       </div>
       <p style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;line-height:1.4">${lv.summary}</p>
       ${(lv.exact_matches || []).map(m => `<div style="background:var(--surface-3);border-radius:8px;padding:10px;margin-top:8px">
         <span style="font-family:monospace;font-weight:700;font-size:13px;color:var(--success)">${m.mutation}</span>
-        <span class="tag-chip" style="background:rgba(196,68,106,0.1);color:var(--success)">EXACT MATCH</span>
+        <span class="tag-chip" style="background:rgba(16,185,129,0.1);color:var(--success)">EXACT MATCH</span>
         <div style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-top:4px">${m.paper} (${m.journal})</div>
         ${m.improvement ? `<div style="font-size:11px;color:var(--text-tertiary)">${m.improvement}</div>` : ''}
       </div>`).join('')}
@@ -3208,7 +3208,7 @@ function showCandidateDetail(c) {
       <div>
         <span class="mut-label">${e.mutation}</span>
         ${e.near_active_site ? `<span class="tag-chip" style="background:rgba(232,98,26,0.1);color:var(--warning)">Active Site</span>` : ''}
-        ${e.thermostability_hotspot ? `<span class="tag-chip" style="background:rgba(196,68,106,0.1);color:var(--success)">Hotspot</span>` : ''}
+        ${e.thermostability_hotspot ? `<span class="tag-chip" style="background:rgba(16,185,129,0.1);color:var(--success)">Hotspot</span>` : ''}
       </div>
       <div class="summary">${e.summary}</div>
       ${(e.reasons || []).map(r => `<div class="reason">${r}</div>`).join('')}
@@ -3348,7 +3348,7 @@ function show3DViewer(mutations) {
           <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)">
             <button onclick="tourPrev()" id="tourPrevBtn" class="viewer-btn" style="font-size:11px">Back</button>
             <div id="tourDots" style="display:flex;gap:4px;align-items:center"></div>
-            <button onclick="tourNext()" id="tourNextBtn" class="viewer-btn" style="font-size:11px;background:rgba(124,140,248,0.4);color:#fff;border-color:rgba(124,140,248,0.5)">Next</button>
+            <button onclick="tourNext()" id="tourNextBtn" class="viewer-btn" style="font-size:11px;background:rgba(59,111,245,0.4);color:#fff;border-color:rgba(59,111,245,0.5)">Next</button>
           </div>
         </div>
       </div>
@@ -3373,7 +3373,7 @@ function show3DViewer(mutations) {
           <button onclick="toggleMutLabels()" id="btn3d_labels" class="viewer-btn viewer-btn-active" title="Toggle mutation labels">Labels</button>
           <button onclick="focusMutations()" class="viewer-btn" title="Zoom to mutation sites" style="background:rgba(231,76,69,0.3);color:#fff">Focus Mutations</button>
           <button onclick="resetView()" class="viewer-btn" title="Reset camera">Reset</button>
-          ${parsedMuts.length > 0 ? `<button onclick="startGuidedTour()" id="btn3d_tour" class="viewer-btn" title="Guided mutation tour" style="background:rgba(124,140,248,0.4);color:#fff;border-color:rgba(124,140,248,0.5)">Guided Tour</button>` : ''}
+          ${parsedMuts.length > 0 ? `<button onclick="startGuidedTour()" id="btn3d_tour" class="viewer-btn" title="Guided mutation tour" style="background:rgba(59,111,245,0.4);color:#fff;border-color:rgba(59,111,245,0.5)">Guided Tour</button>` : ''}
         </div>
       </div>
     </div>
@@ -3406,7 +3406,7 @@ function show3DViewer(mutations) {
     <style>
       .viewer-btn { padding:5px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.8);font-size:11px;font-weight:600;cursor:pointer;backdrop-filter:blur(4px);transition:all 0.15s }
       .viewer-btn:hover { background:rgba(255,255,255,0.18) }
-      .viewer-btn-active { background:rgba(124,140,248,0.4);color:#fff;border-color:rgba(124,140,248,0.5) }
+      .viewer-btn-active { background:rgba(59,111,245,0.4);color:#fff;border-color:rgba(59,111,245,0.5) }
       @keyframes spin { to { transform: rotate(360deg) } }
     </style>
   `;
@@ -3627,7 +3627,7 @@ function renderTourStep() {
   let dots = '';
   for (let i = 0; i < total; i++) {
     const active = i === _tourIdx;
-    dots += '<div style="width:' + (active ? '16px' : '6px') + ';height:6px;border-radius:' + (active ? '3px' : '50%') + ';background:' + (active ? '#7C8CF8' : 'rgba(255,255,255,0.15)') + ';transition:all 0.3s"></div>';
+    dots += '<div style="width:' + (active ? '16px' : '6px') + ';height:6px;border-radius:' + (active ? '3px' : '50%') + ';background:' + (active ? '#5B8CFF' : 'rgba(255,255,255,0.15)') + ';transition:all 0.3s"></div>';
   }
   document.getElementById('tourDots').innerHTML = dots;
   document.getElementById('tourPrevBtn').disabled = (_tourIdx === 0);
@@ -3847,7 +3847,7 @@ showPage = function(name) {
     const pct = Math.max(0, Math.min(1, traveled / timelineH));
     progress.style.height = (pct * timelineH) + 'px';
     // Glow effect on progress line
-    progress.style.boxShadow = `0 0 ${8 + pct * 12}px rgba(124,140,248,${0.3 + pct * 0.4})`;
+    progress.style.boxShadow = `0 0 ${8 + pct * 12}px rgba(59,111,245,${0.3 + pct * 0.4})`;
 
     steps.forEach(function(step, i) {
       const stepRect = step.getBoundingClientRect();
@@ -3884,7 +3884,7 @@ showPage = function(name) {
         header.style.background = 'rgba(8,8,15,0.85)';
         header.style.backdropFilter = 'blur(20px) saturate(1.2)';
         header.style.webkitBackdropFilter = 'blur(20px) saturate(1.2)';
-        header.style.borderBottom = '1px solid rgba(124,140,248,0.08)';
+        header.style.borderBottom = '1px solid rgba(59,111,245,0.08)';
       } else {
         header.style.background = 'rgba(8,8,15,0.5)';
         header.style.backdropFilter = 'blur(8px)';
@@ -4005,7 +4005,7 @@ showPage = function(name) {
       ctx.arc(0, 0, baseR, 0, Math.PI * 2);
       ctx.strokeStyle = i === 0
         ? `rgba(59,111,245,${alpha})`
-        : `rgba(230,57,70,${alpha * 0.8})`;
+        : `rgba(16,185,129,${alpha * 0.8})`;
       ctx.lineWidth = 1;
       ctx.setLineDash([6, 14]);
       ctx.lineDashOffset = -t * 0.5;
@@ -4024,7 +4024,7 @@ showPage = function(name) {
         ctx.lineTo(x2, y2);
         ctx.strokeStyle = i === 0
           ? `rgba(59,111,245,${alpha * 2})`
-          : `rgba(230,57,70,${alpha * 1.5})`;
+          : `rgba(16,185,129,${alpha * 1.5})`;
         ctx.lineWidth = 1.5;
         ctx.stroke();
       }
@@ -4066,7 +4066,7 @@ showPage = function(name) {
 
       const fade = 0.55 + 0.35 * Math.sin(t * 0.02 + i * 1.3);
       const blue = `rgba(59,111,245,${fade})`;
-      const red  = `rgba(230,57,70,${fade})`;
+      const red  = `rgba(16,185,129,${fade})`;
       const col  = i % 2 === 0 ? blue : red;
 
       // Connector line from ring to label
@@ -4269,10 +4269,10 @@ showPage = function(name) {
 // 13. Dynamic background gradient morph as you scroll between sections
 (function bgGradientMorph() {
   const gradients = [
-    'radial-gradient(ellipse 80% 60% at 20% 20%, rgba(124,140,248,0.06) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 80% 80%, rgba(196,68,106,0.05) 0%, transparent 60%)',
-    'radial-gradient(ellipse 70% 60% at 80% 20%, rgba(56,189,248,0.07) 0%, transparent 60%), radial-gradient(ellipse 70% 50% at 20% 80%, rgba(124,140,248,0.06) 0%, transparent 60%)',
-    'radial-gradient(ellipse 90% 60% at 50% 30%, rgba(196,68,106,0.06) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 60% 80%, rgba(52,211,153,0.04) 0%, transparent 60%)',
-    'radial-gradient(ellipse 80% 80% at 10% 50%, rgba(167,139,250,0.07) 0%, transparent 60%), radial-gradient(ellipse 60% 60% at 90% 50%, rgba(56,189,248,0.05) 0%, transparent 60%)',
+    'radial-gradient(ellipse 80% 60% at 20% 20%, rgba(59,111,245,0.06) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 80% 80%, rgba(16,185,129,0.05) 0%, transparent 60%)',
+    'radial-gradient(ellipse 70% 60% at 80% 20%, rgba(56,189,248,0.07) 0%, transparent 60%), radial-gradient(ellipse 70% 50% at 20% 80%, rgba(59,111,245,0.06) 0%, transparent 60%)',
+    'radial-gradient(ellipse 90% 60% at 50% 30%, rgba(16,185,129,0.06) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 60% 80%, rgba(52,211,153,0.04) 0%, transparent 60%)',
+    'radial-gradient(ellipse 80% 80% at 10% 50%, rgba(59,111,245,0.07) 0%, transparent 60%), radial-gradient(ellipse 60% 60% at 90% 50%, rgba(56,189,248,0.05) 0%, transparent 60%)',
   ];
 
   let bgEl = document.createElement('div');
