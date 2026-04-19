@@ -185,6 +185,8 @@ async def optimize_petase(req: OptimizationRequest):
             num_candidates=req.num_candidates,
             optimization_steps=req.optimization_steps,
             target_temp=req.target_temperature,
+            ph=req.ph,
+            contamination_scenario=req.contamination_scenario,
         )
         return OptimizationResponse(
             original_sequence=result["original_sequence"],

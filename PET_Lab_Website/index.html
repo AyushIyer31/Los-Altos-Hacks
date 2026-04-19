@@ -1410,63 +1410,35 @@ footer {
       <input type="range" id="tempSlider" min="30" max="90" step="1" value="60" oninput="updateTemp()">
     </div>
 
-    <!-- Crystallinity -->
+    <!-- pH -->
     <div class="card" style="margin-bottom:12px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M11 3 8 9l4 13 4-13-3-6"/><path d="M2 9h20"/></svg>
-        <h5 style="font-size:14px;font-weight:700">PET Crystallinity</h5>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h4"/><path d="M12 8v8"/><path d="M16 12h.01"/></svg>
+        <h5 style="font-size:14px;font-weight:700">pH</h5>
       </div>
-      <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:10px">Amorphous PET (~7%) degrades easily. Bottle-grade PET (~30%) is tightly packed and much harder to break down.</p>
+      <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:10px">Buffer pH affects charged residue stability and catalytic activity. Most PETases peak at pH 7.5&ndash;9.0 (Yoshida 2016; Tournier 2020).</p>
       <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px">
-        <div class="temp-display"><input type="number" class="num-input" id="crystNum" value="10" min="1" max="45" step="0.01" oninput="document.getElementById('crystSlider').value=Math.round(this.value);updateCryst(true)"><span class="unit">%</span></div>
-        <div class="temp-label" id="crystLabel" style="background:rgba(16,185,129,0.1);color:var(--success)">Amorphous PET film &mdash; easiest to degrade</div>
+        <div class="temp-display"><input type="number" class="num-input" id="phNum" value="8.0" min="4.0" max="10.0" step="0.1" oninput="document.getElementById('phSlider').value=this.value;updatePH(true)"><span class="unit">pH</span></div>
+        <div class="temp-label" id="phLabel" style="background:rgba(16,185,129,0.1);color:var(--success)">Slightly alkaline &mdash; optimal for most PETases</div>
       </div>
-      <input type="range" id="crystSlider" min="1" max="45" step="1" value="10" oninput="updateCryst()">
+      <input type="range" id="phSlider" min="4.0" max="10.0" step="0.1" value="8.0" oninput="updatePH()">
     </div>
 
-    <!-- Contaminant -->
+    <!-- Real-World Scenario -->
     <div class="card" style="margin-bottom:12px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-        <h5 style="font-size:14px;font-weight:700">Contaminants</h5>
+        <h5 style="font-size:14px;font-weight:700">Real-World Scenario</h5>
       </div>
-      <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:10px">Real-world plastic waste contains dyes, coatings, and additives that inhibit enzymes.</p>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
-        <button class="contam-chip active" onclick="selectContam('none')" id="contam_none">None (Pure PET)</button>
-        <button class="contam-chip" onclick="selectContam('dye')" id="contam_dye">Dyed Plastic</button>
-        <button class="contam-chip" onclick="selectContam('coating')" id="contam_coating">Coated / Labels</button>
-        <button class="contam-chip" onclick="selectContam('mixed')" id="contam_mixed">Mixed Waste</button>
-      </div>
-      <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px">
-        <div class="temp-display"><input type="number" class="num-input" id="contamNum" value="0" min="0" max="80" step="0.01" oninput="document.getElementById('contamSlider').value=Math.round(this.value);updateContam(true)"><span class="unit">%</span></div>
-        <div class="temp-label" id="contamLabel" style="background:var(--surface);color:var(--text-tertiary)">No contamination &mdash; lab-grade sample</div>
-      </div>
-      <input type="range" id="contamSlider" min="0" max="80" step="1" value="0" oninput="updateContam()">
-    </div>
-
-    <!-- PET Pre-Processing -->
-    <div class="card" style="margin-bottom:12px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
-        <h5 style="font-size:14px;font-weight:700">PET Pre-Processing</h5>
-      </div>
-      <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:10px">Heat PET above its glass transition temperature (T<sub>g</sub> &asymp; 70&deg;C), then rapidly quench to convert crystalline regions to amorphous phase. Based on <em>Tournier et al. (2020)</em>.</p>
-      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:10px">
-        <input type="checkbox" id="preprocessToggle" onchange="updatePreprocess()" style="width:18px;height:18px;accent-color:var(--primary)">
-        <span style="font-size:13px;font-weight:600">Enable thermal pre-processing</span>
-      </label>
-      <div id="preprocessOptions" style="display:none">
-        <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:6px">
-          <div class="temp-display"><input type="number" class="num-input" id="preheatNum" value="250" min="80" max="270" step="0.01" oninput="document.getElementById('preheatSlider').value=Math.round(this.value);updatePreheat(true)"><span class="unit">&deg;C</span></div>
-          <div class="temp-label" id="preheatLabel" style="background:rgba(232,98,26,0.1);color:var(--warning)">Full melt &mdash; maximum amorphization</div>
-        </div>
-        <input type="range" id="preheatSlider" min="80" max="270" step="1" value="250" oninput="updatePreheat()">
-        <div style="margin-top:8px;padding:8px 10px;border-radius:var(--radius-sm);background:rgba(77,168,218,0.06)">
-          <div style="font-size:11px;color:var(--text-secondary)">
-            <strong>Effective crystallinity:</strong> <span id="effectiveCryst">~3%</span> (down from <span id="originalCryst">10</span>%)
-          </div>
-          <div style="font-size:11px;color:var(--text-tertiary);margin-top:2px">Rapid quench locks the amorphous state, dramatically improving enzyme accessibility.</div>
-        </div>
+      <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:10px">Select your operating environment. This determines which wet-lab validations are flagged on the results page. Chemical robustness is estimated from ESM-2 evolutionary fitness &mdash; not computed from contaminant data.</p>
+      <select id="contamScenario" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text-primary);font-size:13px;cursor:pointer" onchange="updateScenario()">
+        <option value="lab">Lab-grade buffer (pure conditions)</option>
+        <option value="prewashed">Pre-washed municipal waste</option>
+        <option value="industrial">Industrial wastewater</option>
+        <option value="landfill">Landfill leachate</option>
+      </select>
+      <div id="scenarioNote" style="margin-top:10px;font-size:11px;color:var(--text-tertiary);padding:8px 10px;background:var(--surface);border-radius:6px;border:1px solid var(--border)">
+        Controlled conditions &mdash; minimal validation needed beyond activity assay.
       </div>
     </div>
 
@@ -1565,6 +1537,12 @@ footer {
         <h3>Abhinav Iyer</h3>
         <div class="team-role">CO-FOUNDER</div>
         <p class="team-bio">Computational biology researcher interested in applying advanced modeling techniques to biological systems. As the co-founder of PET Lab, Abhinav contributes a strong foundation in data analysis, scientific modeling, and biological systems understanding to guide enzyme design and validation for PET degradation. He has conducted research in computational chemistry and genomics, including molecular dynamics simulations of protein structures. His work integrates principles from biology, chemistry, and computation, with the goal of developing innovative solutions to environmental challenges through protein engineering.</p>
+      </div>
+      <div class="team-card">
+        <img src="images/IMG_7015.png" alt="Ram Bala" class="team-photo">
+        <h3>Ram Bala</h3>
+        <div class="team-role">MENTOR</div>
+        <p class="team-bio">Ram Bala is an Associate Professor of AI &amp; Analytics at the Leavey School of Business, Santa Clara University. He holds a Ph.D. in Operations Research from UCLA Anderson and a bachelor&apos;s degree in Mechanical Engineering from IIT Bombay. A globally recognized expert in pricing, marketplace design, and supply chain strategy, his work applies optimization, game theory, and machine learning to dynamic markets. He is also the founder of Samvid.ai, where he focuses on advancing AI-driven innovation and autonomous decision-making in organizations.</p>
       </div>
     </div>
 
@@ -2577,6 +2555,32 @@ function updateSeqLength() {
   else { el.style.display = 'none'; }
 }
 
+function updatePH(fromInput) {
+  const input = document.getElementById('phNum');
+  const slider = document.getElementById('phSlider');
+  if (!fromInput) input.value = slider.value;
+  const v = parseFloat(input.value) || 8.0;
+  const el = document.getElementById('phLabel');
+  if (v < 5.5)      { el.textContent = 'Strongly acidic \u2014 below PETase activity range';   el.style.background = 'rgba(214,64,69,0.08)';    el.style.color = 'var(--error)'; }
+  else if (v < 6.5) { el.textContent = 'Mildly acidic \u2014 reduced catalytic efficiency';    el.style.background = 'rgba(232,145,12,0.08)';   el.style.color = 'var(--warning)'; }
+  else if (v < 7.5) { el.textContent = 'Near-neutral \u2014 suboptimal for most PETases';      el.style.background = 'rgba(232,145,12,0.08)';   el.style.color = 'var(--warning)'; }
+  else if (v <= 9.0){ el.textContent = 'Slightly alkaline \u2014 optimal for most PETases';    el.style.background = 'rgba(16,185,129,0.1)';    el.style.color = 'var(--success)'; }
+  else if (v <= 9.5){ el.textContent = 'Alkaline \u2014 near upper activity range';            el.style.background = 'rgba(232,145,12,0.08)';   el.style.color = 'var(--warning)'; }
+  else               { el.textContent = 'Strongly alkaline \u2014 above optimal activity range';el.style.background = 'rgba(214,64,69,0.08)';    el.style.color = 'var(--error)'; }
+}
+
+const SCENARIO_NOTES = {
+  lab:        'Controlled conditions \u2014 minimal validation needed beyond activity assay.',
+  prewashed:  'Wet-lab validation needed: residual soap/surfactant inhibition and pH 6\u20137 buffer stability.',
+  industrial: 'Wet-lab validation needed: heavy metal tolerance (Zn\u00B2\u207A, Cu\u00B2\u207A), surfactant inhibition, and pH 5\u20138 range.',
+  landfill:   'Wet-lab validation needed: acidic leachate (pH 4\u20136), protease degradation of enzyme, UV exposure, and competing microbe activity.',
+};
+
+function updateScenario() {
+  const val = document.getElementById('contamScenario').value;
+  document.getElementById('scenarioNote').textContent = SCENARIO_NOTES[val] || SCENARIO_NOTES.lab;
+}
+
 function updateTemp(fromInput) {
   const input = document.getElementById('tempNum');
   const slider = document.getElementById('tempSlider');
@@ -2596,17 +2600,6 @@ function updateCand(fromInput) {
 
 let selectedContamType = 'none';
 
-function updateCryst(fromInput) {
-  const input = document.getElementById('crystNum');
-  if (!fromInput) input.value = document.getElementById('crystSlider').value;
-  const v = parseFloat(input.value) || 10;
-  const el = document.getElementById('crystLabel');
-  if (v <= 10) { el.textContent = 'Amorphous PET film \u2014 easiest to degrade'; el.style.background = 'rgba(16,185,129,0.1)'; el.style.color = 'var(--success)'; }
-  else if (v <= 20) { el.textContent = 'Low crystallinity \u2014 typical recycled flake'; el.style.background = 'rgba(16,185,129,0.1)'; el.style.color = 'var(--success)'; }
-  else if (v <= 30) { el.textContent = 'Bottle-grade PET \u2014 moderate difficulty'; el.style.background = 'rgba(232,98,26,0.1)'; el.style.color = 'var(--warning)'; }
-  else if (v <= 40) { el.textContent = 'High crystallinity \u2014 very resistant'; el.style.background = 'rgba(214,64,69,0.06)'; el.style.color = 'var(--error)'; }
-  else { el.textContent = 'Highly crystalline \u2014 extremely challenging'; el.style.background = 'rgba(214,64,69,0.1)'; el.style.color = 'var(--error)'; }
-}
 
 function selectContam(type) {
   selectedContamType = type;
@@ -2643,30 +2636,6 @@ function updateContam(fromInput) {
   });
 }
 
-function updatePreprocess() {
-  const on = document.getElementById('preprocessToggle').checked;
-  document.getElementById('preprocessOptions').style.display = on ? 'block' : 'none';
-  if (on) updatePreheat();
-}
-
-function updatePreheat(fromInput) {
-  const input = document.getElementById('preheatNum');
-  const slider = document.getElementById('preheatSlider');
-  if (!fromInput) input.value = slider.value;
-  const T = parseFloat(input.value) || 250;
-  const el = document.getElementById('preheatLabel');
-  if (T < 120) { el.textContent = 'Mild anneal \u2014 partial relaxation'; el.style.background = 'rgba(16,185,129,0.1)'; el.style.color = 'var(--success)'; }
-  else if (T < 200) { el.textContent = 'Moderate \u2014 good crystallinity reduction'; el.style.background = 'rgba(232,98,26,0.1)'; el.style.color = 'var(--warning)'; }
-  else { el.textContent = 'Full melt \u2014 maximum amorphization'; el.style.background = 'rgba(214,64,69,0.06)'; el.style.color = 'var(--error)'; }
-
-  // Compute effective crystallinity after preprocessing
-  const origCryst = parseFloat(document.getElementById('crystNum').value) / 100;
-  const Tg = 70, Tm = 260;
-  const meltFrac = Math.max(0, Math.min(1, (T - Tg) / (Tm - Tg)));
-  const effectiveCryst = origCryst * (1 - meltFrac * 0.92); // 92% reduction at full melt
-  document.getElementById('effectiveCryst').textContent = '~' + Math.max(1, Math.round(effectiveCryst * 100)) + '%';
-  document.getElementById('originalCryst').textContent = Math.round(origCryst * 100);
-}
 
 async function runOptimization() {
   const rawSeq = document.getElementById('seqInput').value.replace(/\s/g, '').toUpperCase();
@@ -2705,26 +2674,18 @@ async function runOptimization() {
         num_candidates: parseInt(document.getElementById('candNum').value),
         optimization_steps: 50,
         target_temperature: parseFloat(document.getElementById('tempNum').value),
+        ph: parseFloat(document.getElementById('phNum').value),
+        contamination_scenario: document.getElementById('contamScenario').value,
       }),
     });
     if (!r.ok) throw new Error('Server error: ' + r.status);
     currentResult = await r.json();
 
     // Attach environmental simulation parameters to the result
-    const preprocessOn = document.getElementById('preprocessToggle').checked;
-    let effectiveCryst = parseFloat(document.getElementById('crystNum').value) / 100;
-    if (preprocessOn) {
-      const pT = parseFloat(document.getElementById('preheatNum').value);
-      const mf = Math.max(0, Math.min(1, (pT - 70) / (260 - 70)));
-      effectiveCryst = effectiveCryst * (1 - mf * 0.92);
-    }
     currentResult._env = {
       temperature: parseFloat(document.getElementById('tempNum').value),
-      crystallinity: effectiveCryst,
-      contaminant_level: parseFloat(document.getElementById('contamNum').value) / 100,
-      contaminant_type: selectedContamType,
-      preprocessing: preprocessOn,
-      original_crystallinity: parseFloat(document.getElementById('crystNum').value) / 100,
+      ph: parseFloat(document.getElementById('phNum').value),
+      contamination_scenario: document.getElementById('contamScenario').value,
     };
 
     renderResults();
@@ -2749,16 +2710,6 @@ function simThermalFactor(T, T_opt, width) {
   return Math.max(0, Math.min(1, Math.exp(-Math.pow((T - T_opt) / w, 2))));
 }
 
-function simCrystallinityFactor(cryst, T, Tg) {
-  const alpha = 1.8;
-  const base = Math.pow(1 - cryst, alpha);
-  let tgBoost = 1.0;
-  if (T > Tg - 10) {
-    tgBoost = 1.0 + 0.5 / (1.0 + Math.exp(-(T - Tg) / 3.0));
-  }
-  return Math.max(0.05, Math.min(1.5, base * tgBoost));
-}
-
 function simContaminantFactor(level, type, tolerance) {
   const severity = { none: 0, dye: 0.4, coating: 0.7, mixed: 0.85 }[type] || 0;
   return Math.max(0.05, Math.min(1, 1 - severity * level * (1 - tolerance)));
@@ -2779,16 +2730,14 @@ function getEnzymeProfile() {
 /**
  * Compute environmental factors for the AI-OPTIMIZED enzyme.
  *
- * The AI specifically targets the user's conditions: it selects
- * thermostabilizing mutations at high temperatures, surface-binding
- * mutations for crystalline PET, and robust mutations for contaminant
- * resistance. The candidate's stability and activity scores reflect
- * how well the mutations adapted the enzyme.
+ * The ML model (trained on ThermoMutDB) already encodes temperature and pH
+ * as features — so the ranking is genuinely condition-aware.  This simulation
+ * layer maps the ML scores onto a biologically interpretable thermal profile
+ * for display purposes.
  *
  * We shift the enzyme's profile based on:
  *   - stability_score → shifts T_opt toward target, widens thermal range
- *   - activity_score → improves crystallinity penetration
- *   - classifier confidence → improves contaminant tolerance
+ *   - predicted_dtm   → additional ΔTm from ThermoMutDB regressor
  */
 function computeEnvironmentalFactors(env, candidate) {
   const base = getEnzymeProfile();
@@ -2800,30 +2749,23 @@ function computeEnvironmentalFactors(env, candidate) {
 
   // ── Shift thermal profile toward target temperature ──
   // Thermostabilizing mutations move T_opt toward the target
-  // and widen the thermal tolerance window
-  const T_shift = stabilityGain * (env.temperature - base.T_opt) * 0.7;
+  // and widen the thermal tolerance window.
+  // If ΔTm is available from the ThermoMutDB regressor, add it directly.
+  const dtm = candidate?.predicted_dtm ?? 0;
+  const T_shift = stabilityGain * (env.temperature - base.T_opt) * 0.7 + Math.max(0, dtm);
   const adapted_T_opt = base.T_opt + T_shift;
   const adapted_width = base.width + stabilityGain * 12; // Broader tolerance
 
-  // ── Improve crystallinity penetration ──
-  // Active-site mutations improve substrate binding on crystalline surfaces
-  const cryst_boost = 1 + activityGain * 0.5;
-
-  // ── Improve contaminant tolerance ──
-  // High-confidence mutations tend to be more robust
-  const adapted_tolerance = Math.min(0.95, base.tolerance + mlConfidence * 0.3);
-
   const fT = simThermalFactor(env.temperature, adapted_T_opt, adapted_width);
-  const fC = Math.min(1.5, simCrystallinityFactor(env.crystallinity, env.temperature, 70) * cryst_boost);
-  const fX = simContaminantFactor(env.contaminant_level, env.contaminant_type, adapted_tolerance);
-  const combined = fT * fC * fX;
+  // Combined = thermal efficiency only (crystallinity removed — no validated dataset)
+  const combined = fT;
 
   return {
-    thermal: fT, crystallinity: fC, contaminant: fX, combined,
+    thermal: fT, combined,
     profile: { ...base, T_opt: Math.round(adapted_T_opt), width: adapted_width },
     base_profile: base,
     adapted: true,
-    stabilityGain, activityGain, mlConfidence,
+    stabilityGain, activityGain, mlConfidence, dtm,
   };
 }
 
@@ -2841,9 +2783,15 @@ function renderResults() {
   const isDiseaseMode = false;
 
   // Environmental simulation — factors account for AI mutations
-  const env = R._env || { temperature: 60, crystallinity: 0.1, contaminant_level: 0, contaminant_type: 'none' };
+  const env = R._env || { temperature: 60, ph: 8.0, contamination_scenario: 'lab' };
   const factors = computeEnvironmentalFactors(env, best);
   const adjustedScore = best ? Math.min(best.combined_score * factors.combined, 0.999) : 0;
+
+  // Chemical Robustness from ESM-2 (or classifier fallback) — returned by backend
+  const esmRobustness = best?.esm_robustness ?? 0.5;
+  const esmRobustnessSource = best?.esm_robustness_source ?? 'classifier confidence';
+  // Scenario-specific wet-lab disclaimer shown below the robustness bar
+  const scenarioDisclaimer = SCENARIO_NOTES[env.contamination_scenario] || SCENARIO_NOTES.lab;
 
   // Context-dependent labels
   const perfMetric = isDiseaseMode
@@ -2922,21 +2870,29 @@ function renderResults() {
           </div>
         </div>
         <div style="text-align:center;padding:14px;background:var(--surface);border-radius:10px;border:1px solid var(--border)">
-          <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:4px">${isDiseaseMode ? 'Aggregation Resistance' : 'Substrate Access'}</div>
-          <div style="font-size:24px;font-weight:800;color:${factors.crystallinity > 0.7 ? 'var(--success)' : factors.crystallinity > 0.4 ? 'var(--warning)' : 'var(--error)'}">${(Math.min(factors.crystallinity, 1) * 100).toFixed(0)}%</div>
-          <div style="font-size:11px;color:var(--text-tertiary)">${isDiseaseMode ? 'reduced misfolding' : (env.crystallinity*100).toFixed(0) + '% crystalline PET' + (env.preprocessing ? ' (pre-processed)' : '')}</div>
-          ${!isDiseaseMode && env.preprocessing && env.original_crystallinity > env.crystallinity + 0.01 ? `<div style="font-size:10px;color:var(--primary);margin-top:2px">${(env.original_crystallinity*100).toFixed(0)}% &rarr; ${(env.crystallinity*100).toFixed(0)}% via thermal quench</div>` : ''}
-          ${!isDiseaseMode && activityGain > 0.1 ? `<div style="font-size:10px;color:var(--success);margin-top:2px">+${(activityGain*50).toFixed(0)}% binding boost from mutations</div>` : ''}
-          <div style="margin-top:6px;height:4px;border-radius:2px;background:var(--border)">
-            <div style="height:100%;width:${Math.min(factors.crystallinity*100, 100).toFixed(0)}%;border-radius:2px;background:${factors.crystallinity > 0.7 ? 'var(--success)' : factors.crystallinity > 0.4 ? 'var(--warning)' : 'var(--error)'}"></div>
-          </div>
+          <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:4px">&#916;Tm (Melting Temp. Shift)</div>
+          ${(() => {
+            const dtmVal = best?.predicted_dtm;
+            if (dtmVal == null) {
+              return `<div style="font-size:22px;font-weight:800;color:var(--text-tertiary)">N/A</div>
+                      <div style="font-size:11px;color:var(--text-tertiary)">retrain model to enable</div>`;
+            }
+            const dtmColor = dtmVal > 2 ? 'var(--success)' : dtmVal > 0 ? 'var(--warning)' : 'var(--error)';
+            const dtmSign = dtmVal >= 0 ? '+' : '';
+            const dtmLabel = dtmVal > 2 ? 'significantly stabilising' : dtmVal > 0 ? 'mildly stabilising' : 'destabilising';
+            return `<div style="font-size:24px;font-weight:800;color:${dtmColor}">${dtmSign}${dtmVal.toFixed(1)}&deg;C</div>
+                    <div style="font-size:11px;color:var(--text-tertiary)">${dtmLabel} &mdash; ThermoMutDB model</div>
+                    <div style="margin-top:6px;height:4px;border-radius:2px;background:var(--border)">
+                      <div style="height:100%;width:${Math.min(Math.abs(dtmVal)/10*100, 100).toFixed(0)}%;border-radius:2px;background:${dtmColor}"></div>
+                    </div>`;
+          })()}
         </div>
         <div style="text-align:center;padding:14px;background:var(--surface);border-radius:10px;border:1px solid var(--border)">
-          <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:4px">${isDiseaseMode ? 'Solubility' : 'Contaminant Resistance'}</div>
-          <div style="font-size:24px;font-weight:800;color:${factors.contaminant > 0.7 ? 'var(--success)' : factors.contaminant > 0.4 ? 'var(--warning)' : 'var(--error)'}">${(factors.contaminant * 100).toFixed(0)}%</div>
-          <div style="font-size:11px;color:var(--text-tertiary)">${isDiseaseMode ? 'in physiological buffer' : (env.contaminant_type === 'none' ? 'Pure PET' : env.contaminant_type + ' (' + (env.contaminant_level*100).toFixed(0) + '%)')}</div>
+          <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:4px">${isDiseaseMode ? 'Solubility' : 'Chemical Robustness'}</div>
+          <div style="font-size:24px;font-weight:800;color:${esmRobustness > 0.7 ? 'var(--success)' : esmRobustness > 0.4 ? 'var(--warning)' : 'var(--error)'}">${(esmRobustness * 100).toFixed(0)}%</div>
+          <div style="font-size:11px;color:var(--text-tertiary)">${isDiseaseMode ? 'in physiological buffer' : esmRobustnessSource}</div>
           <div style="margin-top:6px;height:4px;border-radius:2px;background:var(--border)">
-            <div style="height:100%;width:${(factors.contaminant*100).toFixed(0)}%;border-radius:2px;background:${factors.contaminant > 0.7 ? 'var(--success)' : factors.contaminant > 0.4 ? 'var(--warning)' : 'var(--error)'}"></div>
+            <div style="height:100%;width:${(esmRobustness*100).toFixed(0)}%;border-radius:2px;background:${esmRobustness > 0.7 ? 'var(--success)' : esmRobustness > 0.4 ? 'var(--warning)' : 'var(--error)'}"></div>
           </div>
         </div>
       </div>
@@ -2946,12 +2902,18 @@ function renderResults() {
           <div>
             <div style="font-size:12px;font-weight:700;color:var(--text-primary)">${isDiseaseMode ? 'Overall Therapeutic Score' : 'Combined Efficiency (Post-Optimization)'}</div>
             <div style="font-size:11px;color:var(--text-tertiary)">${isDiseaseMode
-              ? 'Folding &times; Aggregation &times; Solubility = ' + (factors.thermal*100).toFixed(0) + '% &times; ' + (Math.min(factors.crystallinity,1)*100).toFixed(0) + '% &times; ' + (factors.contaminant*100).toFixed(0) + '%'
-              : 'Thermal &times; Substrate &times; Contaminant = ' + (factors.thermal*100).toFixed(0) + '% &times; ' + (Math.min(factors.crystallinity,1)*100).toFixed(0) + '% &times; ' + (factors.contaminant*100).toFixed(0) + '%'}</div>
+              ? 'Folding efficiency = ' + (factors.thermal*100).toFixed(0) + '%'
+              : 'Thermal efficiency at ' + env.temperature + '&deg;C = ' + (factors.thermal*100).toFixed(0) + '%'}</div>
           </div>
           <div style="font-size:28px;font-weight:800;color:${factors.combined > 0.6 ? 'var(--success)' : factors.combined > 0.3 ? 'var(--warning)' : 'var(--error)'}">${(factors.combined * 100).toFixed(1)}%</div>
         </div>
       </div>
+
+      ${!isDiseaseMode ? `<div style="margin-top:12px;padding:10px 14px;background:rgba(232,145,12,0.06);border:1px solid rgba(232,145,12,0.18);border-radius:8px;font-size:11px;color:var(--text-secondary);line-height:1.5">
+        <strong style="color:var(--warning)">Wet-lab validation required &mdash; ${env.contamination_scenario === 'lab' ? 'Lab-grade' : env.contamination_scenario === 'prewashed' ? 'Pre-washed municipal' : env.contamination_scenario === 'industrial' ? 'Industrial wastewater' : 'Landfill leachate'} scenario:</strong>
+        ${scenarioDisclaimer}
+        Chemical Robustness above is an ESM-2 evolutionary fitness proxy, not a direct contaminant measurement.
+      </div>` : ''}
     </div>
 
     <!-- What the AI Did -->

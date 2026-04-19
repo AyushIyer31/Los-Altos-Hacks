@@ -25,11 +25,14 @@ REGRESSOR_PATH = os.path.join(MODEL_DIR, "mutation_regressor.pkl")
 SCALER_PATH = os.path.join(MODEL_DIR, "scaler.pkl")
 META_PATH = os.path.join(MODEL_DIR, "model_meta.json")
 CONSERVATION_PATH = os.path.join(MODEL_DIR, "conservation_cache.pkl")
+DTM_REGRESSOR_PATH = os.path.join(MODEL_DIR, "deltaTm_regressor.pkl")
 
 _ensemble = None  # dict with 'models' list and 'weights'
 _scaler = None
 _training_metrics = None
 _conservation_cache = None
+_dtm_ensemble = None   # ΔTm regressor (GradientBoosting + XGBoost, ThermoMutDB)
+_n_features = 48       # updated from model_meta.json after load
 
 # ═══════════════════════════════════════════════════════════
 # Amino acid property tables
@@ -179,10 +182,16 @@ def _get_conservation_features(protein_id, position, wt_aa, mut_aa):
 
 
 def _extract_features(wt_aa: str, position: int, mut_aa: str,
-                      sequence: str = None, protein_id: str = None, **kwargs) -> list[float]:
-    """Extract 48 features for a single mutation (42 original + 6 conservation)."""
+                      sequence: str = None, protein_id: str = None,
+                      temperature: float = 25.0, ph: float = 7.0, **kwargs) -> list[float]:
+    """Extract features for a single mutation.
+
+    Returns 50 features when the model was trained with condition features (v7+),
+    or 48 features for backward compatibility with older model files.
+    Features 49-50 are assay temperature (°C) and pH.
+    """
     if wt_aa not in AA_SET or mut_aa not in AA_SET:
-        return [0.0] * 48
+        return [0.0] * _n_features
 
     features = []
 
@@ -271,7 +280,12 @@ def _extract_features(wt_aa: str, position: int, mut_aa: str,
     cons_feats = _get_conservation_features(protein_id, position, wt_aa, mut_aa)
     features.extend(cons_feats)
 
-    return features  # 48 features
+    # Condition features (2) — only appended when model expects 50 features
+    if _n_features >= 50:
+        features.append(float(temperature))  # feature 49: assay temperature (°C)
+        features.append(float(ph))           # feature 50: assay pH
+
+    return features  # 48 or 50 features depending on loaded model
 
 
 # ═══════════════════════════════════════════════════════════
@@ -280,7 +294,7 @@ def _extract_features(wt_aa: str, position: int, mut_aa: str,
 
 def train_model(force_retrain: bool = False) -> dict:
     """Load pre-trained ensemble from disk."""
-    global _ensemble, _scaler, _training_metrics, _conservation_cache
+    global _ensemble, _scaler, _training_metrics, _conservation_cache, _dtm_ensemble, _n_features
 
     # Already loaded — skip disk I/O
     if not force_retrain and _ensemble is not None and _scaler is not None:
@@ -293,6 +307,35 @@ def train_model(force_retrain: bool = False) -> dict:
             _ensemble = pickle.load(f)
         with open(SCALER_PATH, "rb") as f:
             _scaler = pickle.load(f)
+
+        # Detect feature count from model metadata (backward-compatible)
+        if os.path.exists(META_PATH):
+            with open(META_PATH) as f:
+                _training_metrics = json.load(f)
+            _n_features = int(_training_metrics.get("n_features", 48))
+            _training_metrics["loaded_from_cache"] = True
+        else:
+            _training_metrics = {
+                "model_type": "Ensemble (GradientBoosting + XGBoost + RandomForest)",
+                "loaded_from_cache": True,
+            }
+            _n_features = 48  # assume legacy model
+
+        print(f"[trained_classifier] Model loaded: {_n_features} features", file=sys.stderr)
+
+        # Load ΔTm regressor (optional — only present after v7 retrain)
+        if os.path.exists(DTM_REGRESSOR_PATH):
+            try:
+                with open(DTM_REGRESSOR_PATH, "rb") as f:
+                    _dtm_ensemble = pickle.load(f)
+                print(f"[trained_classifier] ΔTm regressor loaded", file=sys.stderr)
+            except Exception as e:
+                print(f"[trained_classifier] WARNING: Could not load ΔTm regressor: {e}", file=sys.stderr)
+                _dtm_ensemble = None
+        else:
+            _dtm_ensemble = None
+            print(f"[trained_classifier] No ΔTm regressor found (run retrain to enable)", file=sys.stderr)
+
         # Load conservation cache if available
         if os.path.exists(CONSERVATION_PATH):
             try:
@@ -303,15 +346,6 @@ def train_model(force_retrain: bool = False) -> dict:
                 print(f"[trained_classifier] WARNING: Could not load conservation cache: {e}", file=sys.stderr)
                 _conservation_cache = None
 
-        if os.path.exists(META_PATH):
-            with open(META_PATH) as f:
-                _training_metrics = json.load(f)
-            _training_metrics["loaded_from_cache"] = True
-        else:
-            _training_metrics = {
-                "model_type": "Ensemble (GradientBoosting + XGBoost + RandomForest)",
-                "loaded_from_cache": True,
-            }
         print(f"[trained_classifier] Model loaded successfully", file=sys.stderr)
         return _training_metrics
 
@@ -359,16 +393,21 @@ def predict_mutation(wt_aa: str, position: int, mut_aa: str,
     }
 
 
-def _extract_features_batch(mutation_tuples: list[tuple], sequence: str = None, protein_id: str = None) -> np.ndarray:
+def _extract_features_batch(mutation_tuples: list[tuple], sequence: str = None,
+                            protein_id: str = None,
+                            temperature: float = 25.0, ph: float = 7.0) -> np.ndarray:
     """Vectorized feature extraction for many mutations at once.
 
     Much faster than calling _extract_features in a loop because it
     pre-computes shared sequence-level data and caches position-dependent
     features (RSA, secondary structure, context, PSSM) that are identical
     across all mutations at the same residue position.
+
+    temperature: assay temperature in °C (user-selected, applied to all mutations)
+    ph: assay pH (user-selected, applied to all mutations)
     """
     n = len(mutation_tuples)
-    features = np.zeros((n, 48), dtype=np.float64)
+    features = np.zeros((n, _n_features), dtype=np.float64)
 
     # Pre-compute sequence-level data once (shared across all mutations)
     seq_len = len(sequence) if sequence else 0
@@ -502,14 +541,24 @@ def _extract_features_batch(mutation_tuples: list[tuple], sequence: str = None, 
         cons_feats = _get_conservation_features(protein_id, position, wt_aa, mut_aa)
         features[i, 42:48] = cons_feats
 
+        # Condition features (indices 48-49) — only when model expects 50 features
+        if _n_features >= 50:
+            features[i, 48] = float(temperature)  # assay temperature (°C)
+            features[i, 49] = float(ph)            # assay pH
+
     return features
 
 
-def predict_mutations_batch_raw(mutation_tuples: list[tuple], sequence: str = None, protein_id: str = None) -> tuple[np.ndarray, np.ndarray]:
+def predict_mutations_batch_raw(mutation_tuples: list[tuple], sequence: str = None,
+                               protein_id: str = None,
+                               temperature: float = 25.0, ph: float = 7.0) -> tuple[np.ndarray, np.ndarray]:
     """Batch prediction returning raw numpy arrays (ddg, probability).
 
     Much faster than predict_mutations_batch when you only need the arrays
     and will filter before building dicts (e.g. scanning ~6000 mutations).
+
+    temperature: assay temperature in °C — used as feature 49 in v7+ models
+    ph: assay pH — used as feature 50 in v7+ models
     """
     if _ensemble is None:
         train_model()
@@ -517,11 +566,49 @@ def predict_mutations_batch_raw(mutation_tuples: list[tuple], sequence: str = No
     if not mutation_tuples:
         return np.array([]), np.array([])
 
-    all_features = _extract_features_batch(mutation_tuples, sequence=sequence, protein_id=protein_id)
+    all_features = _extract_features_batch(
+        mutation_tuples, sequence=sequence, protein_id=protein_id,
+        temperature=temperature, ph=ph,
+    )
     all_scaled = _scaler.transform(all_features)
     all_ddg = _ensemble_predict(all_scaled)
     all_prob = 1.0 / (1.0 + np.exp(all_ddg))
     return all_ddg, all_prob
+
+
+def predict_dtm_batch(mutation_tuples: list[tuple], sequence: str = None,
+                      protein_id: str = None,
+                      temperature: float = 65.0, ph: float = 8.0) -> np.ndarray:
+    """Predict ΔTm (°C) for each mutation using the ThermoMutDB-trained regressor.
+
+    Returns array of ΔTm predictions (°C). Positive = more thermostable.
+    Falls back to NaN array if the ΔTm model was not loaded (pre-v7 models).
+
+    temperature: target assay temperature (°C) — passed as feature 49
+    ph: target assay pH — passed as feature 50
+    """
+    if _ensemble is None:
+        train_model()
+
+    if not mutation_tuples:
+        return np.array([])
+
+    if _dtm_ensemble is None:
+        # ΔTm model not available (old model file) — return zeros
+        return np.zeros(len(mutation_tuples))
+
+    all_features = _extract_features_batch(
+        mutation_tuples, sequence=sequence, protein_id=protein_id,
+        temperature=temperature, ph=ph,
+    )
+    all_scaled = _scaler.transform(all_features)
+
+    preds = []
+    weights = _dtm_ensemble.get('weights', [0.5, 0.5])
+    total_w = sum(weights)
+    for (name, model), w in zip(_dtm_ensemble['models'], weights):
+        preds.append(model.predict(all_scaled) * w)
+    return np.sum(preds, axis=0) / total_w
 
 
 def predict_mutations_batch(mutation_tuples: list[tuple], sequence: str = None, protein_id: str = None) -> list[dict]:

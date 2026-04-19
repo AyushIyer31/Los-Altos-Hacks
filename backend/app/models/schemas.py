@@ -12,6 +12,8 @@ class OptimizationRequest(BaseModel):
     num_candidates: int = 10
     optimization_steps: int = 50
     target_temperature: float = 60.0
+    ph: float = 8.0
+    contamination_scenario: str = "lab"
 
 
 class MutationCandidate(BaseModel):
@@ -21,13 +23,22 @@ class MutationCandidate(BaseModel):
     predicted_stability_score: float
     predicted_activity_score: float
     combined_score: float
-    # New: explainability
+    # Explainability
     explanations: list[dict] = []
     overall_strategy: str = "balanced"
-    # New: literature validation
+    # Literature validation
     literature_validation: dict = {}
-    # New: classifier prediction
+    # Classifier prediction
     classifier_prediction: dict = {}
+    # Chemical robustness (ESM-2 evolutionary fitness proxy)
+    esm_robustness: float = 0.5
+    esm_robustness_source: str = "classifier confidence (ESM-2 unavailable)"
+    # Condition metadata
+    ph_used: float = 8.0
+    ph_adjustment_factor: float = 1.0
+    # ΔTm: predicted change in melting temperature (°C) from ThermoMutDB-trained regressor
+    # Positive values indicate the mutation increases thermal stability
+    predicted_dtm: Optional[float] = None
 
 
 class OptimizationResponse(BaseModel):

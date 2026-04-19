@@ -11,25 +11,21 @@ from .amino_acid_props import (
     HYDROPHOBICITY, SIZE, CHARGE, FLEXIBILITY,
 )
 
-# Base weights for the combined fitness score
-BASE_STABILITY_WEIGHT = 0.5
-BASE_ACTIVITY_WEIGHT = 0.5
-
-TEMP_BASELINE = 40.0
-TEMP_SCALE = 0.006
+# Equal weights — the ML model captures stability vs. activity through DDG directly.
+# Temperature ranking is handled via the trained model's features (ThermoMutDB data),
+# not by manually shifting weights here.
+STABILITY_WEIGHT = 0.5
+ACTIVITY_WEIGHT = 0.5
 
 AMINO_ACIDS = list("ACDEFGHIKLMNPQRSTVWY")
 
+# Optimal pH for IsPETase and most characterised PETase variants (literature consensus)
+PETASE_OPTIMAL_PH = 8.0
+PH_WIDTH = 2.5  # Gaussian width (std dev in pH units)
 
-def _get_temp_weights(target_temp: float) -> tuple[float, float]:
-    """Calculate stability/activity weights based on target temperature."""
-    temp_shift = max(0.0, target_temp - TEMP_BASELINE) * TEMP_SCALE
-    stability_w = min(0.85, BASE_STABILITY_WEIGHT + temp_shift)
-    activity_w = max(0.15, BASE_ACTIVITY_WEIGHT - temp_shift)
-    return stability_w, activity_w
-
-
+# Thermostability hotspot bonus — grounded in known PETase biology
 def _get_hotspot_bonus(target_temp: float) -> float:
+    """Bonus for mutations at known thermostability hotspot positions."""
     if target_temp <= 50:
         return 0.01
     elif target_temp <= 65:
@@ -38,11 +34,77 @@ def _get_hotspot_bonus(target_temp: float) -> float:
         return 0.05
 
 
-def _scan_beneficial_mutations(sequence: str, top_k: int = 50) -> list[dict]:
+def _ph_adjustment(ph: float) -> float:
+    """Gaussian penalty for pH deviation from PETase optimum (pH 8.0).
+
+    Derived from the pH vs. activity profile of IsPETase (Yoshida 2016)
+    and LCC (Tournier 2020):  full activity at pH 7.5–9.0, ~70% at pH 6,
+    ~50% below pH 5.  Models this as a Gaussian centred at pH 8.0.
+
+    Returns a multiplier in (0, 1].
+    """
+    import math
+    return math.exp(-0.5 * ((ph - PETASE_OPTIMAL_PH) / PH_WIDTH) ** 2)
+
+
+def _compute_esm_robustness(
+    mutations: list[str],
+    sequence: str,
+    confidence_cache: dict,
+) -> tuple[float, str]:
+    """Compute Chemical Robustness score for a candidate.
+
+    Primary:  ESM-2 log-likelihood ratio (LLR) summed across all mutations,
+              normalised to [0, 1] via sigmoid.  Higher LLR means the mutation
+              is more evolutionarily tolerated → proxy for general chemical
+              robustness (Meier et al. 2021; Notin et al. 2022).
+
+    Fallback: average XGBoost classifier confidence when ESM-2 is unavailable
+              (e.g. memory-constrained deployment).
+
+    Returns (score, source_label).
+    """
+    try:
+        from . import esm_engine
+        # Skip ESM entirely if the model isn't already loaded in memory —
+        # loading the 650M model blocks the request for minutes.
+        # Fall back to classifier confidence immediately.
+        if esm_engine._model is None:
+            raise RuntimeError("ESM-2 not loaded — using confidence fallback")
+        import math
+        total_llr = 0.0
+        count = 0
+        for mut_str in mutations:
+            if len(mut_str) < 3:
+                continue
+            wt_aa  = mut_str[0]
+            mut_aa = mut_str[-1]
+            position = int(mut_str[1:-1]) - 1
+            llr = esm_engine.predict_mutation_effect(sequence, position, mut_aa)
+            total_llr += llr
+            count += 1
+        if count == 0:
+            raise ValueError("no valid mutations")
+        avg_llr = total_llr / count
+        # sigmoid(avg_llr * 1.5) maps typical LLR range to [0, 1]
+        score = 1.0 / (1.0 + math.exp(-avg_llr * 1.5))
+        return round(float(score), 4), "ESM-2 evolutionary fitness (UniRef50)"
+    except Exception:
+        # Fallback: XGBoost average confidence
+        confs = [confidence_cache.get(m, 0.5) for m in mutations]
+        score = float(sum(confs) / len(confs)) if confs else 0.5
+        return round(score, 4), "classifier confidence (ESM-2 unavailable on this server)"
+
+
+def _scan_beneficial_mutations(sequence: str, top_k: int = 50,
+                               temperature: float = 60.0, ph: float = 8.0) -> list[dict]:
     """Scan single-point mutations using the trained classifier (vectorized).
 
     Uses raw numpy arrays to score all ~6000 mutations in a single batch,
     then only builds result dicts for the beneficial ones (~50).
+
+    temperature: user-selected assay temperature (°C) — passed as ML feature 49
+    ph: user-selected assay pH — passed as ML feature 50
     """
     from . import trained_classifier as _clf
     _clf.train_model()
@@ -63,8 +125,12 @@ def _scan_beneficial_mutations(sequence: str, top_k: int = 50) -> list[dict]:
             mutation_tuples.append((wt_aa, pos + 1, mut_aa))
             mutation_meta.append((pos, wt_aa, mut_aa))
 
-    # Single batch — returns raw numpy arrays, no dict overhead
-    all_ddg, all_prob = _clf.predict_mutations_batch_raw(mutation_tuples, sequence=sequence)
+    # Single batch scored at user's actual temperature and pH — these are now
+    # real ML features (49 and 50) in the v7 model, so ranking changes with conditions
+    all_ddg, all_prob = _clf.predict_mutations_batch_raw(
+        mutation_tuples, sequence=sequence,
+        temperature=temperature, ph=ph,
+    )
 
     if len(all_ddg) == 0:
         return []
@@ -168,6 +234,8 @@ def optimize(
     num_candidates: int = 10,
     optimization_steps: int = 50,
     target_temp: float = 60.0,
+    ph: float = 8.0,
+    contamination_scenario: str = "lab",
 ) -> dict:
     """Run optimization to generate improved PETase candidates.
 
@@ -175,13 +243,16 @@ def optimize(
     Results are cached in memory so repeated requests for the same
     sequence/temperature return instantly.
     """
-    # Check result cache
-    cache_key = f"{sequence}:{num_candidates}:{target_temp}"
+    # Check result cache (include ph so different pH runs aren't conflated)
+    cache_key = f"{sequence}:{num_candidates}:{target_temp}:{ph}"
     if cache_key in _optimize_cache:
         return _optimize_cache[cache_key]
 
-    # Step 1: Scan for beneficial single mutations (single batch call)
-    beneficial = _scan_beneficial_mutations(sequence, top_k=optimization_steps)
+    # Step 1: Scan for beneficial single mutations scored at user's conditions
+    beneficial = _scan_beneficial_mutations(
+        sequence, top_k=optimization_steps,
+        temperature=target_temp, ph=ph,
+    )
 
     if not beneficial:
         return {
@@ -255,29 +326,34 @@ def optimize(
     candidates.sort(key=lambda x: x["mutation_score_sum"], reverse=True)
     top_to_score = candidates[:num_candidates + 5]
 
-    # Score candidates using cached scores (no re-prediction)
-    stability_w, activity_w = _get_temp_weights(target_temp)
-    wt_stability, wt_activity = 0.5, 0.5
-    wt_combined = stability_w * wt_stability + activity_w * wt_activity
+    # Score candidates.
+    # Equal 0.5/0.5 weights — the XGBoost model (trained on ThermoMutDB temperatures)
+    # already encodes the temperature signal through DDG.  Manually shifting weights
+    # based on temperature is not supported by any training data and was removed.
+    ph_factor = _ph_adjustment(ph)
     hotspot_per_mut = _get_hotspot_bonus(target_temp)
 
     scored = []
     for cand in top_to_score:
         stability, activity = _score_candidate(cand["sequence"], sequence, score_cache=score_cache)
-        combined = stability_w * stability + activity_w * activity
+        combined = STABILITY_WEIGHT * stability + ACTIVITY_WEIGHT * activity
 
+        # Hotspot bonus: positions known to affect thermostability in PETase literature
         hotspot_bonus = sum(
             hotspot_per_mut for m in cand["mutations"]
             if int(m[1:-1]) - 1 in THERMOSTABILITY_HOTSPOTS
         )
         combined += hotspot_bonus
 
+        # Apply pH adjustment derived from published PETase activity profiles
+        combined_ph_adjusted = combined * ph_factor
+
         scored.append({
             "sequence": cand["sequence"],
             "mutations": cand["mutations"],
             "predicted_stability_score": round(stability, 6),
             "predicted_activity_score": round(activity, 6),
-            "combined_score": round(combined, 6),
+            "combined_score": round(combined_ph_adjusted, 6),
         })
 
     # Step 5: Rank and return
@@ -287,7 +363,42 @@ def optimize(
     for i, cand in enumerate(top_candidates):
         cand["rank"] = i + 1
 
-    # Step 6: Add explainability, literature validation, and classifier predictions
+    # Step 6: Compute ΔTm predictions for all top candidates (single batch)
+    from . import trained_classifier as _clf_dtm
+    dtm_mutation_tuples_per_cand = []
+    for cand in top_candidates:
+        tuples = []
+        for mut_str in cand["mutations"]:
+            if len(mut_str) >= 3:
+                wt_aa  = mut_str[0]
+                mut_aa = mut_str[-1]
+                try:
+                    position = int(mut_str[1:-1])
+                    tuples.append((wt_aa, position, mut_aa))
+                except ValueError:
+                    pass
+        dtm_mutation_tuples_per_cand.append(tuples)
+
+    # Flatten, predict, then slice back per candidate
+    flat_tuples = [t for ts in dtm_mutation_tuples_per_cand for t in ts]
+    if flat_tuples:
+        dtm_flat = _clf_dtm.predict_dtm_batch(
+            flat_tuples, sequence=sequence,
+            temperature=target_temp, ph=ph,
+        )
+    else:
+        dtm_flat = np.array([])
+
+    offset = 0
+    for cand, tuples in zip(top_candidates, dtm_mutation_tuples_per_cand):
+        if len(tuples) > 0 and len(dtm_flat) > 0:
+            slice_dtm = dtm_flat[offset: offset + len(tuples)]
+            cand["predicted_dtm"] = round(float(np.mean(slice_dtm)), 4)
+            offset += len(tuples)
+        else:
+            cand["predicted_dtm"] = None  # ΔTm model not yet available
+
+    # Step 7: Add explainability, literature validation, and classifier predictions
     # All use cached scores — no ML re-prediction needed
     from . import explainability as _explain
     from . import literature_validation as _litval
@@ -339,7 +450,17 @@ def optimize(
             "per_mutation": per_mutation,
         }
 
+        # Chemical robustness via ESM-2 LLR (falls back to classifier confidence)
+        esm_score, esm_source = _compute_esm_robustness(
+            cand["mutations"], sequence, confidence_cache
+        )
+        cand["esm_robustness"] = esm_score
+        cand["esm_robustness_source"] = esm_source
+        cand["ph_used"] = round(ph, 2)
+        cand["ph_adjustment_factor"] = round(ph_factor, 4)
+
     # Latent space summary
+    wt_combined = STABILITY_WEIGHT * 0.5 + ACTIVITY_WEIGHT * 0.5  # neutral baseline
     coords_2d = [[0.0, 0.0]]
     for cand in top_candidates[:5]:
         x = (cand["predicted_stability_score"] - 0.5) * 4

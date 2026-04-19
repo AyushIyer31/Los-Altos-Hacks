@@ -232,10 +232,11 @@ def estimate_secondary_structure(sequence, position):
     return h_score / total, s_score / total, 1.0 / total
 
 
-def extract_features(wt_aa, position, mut_aa, sequence=None, protein_id=None):
+def extract_features(wt_aa, position, mut_aa, sequence=None, protein_id=None,
+                     temperature=25.0, ph=7.0):
     """Extract feature vector for a single mutation.
 
-    Features (48 total = 42 original + 6 conservation):
+    Features (50 total = 48 physicochemical/conservation + 2 condition features):
       - 6 physicochemical deltas (hydrophobicity, volume, charge, flexibility, helix, sheet)
       - 6 absolute values for WT and MUT
       - 1 BLOSUM62 substitution score
@@ -245,6 +246,9 @@ def extract_features(wt_aa, position, mut_aa, sequence=None, protein_id=None):
       - 6 thermostability-specific features
       - 9 interaction terms
       - 6 additional features
+      - 6 PSSM conservation features
+      - 1 assay temperature (°C)  [feature 49]
+      - 1 assay pH               [feature 50]
     """
     if wt_aa not in AA_SET or mut_aa not in AA_SET:
         return None
@@ -358,7 +362,13 @@ def extract_features(wt_aa, position, mut_aa, sequence=None, protein_id=None):
     cons_feats = get_conservation_features(protein_id, position, wt_aa, mut_aa)
     features.extend(cons_feats)
 
-    return features  # 48 features total
+    # ── Condition features (2): temperature (°C) and pH ──
+    # These are the actual assay conditions reported in ThermoMutDB/FireProtDB.
+    # Including them lets the model learn condition-dependent stability effects.
+    features.append(float(temperature))  # feature 49: assay temperature (°C)
+    features.append(float(ph))           # feature 50: assay pH
+
+    return features  # 50 features total
 
 
 # ═══════════════════════════════════════════════════════════
@@ -393,10 +403,19 @@ def load_fireprotdb():
         except (ValueError, TypeError):
             continue
 
+        # FireProtDB has a pH column; temperature is measured at 25°C by default
+        ph_val = row.get('pH', row.get('ph', 7.0))
+        try:
+            ph_val = float(ph_val) if pd.notna(ph_val) else 7.0
+        except (ValueError, TypeError):
+            ph_val = 7.0
+
         records.append({
             'wt_aa': wt, 'position': pos, 'mut_aa': mut,
             'ddg': float(ddg), 'sequence': str(seq) if pd.notna(seq) else '',
-            'protein_id': pdb, 'source': 'FireProtDB'
+            'protein_id': pdb, 'source': 'FireProtDB',
+            'temperature_c': 25.0,  # standard biochemistry assay temp
+            'ph': ph_val,
         })
     print(f"  Loaded {len(records)} mutations from FireProtDB")
     return records
@@ -405,6 +424,9 @@ def load_fireprotdb():
 def load_proddg():
     """Load ProDDG / S2648 dataset."""
     print("Loading ProDDG (S2648)...")
+    if not os.path.exists(PRODDG_PATH):
+        print(f"  WARNING: ProDDG file not found at {PRODDG_PATH} — skipping")
+        return []
     df = pd.read_csv(PRODDG_PATH, sep='\t')
     records = []
     for _, row in df.iterrows():
@@ -420,7 +442,9 @@ def load_proddg():
         records.append({
             'wt_aa': wt, 'position': pos, 'mut_aa': mut,
             'ddg': float(ddg), 'sequence': str(seq) if pd.notna(seq) else '',
-            'protein_id': pdb, 'source': 'ProDDG'
+            'protein_id': pdb, 'source': 'ProDDG',
+            'temperature_c': 25.0,  # standard biochemistry assay temp
+            'ph': 7.0,
         })
     print(f"  Loaded {len(records)} mutations from ProDDG")
     return records
@@ -429,6 +453,9 @@ def load_proddg():
 def load_s669():
     """Load S669 independent test set."""
     print("Loading S669 (independent test set)...")
+    if not os.path.exists(S669_PATH):
+        print(f"  WARNING: S669 file not found at {S669_PATH} — skipping independent test")
+        return []
     df = pd.read_csv(S669_PATH, sep='\t')
     records = []
     for _, row in df.iterrows():
@@ -451,33 +478,75 @@ def load_s669():
 
 
 def load_thermomutdb():
-    """Load ThermoMutDB dataset."""
+    """Load ThermoMutDB dataset.
+
+    Returns DDG training records and a separate list of ΔTm records.
+    ThermoMutDB provides measured assay temperature (Kelvin) and pH for each
+    entry — these become real ML features (features 49 and 50).
+    Source: ThermoMutDB (Pucci et al., 2021, Nucleic Acids Res.)
+    """
     print("Loading ThermoMutDB...")
     with open(THERMOMUTDB_PATH, 'r') as f:
         data = json.load(f)
 
     records = []
+    dtm_records = []   # subset with measured ΔTm (melting temperature shift)
+    no_temp = 0
+    no_ph = 0
+
     for entry in data:
         mut_code = entry.get('mutation_code', '')
         wt, pos, mut = parse_mutation_code(str(mut_code))
-        ddg = entry.get('ddg', None)
+        if wt is None:
+            continue
         pdb = entry.get('PDB_wild', '')
 
-        if wt is None or ddg is None:
-            continue
+        # ── Condition features — from the database record itself ──
+        temp_k = entry.get('temperature', None)
         try:
-            ddg = float(ddg)
+            temp_c = float(temp_k) - 273.15 if temp_k is not None else 37.0
         except (ValueError, TypeError):
-            continue
+            temp_c = 37.0
+            no_temp += 1
 
-        # ThermoMutDB doesn't include sequences
-        records.append({
+        ph_val = entry.get('ph', None)
+        try:
+            ph_val = float(ph_val) if ph_val is not None else 7.0
+        except (ValueError, TypeError):
+            ph_val = 7.0
+            no_ph += 1
+
+        base = {
             'wt_aa': wt, 'position': pos, 'mut_aa': mut,
-            'ddg': ddg, 'sequence': '',
-            'protein_id': str(pdb), 'source': 'ThermoMutDB'
-        })
-    print(f"  Loaded {len(records)} mutations from ThermoMutDB")
-    return records
+            'sequence': '', 'protein_id': str(pdb), 'source': 'ThermoMutDB',
+            'temperature_c': temp_c, 'ph': ph_val,
+        }
+
+        # DDG record
+        ddg = entry.get('ddg', None)
+        if ddg is not None:
+            try:
+                ddg = float(ddg)
+                records.append({**base, 'ddg': ddg})
+            except (ValueError, TypeError):
+                pass
+
+        # ΔTm record (subset: 6,107 entries in ThermoMutDB)
+        dtm = entry.get('dtm', None)
+        if dtm is not None:
+            try:
+                dtm = float(dtm)
+                dtm_records.append({**base, 'dtm': dtm})
+            except (ValueError, TypeError):
+                pass
+
+    print(f"  Loaded {len(records)} DDG mutations from ThermoMutDB")
+    print(f"  Loaded {len(dtm_records)} ΔTm records from ThermoMutDB")
+    if no_temp:
+        print(f"  WARNING: {no_temp} entries missing temperature (used 37.0°C default)")
+    if no_ph:
+        print(f"  WARNING: {no_ph} entries missing pH (used 7.0 default)")
+    return records, dtm_records
 
 
 def deduplicate(records):
@@ -509,7 +578,7 @@ def main():
     print("-" * 40)
     fireprot = load_fireprotdb()
     proddg = load_proddg()
-    thermomutdb = load_thermomutdb()
+    thermomutdb, dtm_records = load_thermomutdb()
     s669 = load_s669()
 
     # ── Step 2: Combine training data and deduplicate ──
@@ -543,12 +612,24 @@ def main():
     print("-" * 40)
 
     def records_to_arrays(records):
+        """Convert records to feature arrays.
+
+        For DDG training records:
+          - temperature_c and ph come from each record's measured assay conditions
+          - FireProtDB/ProDDG records use defaults (25°C, 7.0 or measured pH)
+          - ThermoMutDB records use their exact measured temperature and pH
+        """
         X, y_ddg, y_binary, proteins, sources = [], [], [], [], []
         skipped = 0
         has_pssm = 0
         for r in records:
-            feats = extract_features(r['wt_aa'], r['position'], r['mut_aa'],
-                                     r['sequence'], protein_id=r['protein_id'])
+            temp_c = r.get('temperature_c', 25.0)
+            ph_val = r.get('ph', 7.0)
+            feats = extract_features(
+                r['wt_aa'], r['position'], r['mut_aa'],
+                r['sequence'], protein_id=r['protein_id'],
+                temperature=temp_c, ph=ph_val,
+            )
             if feats is None:
                 skipped += 1
                 continue
@@ -584,7 +665,7 @@ def main():
     print("-" * 40)
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
-    X_test_scaled = scaler.transform(X_test)
+    X_test_scaled = scaler.transform(X_test) if X_test.shape[0] > 0 else X_test
     print(f"  Scaled {X_train.shape[1]} features")
 
     # ── Step 5: Train ensemble of 3 regressors ──
@@ -713,50 +794,56 @@ def main():
     print("\nSTEP 8: Independent test on S669")
     print("-" * 40)
 
-    # Individual model predictions
-    test_preds_all = {}
-    for name, model in models:
-        tp = model.predict(X_test_scaled)
-        test_preds_all[name] = tp
-        pr, _ = pearsonr(tp, y_test_ddg)
-        mae_val = mean_absolute_error(y_test_ddg, tp)
-        tb = (tp < 0).astype(int)
-        acc_val = accuracy_score(y_test, tb)
-        print(f"  {name:20s}  MAE={mae_val:.4f}  Pearson={pr:.4f}  Acc={acc_val:.4f}")
+    mae = rmse = r2 = pearson_r_val = pearson_p = spearman_r_val = spearman_p = 0.0
+    acc = f1 = prec = rec = auc = 0.0
 
-    # Ensemble prediction
-    y_pred_ddg = np.mean([test_preds_all[n] for n, _ in models], axis=0)
+    if X_test.shape[0] == 0:
+        print("  S669 not available — skipping independent test")
+    else:
+        # Individual model predictions
+        test_preds_all = {}
+        for name, model in models:
+            tp = model.predict(X_test_scaled)
+            test_preds_all[name] = tp
+            pr, _ = pearsonr(tp, y_test_ddg)
+            mae_val = mean_absolute_error(y_test_ddg, tp)
+            tb = (tp < 0).astype(int)
+            acc_val = accuracy_score(y_test, tb)
+            print(f"  {name:20s}  MAE={mae_val:.4f}  Pearson={pr:.4f}  Acc={acc_val:.4f}")
 
-    mae = mean_absolute_error(y_test_ddg, y_pred_ddg)
-    rmse = np.sqrt(mean_squared_error(y_test_ddg, y_pred_ddg))
-    r2 = r2_score(y_test_ddg, y_pred_ddg)
-    pearson_r_val, pearson_p = pearsonr(y_pred_ddg, y_test_ddg)
-    spearman_r_val, spearman_p = spearmanr(y_pred_ddg, y_test_ddg)
+        # Ensemble prediction
+        y_pred_ddg = np.mean([test_preds_all[n] for n, _ in models], axis=0)
 
-    y_pred_binary = (y_pred_ddg < 0).astype(int)
-    acc = accuracy_score(y_test, y_pred_binary)
-    f1 = f1_score(y_test, y_pred_binary)
-    prec = precision_score(y_test, y_pred_binary, zero_division=0)
-    rec = recall_score(y_test, y_pred_binary, zero_division=0)
-    try:
-        auc = roc_auc_score(y_test, -y_pred_ddg)
-    except ValueError:
-        auc = 0.0
+        mae = mean_absolute_error(y_test_ddg, y_pred_ddg)
+        rmse = np.sqrt(mean_squared_error(y_test_ddg, y_pred_ddg))
+        r2 = r2_score(y_test_ddg, y_pred_ddg)
+        pearson_r_val, pearson_p = pearsonr(y_pred_ddg, y_test_ddg)
+        spearman_r_val, spearman_p = spearmanr(y_pred_ddg, y_test_ddg)
 
-    print(f"\n  ENSEMBLE results:")
-    print(f"  MAE:         {mae:.4f} kcal/mol")
-    print(f"  RMSE:        {rmse:.4f} kcal/mol")
-    print(f"  R²:          {r2:.4f}")
-    print(f"  Pearson r:   {pearson_r_val:.4f} (p={pearson_p:.2e})")
-    print(f"  Spearman r:  {spearman_r_val:.4f} (p={spearman_p:.2e})")
-    print(f"\n  Classification (threshold DDG < 0):")
-    print(f"  Accuracy:    {acc:.4f}")
-    print(f"  F1 Score:    {f1:.4f}")
-    print(f"  AUC-ROC:     {auc:.4f}")
-    print(f"  Precision:   {prec:.4f}")
-    print(f"  Recall:      {rec:.4f}")
-    cm = confusion_matrix(y_test, y_pred_binary)
-    print(f"  TN={cm[0][0]}, FP={cm[0][1]}, FN={cm[1][0]}, TP={cm[1][1]}")
+        y_pred_binary = (y_pred_ddg < 0).astype(int)
+        acc = accuracy_score(y_test, y_pred_binary)
+        f1 = f1_score(y_test, y_pred_binary)
+        prec = precision_score(y_test, y_pred_binary, zero_division=0)
+        rec = recall_score(y_test, y_pred_binary, zero_division=0)
+        try:
+            auc = roc_auc_score(y_test, -y_pred_ddg)
+        except ValueError:
+            auc = 0.0
+
+        print(f"\n  ENSEMBLE results:")
+        print(f"  MAE:         {mae:.4f} kcal/mol")
+        print(f"  RMSE:        {rmse:.4f} kcal/mol")
+        print(f"  R²:          {r2:.4f}")
+        print(f"  Pearson r:   {pearson_r_val:.4f} (p={pearson_p:.2e})")
+        print(f"  Spearman r:  {spearman_r_val:.4f} (p={spearman_p:.2e})")
+        print(f"\n  Classification (threshold DDG < 0):")
+        print(f"  Accuracy:    {acc:.4f}")
+        print(f"  F1 Score:    {f1:.4f}")
+        print(f"  AUC-ROC:     {auc:.4f}")
+        print(f"  Precision:   {prec:.4f}")
+        print(f"  Recall:      {rec:.4f}")
+        cm = confusion_matrix(y_test, y_pred_binary)
+        print(f"  TN={cm[0][0]}, FP={cm[0][1]}, FN={cm[1][0]}, TP={cm[1][1]}")
 
     # ── Step 9: Feature importance (averaged across models) ──
     print("\nSTEP 9: Top 15 feature importances (averaged)")
@@ -774,6 +861,8 @@ def main():
         'aromatic_change', 'small→large', 'large→small',
         'cons_wt_blosum', 'cons_mut_blosum', 'cons_delta_blosum',
         'PSSM_wt', 'PSSM_mut', 'delta_PSSM', 'info_content', 'cons_rank', 'wt_rank',
+        'temperature_C',  # feature 49: assay temperature from ThermoMutDB/FireProtDB
+        'pH',             # feature 50: assay pH from ThermoMutDB/FireProtDB
     ]
     avg_imp = np.mean([m.feature_importances_ for _, m in models], axis=0)
     idx_sorted = np.argsort(avg_imp)[::-1]
@@ -782,8 +871,81 @@ def main():
         name = feature_names[j] if j < len(feature_names) else f"feat_{j}"
         print(f"  {i+1:2d}. {name:20s} {avg_imp[j]:.4f}")
 
-    # ── Step 10: Save ensemble ──
-    print("\nSTEP 10: Saving ensemble model")
+    # ── Step 10: Train ΔTm regressor on ThermoMutDB ──
+    print("\nSTEP 10: Training ΔTm regressor (ThermoMutDB, 6,107 entries)")
+    print("-" * 40)
+    print("  Source: ThermoMutDB (Pucci et al. 2021, Nucleic Acids Res.)")
+    print("  Target: ΔTm (°C) — measured change in melting temperature upon mutation")
+
+    dtm_X, dtm_y, dtm_proteins = [], [], []
+    dtm_skipped = 0
+    for r in dtm_records:
+        feats = extract_features(
+            r['wt_aa'], r['position'], r['mut_aa'],
+            r.get('sequence', ''), protein_id=r.get('protein_id'),
+            temperature=r.get('temperature_c', 37.0), ph=r.get('ph', 7.0),
+        )
+        if feats is None:
+            dtm_skipped += 1
+            continue
+        dtm_X.append(feats)
+        dtm_y.append(r['dtm'])
+        dtm_proteins.append(r.get('protein_id', ''))
+
+    if len(dtm_X) < 100:
+        print(f"  WARNING: Only {len(dtm_X)} ΔTm records — skipping ΔTm regressor")
+        dtm_regressor = None
+        dtm_meta = None
+    else:
+        dtm_X = np.array(dtm_X)
+        dtm_y = np.array(dtm_y)
+        print(f"  ΔTm training set: {len(dtm_X)} mutations (skipped {dtm_skipped})")
+        print(f"  ΔTm range: [{dtm_y.min():.2f}, {dtm_y.max():.2f}] °C")
+
+        # Scale using the SAME scaler trained on DDG features (same 50 features)
+        dtm_X_scaled = scaler.transform(dtm_X)
+
+        print("  Training GradientBoosting ΔTm regressor...")
+        dtm_gb = GradientBoostingRegressor(
+            n_estimators=400, max_depth=4, learning_rate=0.05,
+            subsample=0.8, min_samples_leaf=10, max_features='sqrt',
+            loss='huber', alpha=0.9, random_state=42,
+        )
+        dtm_gb.fit(dtm_X_scaled, dtm_y)
+
+        print("  Training XGBoost ΔTm regressor...")
+        dtm_xgb = XGBRegressor(
+            n_estimators=400, max_depth=4, learning_rate=0.05,
+            subsample=0.8, colsample_bytree=0.8, min_child_weight=10,
+            reg_alpha=0.1, reg_lambda=1.0, random_state=42, verbosity=0,
+        )
+        dtm_xgb.fit(dtm_X_scaled, dtm_y)
+
+        # Evaluate with 5-fold CV
+        kf5 = KFold(n_splits=5, shuffle=True, random_state=42)
+        dtm_cv_gb = cross_val_predict(dtm_gb, dtm_X_scaled, dtm_y, cv=kf5)
+        dtm_cv_xgb = cross_val_predict(dtm_xgb, dtm_X_scaled, dtm_y, cv=kf5)
+        dtm_cv_ens = (dtm_cv_gb + dtm_cv_xgb) / 2.0
+        dtm_mae = mean_absolute_error(dtm_y, dtm_cv_ens)
+        dtm_pearson, _ = pearsonr(dtm_cv_ens, dtm_y)
+        dtm_spearman, _ = spearmanr(dtm_cv_ens, dtm_y)
+        print(f"  ΔTm CV (5-fold): MAE={dtm_mae:.3f}°C  Pearson={dtm_pearson:.4f}  Spearman={dtm_spearman:.4f}")
+
+        dtm_regressor = {
+            'models': [('GradientBoosting', dtm_gb), ('XGBoost', dtm_xgb)],
+            'weights': [0.5, 0.5],
+        }
+        dtm_meta = {
+            "n_training_samples": int(len(dtm_X)),
+            "source": "ThermoMutDB (Pucci et al. 2021)",
+            "cv_mae_celsius": round(float(dtm_mae), 4),
+            "cv_pearson": round(float(dtm_pearson), 4),
+            "cv_spearman": round(float(dtm_spearman), 4),
+            "dtm_range": [round(float(dtm_y.min()), 2), round(float(dtm_y.max()), 2)],
+        }
+
+    # ── Step 11: Save ensemble and ΔTm model ──
+    print("\nSTEP 11: Saving ensemble model and ΔTm regressor")
     print("-" * 40)
     os.makedirs(MODEL_DIR, exist_ok=True)
 
@@ -795,6 +957,12 @@ def main():
         pickle.dump(ensemble, f)
     with open(os.path.join(MODEL_DIR, "scaler.pkl"), "wb") as f:
         pickle.dump(scaler, f)
+
+    if dtm_regressor is not None:
+        with open(os.path.join(MODEL_DIR, "deltaTm_regressor.pkl"), "wb") as f:
+            pickle.dump(dtm_regressor, f)
+        print(f"  Saved deltaTm_regressor.pkl ({len(dtm_X)} ΔTm training points)")
+
     # Save conservation cache for deployment
     if _conservation_cache:
         with open(os.path.join(MODEL_DIR, "conservation_cache.pkl"), "wb") as f:
@@ -805,8 +973,12 @@ def main():
         "model_type": "Ensemble (GradientBoosting + XGBoost + RandomForest)",
         "prediction_target": "DDG (kcal/mol)",
         "n_models": 3,
-        "n_features": int(X_train.shape[1]),
-        "feature_version": "v6_ensemble_conservation",
+        "n_features": int(X_train.shape[1]),  # 50: 48 physicochemical + temperature + pH
+        "feature_version": "v7_condition_aware",
+        "condition_features": {
+            "feature_49": "temperature_C (assay temperature from ThermoMutDB/FireProtDB)",
+            "feature_50": "pH (assay pH from ThermoMutDB/FireProtDB)",
+        },
         "training_samples": int(X_train.shape[0]),
         "stabilizing_samples": int(n_pos),
         "destabilizing_samples": int(n_neg),
@@ -831,11 +1003,12 @@ def main():
         "test_accuracy": round(float(acc), 4),
         "test_f1": round(float(f1), 4),
         "test_auc": round(float(auc), 4),
+        "deltaTm_regressor": dtm_meta,
     }
     with open(os.path.join(MODEL_DIR, "model_meta.json"), "w") as f:
         json.dump(meta, f, indent=2)
 
-    print(f"  Saved mutation_regressor.pkl (ensemble)")
+    print(f"  Saved mutation_regressor.pkl (ensemble, {int(X_train.shape[1])} features)")
     print(f"  Saved scaler.pkl")
     print(f"  Saved model_meta.json")
 
