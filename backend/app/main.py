@@ -1,11 +1,14 @@
 """FastAPI backend for PETase ML optimization."""
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import httpx
 import os
 import sys
+
+_FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "PET_Lab_Website")
 
 
 import threading
@@ -60,9 +63,11 @@ from .models.schemas import (
     EmbeddingResponse,
     MutationCandidate,
     PDBSearchResult,
+    StructureResolveRequest,
 )
 from .services import pdb_fetcher, latent_optimizer
 from .services import explainability, literature_validation, trained_classifier
+from .services import structure_resolver as _sr
 
 app = FastAPI(
     title="PETase ML Optimizer",
@@ -107,6 +112,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Serve frontend static assets (images, etc.) from /static
+if os.path.isdir(_FRONTEND_DIR):
+    app.mount("/static", StaticFiles(directory=_FRONTEND_DIR), name="static")
+
 # Default IsPETase wild-type sequence (Ideonella sakaiensis, PDB: 5XJH)
 ISPETASE_SEQUENCE = (
     "MNFPRASRLMQAAVLGGLMAVSAAATAQTNPYARGPNPTAASLEASAGPFTVRSFTVSRPSGYGAG"
@@ -117,24 +126,37 @@ ISPETASE_SEQUENCE = (
 )
 
 
-@app.get("/")
+@app.get("/", response_class=FileResponse)
 async def root():
-    return {
-        "service": "PETase ML Optimizer",
-        "version": "1.0.0",
-        "endpoints": [
-            "/pdb/search",
-            "/pdb/sequence/{pdb_id}",
-            "/esm/embedding",
-            "/optimize",
-            "/health",
-        ],
-    }
+    return FileResponse(os.path.join(_FRONTEND_DIR, "index.html"))
 
 
 @app.get("/health")
 async def health():
     return {"status": "healthy"}
+
+
+@app.get("/structure/dataset")
+async def structure_dataset():
+    """List all locally cached AlphaFold structures."""
+    import json as _json
+    index_path = _AF_LOCAL_DIR / "index.json"
+    if index_path.exists():
+        entries = _json.loads(index_path.read_text())
+    else:
+        entries = {}
+    result = []
+    for uniprot, meta in entries.items():
+        local_file = _AF_LOCAL_DIR / f"{uniprot}.pdb"
+        result.append({
+            "uniprot": uniprot,
+            "label": meta.get("label", uniprot),
+            "alias": meta.get("alias", ""),
+            "plddt_avg": meta.get("plddt_avg", 0),
+            "size_kb": round(local_file.stat().st_size / 1024, 1) if local_file.exists() else 0,
+            "cached_locally": local_file.exists(),
+        })
+    return sorted(result, key=lambda x: x["label"])
 
 
 @app.get("/pdb/search", response_model=list[PDBSearchResult])
@@ -310,6 +332,700 @@ async def classifier_predict(req: SequenceInput):
 async def default_sequence():
     """Return the default IsPETase wild-type sequence."""
     return {"name": "IsPETase (Ideonella sakaiensis)", "pdb_id": "5XJH", "sequence": ISPETASE_SEQUENCE}
+
+
+import hashlib, pathlib as _pathlib
+
+_STRUCTURE_CACHE_DIR = _pathlib.Path(os.path.dirname(__file__)) / "cached_data" / "structures"
+_STRUCTURE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _structure_cache_path(sequence: str) -> _pathlib.Path:
+    key = hashlib.sha256(sequence.encode()).hexdigest()[:16]
+    return _STRUCTURE_CACHE_DIR / f"{key}.pdb"
+
+
+@app.post("/structure/resolve")
+async def resolve_structure(req: StructureResolveRequest):
+    """
+    Resolve the best available 3D structure for a protein using all available
+    metadata identifiers, then apply mutations via NERF sidechain placement.
+
+    Resolution priority:
+      1. Direct structure ID (PDB ID or AF-UniProt-F1)
+      2. UniProt accession -> AlphaFold EBI, then RCSB
+      3. Gene name + organism -> UniProt search -> step 2
+      4. Protein name + organism -> UniProt search -> step 2
+      5. Sequence similarity -> RCSB sequence search
+
+    Response headers carry full provenance:
+      X-Structure-Source, X-Source-Type, X-Is-Experimental,
+      X-Resolved-PDB-ID, X-Resolved-UniProt, X-Resolution,
+      X-PLDDT-Avg, X-Method
+    """
+    from fastapi.responses import PlainTextResponse
+
+    # Build the mutant sequence for cache keying
+    mutant_seq = req.sequence or ""
+    if mutant_seq and req.mutations:
+        seq_list = list(mutant_seq)
+        for m in req.mutations:
+            match = len(m) >= 3 and m[1:-1].isdigit()
+            if match:
+                try:
+                    pos = int(m[1:-1]) - 1
+                    if 0 <= pos < len(seq_list):
+                        seq_list[pos] = m[-1].upper()
+                except (ValueError, IndexError):
+                    pass
+        mutant_seq = "".join(seq_list)
+
+    # Disk cache keyed on mutant sequence
+    if mutant_seq:
+        cache_path = _structure_cache_path(mutant_seq)
+        if cache_path.exists():
+            response = PlainTextResponse(cache_path.read_text(), media_type="chemical/x-pdb")
+            response.headers["X-Structure-Source"] = "Cached resolved structure"
+            response.headers["X-Source-Type"]      = "cache"
+            return response
+
+    # Resolve best available structure
+    resolved = await _sr.resolve(
+        pdb_id=req.pdb_id,
+        uniprot_id=req.uniprot_id,
+        gene=req.gene,
+        name=req.name,
+        organism=req.organism,
+        sequence=req.sequence,
+    )
+
+    if not resolved:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                "No structure found for this protein in AlphaFold DB or RCSB PDB. "
+                "Provide a UniProt accession, PDB ID, or gene name to help resolve it."
+            ),
+        )
+
+    # Apply mutations via NERF full-atom sidechain placement
+    pdb_data = resolved["pdb_text"]
+    if req.mutations:
+        pdb_data = _apply_mutations_full_atom(pdb_data, req.mutations)
+        pdb_data = _annotate_pdb(pdb_data, req.mutations, mutant_seq)
+
+    # Cache the final structure
+    if mutant_seq:
+        cache_path = _structure_cache_path(mutant_seq)
+        if not cache_path.exists():
+            cache_path.write_text(pdb_data)
+
+    response = PlainTextResponse(pdb_data, media_type="chemical/x-pdb")
+
+    # Provenance headers (ASCII-safe — HTTP headers are latin-1)
+    def _ascii(s: str) -> str:
+        return s.encode("ascii", errors="replace").decode("ascii")
+
+    response.headers["X-Structure-Source"]  = _ascii(resolved["source"])
+    response.headers["X-Source-Type"]       = resolved["source_type"]
+    response.headers["X-Is-Experimental"]   = "true" if resolved["is_experimental"] else "false"
+    response.headers["X-Resolved-PDB-ID"]   = resolved.get("resolved_pdb_id") or ""
+    response.headers["X-Method"]            = _ascii(resolved.get("method") or "UNKNOWN")
+    if resolved.get("resolved_uniprot_id"):
+        response.headers["X-Resolved-UniProt"] = resolved["resolved_uniprot_id"]
+    if resolved.get("resolution") is not None:
+        response.headers["X-Resolution"] = str(resolved["resolution"])
+    if resolved.get("plddt_avg") is not None:
+        response.headers["X-PLDDT-Avg"] = str(resolved["plddt_avg"])
+
+    return response
+
+
+@app.post("/structure/predict")
+async def predict_structure(req: dict):
+    """
+    Return a full-atom PDB with mutations applied.
+    1. Disk cache (instant).
+    2. AlphaFold DB wild-type + NERF sidechain placement at mutated positions.
+    3. RCSB crystal structure + NERF sidechain placement (fallback).
+    """
+    from fastapi.responses import PlainTextResponse
+
+    sequence  = req.get("sequence", "")
+    mutations = req.get("mutations", [])
+    pdb_id    = req.get("pdb_id", "5XJH")
+
+    if not sequence or len(sequence) < 10:
+        raise HTTPException(status_code=400, detail="Sequence too short")
+
+    # ── 1. Disk cache ──────────────────────────────────────────────────────────
+    cache_path = _structure_cache_path(sequence)
+    if cache_path.exists():
+        pdb_data = cache_path.read_text()
+        response = PlainTextResponse(pdb_data, media_type="chemical/x-pdb")
+        response.headers["X-Structure-Source"] = "AlphaFold DB + NERF mutations (cached)"
+        return response
+
+    # ── 2. AlphaFold structure (local dataset first, remote fallback) + NERF ────
+    pdb_data = None
+    source   = ""
+    wt_pdb   = _WT_PDB_CACHE.get(pdb_id) or _load_local_alphafold(pdb_id)
+    if not wt_pdb:
+        wt_pdb = await _fetch_alphafold_remote(pdb_id)
+    if wt_pdb:
+        _WT_PDB_CACHE[pdb_id] = wt_pdb
+        pdb_data = _apply_mutations_full_atom(wt_pdb, mutations)
+        pdb_data = _annotate_pdb(pdb_data, mutations, sequence)
+        source   = "AlphaFold DB structure + NERF sidechain placement at mutated positions"
+        cache_path.write_text(pdb_data)
+
+    # ── 3. RCSB crystal structure + NERF sidechain placement ──────────────────
+    if not pdb_data:
+        rcsb_url = f"https://files.rcsb.org/download/{pdb_id.upper()}.pdb"
+        try:
+            wt_pdb = _WT_PDB_CACHE.get(rcsb_url)
+            if not wt_pdb:
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    r = await client.get(rcsb_url)
+                    if r.status_code != 200:
+                        raise HTTPException(status_code=502, detail="Could not fetch PDB")
+                    wt_pdb = r.text
+                    _WT_PDB_CACHE[rcsb_url] = wt_pdb
+            pdb_data = _apply_mutations_full_atom(wt_pdb, mutations)
+            pdb_data = _annotate_pdb(pdb_data, mutations, sequence)
+            source   = f"Crystal structure {pdb_id.upper()} + NERF sidechain placement at mutated positions"
+            cache_path.write_text(pdb_data)
+        except httpx.RequestError:
+            raise HTTPException(status_code=502, detail="Could not fetch PDB from RCSB")
+
+    response = PlainTextResponse(pdb_data, media_type="chemical/x-pdb")
+    response.headers["X-Structure-Source"] = source
+    return response
+
+
+def _annotate_pdb(pdb_text: str, mutations: list[str], sequence: str) -> str:
+    """Prepend REMARK lines describing the mutations and sequence to the PDB."""
+    import datetime
+    today = datetime.date.today().isoformat()
+    remarks = [
+        f"REMARK   1 GENERATED BY PET Lab Enzyme Design Tool — {today}",
+        f"REMARK   1 SEQUENCE LENGTH: {len(sequence)} residues",
+    ]
+    if mutations:
+        mut_str = ", ".join(mutations)
+        remarks.append(f"REMARK   1 MUTATIONS APPLIED: {mut_str}")
+        for m in mutations:
+            if len(m) >= 3:
+                try:
+                    wt_aa  = m[0].upper()
+                    pos    = int(m[1:-1])
+                    mut_aa = m[-1].upper()
+                    wt3  = _AA1_TO_3.get(wt_aa, wt_aa)
+                    mut3 = _AA1_TO_3.get(mut_aa, mut_aa)
+                    remarks.append(
+                        f"REMARK   1   {wt3} {pos:4d} -> {mut3}  "
+                        f"({wt_aa}{pos}{mut_aa})"
+                    )
+                except (ValueError, IndexError):
+                    pass
+    else:
+        remarks.append("REMARK   1 MUTATIONS APPLIED: none (wild-type)")
+
+    header = "\n".join(remarks) + "\n"
+    # Strip any existing REMARK 1 lines from ESMFold output to avoid duplicates,
+    # but keep all ATOM/HETATM/TER/END records.
+    filtered = "\n".join(
+        ln for ln in pdb_text.splitlines()
+        if not ln.startswith("REMARK   1")
+    )
+    return header + filtered + "\n"
+
+
+# ── AlphaFold DB URL resolution ───────────────────────────────────────────────
+# Maps RCSB PDB IDs → UniProt accessions so we can query the EBI API
+_PDBID_TO_UNIPROT: dict[str, str] = {
+    "5XJH": "A0A0K8P6T7",
+    "6EQE": "A0A0K8P6T7",
+    "6IJ6": "A0A0K8P6T7",
+    "4EB0": "G9BY57",
+}
+
+# ── Local AlphaFold structure dataset ─────────────────────────────────────────
+_AF_LOCAL_DIR = _pathlib.Path(os.path.dirname(__file__)) / "alphafold_structures"
+
+
+def _uniprot_from_pdb_id(pdb_id: str) -> str | None:
+    """Extract UniProt accession from a pdbId string (RCSB or AF-xxx format)."""
+    pid = pdb_id.strip()
+    if pid.upper().startswith("AF-"):
+        parts = pid.split("-")
+        return parts[1] if len(parts) >= 2 else None
+    return _PDBID_TO_UNIPROT.get(pid.upper())
+
+
+def _load_local_alphafold(pdb_id: str) -> str | None:
+    """
+    Return the PDB text for a protein from our local AlphaFold dataset.
+    Covers all preset proteins (PETase + disease). Returns None if not cached.
+    """
+    uniprot = _uniprot_from_pdb_id(pdb_id)
+    if not uniprot:
+        return None
+    local_path = _AF_LOCAL_DIR / f"{uniprot}.pdb"
+    if local_path.exists():
+        return local_path.read_text()
+    return None
+
+
+async def _fetch_alphafold_remote(pdb_id: str) -> str | None:
+    """
+    Fallback: query EBI API for the pdbUrl then download.
+    Saves to local dataset so subsequent calls are instant.
+    """
+    uniprot = _uniprot_from_pdb_id(pdb_id)
+    if not uniprot:
+        return None
+    return await _fetch_alphafold_by_uniprot(uniprot)
+
+
+async def _fetch_alphafold_by_uniprot(uniprot: str) -> str | None:
+    """Fetch an AlphaFold PDB by UniProt accession, cache locally."""
+    local_path = _AF_LOCAL_DIR / f"{uniprot}.pdb"
+    if local_path.exists():
+        return local_path.read_text()
+    try:
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            api_r = await client.get(
+                f"https://alphafold.ebi.ac.uk/api/prediction/{uniprot}"
+            )
+            if api_r.status_code != 200:
+                return None
+            entries = api_r.json()
+            if not entries:
+                return None
+            pdb_url = entries[0].get("pdbUrl")
+            if not pdb_url:
+                return None
+            pdb_r = await client.get(pdb_url)
+            if pdb_r.status_code != 200:
+                return None
+            pdb_text = pdb_r.text
+            _AF_LOCAL_DIR.mkdir(parents=True, exist_ok=True)
+            local_path.write_text(pdb_text)
+            return pdb_text
+    except Exception:
+        return None
+
+
+@app.get("/structure/alphafold/{uniprot_id}")
+async def get_alphafold_by_uniprot(uniprot_id: str):
+    """
+    Return the AlphaFold PDB for any UniProt accession (e.g. P00441, P35637).
+    Covers all 214M proteins in the AlphaFold DB. Caches locally after first fetch.
+    """
+    from fastapi.responses import PlainTextResponse
+
+    uid = uniprot_id.strip().upper()
+    local_path = _AF_LOCAL_DIR / f"{uid}.pdb"
+
+    # 1. Local cache -- instant
+    if local_path.exists():
+        response = PlainTextResponse(local_path.read_text(), media_type="chemical/x-pdb")
+        response.headers["X-Structure-Source"] = f"AlphaFold DB (cached) - UniProt {uid}"
+        return response
+
+    # 2. Fetch from EBI AlphaFold API
+    try:
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            api_r = await client.get(f"https://alphafold.ebi.ac.uk/api/prediction/{uid}")
+            if api_r.status_code != 200:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"No AlphaFold structure found for UniProt ID '{uid}'. "
+                           "Check the ID at uniprot.org — it should be 6 characters like P35637."
+                )
+            entries = api_r.json()
+            if not entries:
+                raise HTTPException(status_code=404, detail=f"Empty AlphaFold response for {uid}")
+
+            pdb_url = entries[0].get("pdbUrl")
+            if not pdb_url:
+                raise HTTPException(status_code=404, detail=f"No pdbUrl in AlphaFold response for {uid}")
+
+            pdb_r = await client.get(pdb_url)
+            if pdb_r.status_code != 200:
+                raise HTTPException(status_code=502, detail=f"Could not download PDB from AlphaFold for {uid}")
+
+            pdb_text = pdb_r.text
+            _AF_LOCAL_DIR.mkdir(parents=True, exist_ok=True)
+            local_path.write_text(pdb_text)
+
+            entry     = entries[0]
+            gene      = entry.get("gene", uid)
+            organism  = entry.get("organismScientificName", "")
+            plddt_avg = entry.get("globalMetricValue")
+
+            response = PlainTextResponse(pdb_text, media_type="chemical/x-pdb")
+            response.headers["X-Structure-Source"] = (
+                f"AlphaFold DB - {gene} ({organism}), UniProt {uid}"
+            )
+            response.headers["X-Gene-Name"]  = gene
+            response.headers["X-Organism"]   = organism
+            if plddt_avg is not None:
+                response.headers["X-PLDDT-Avg"] = str(round(plddt_avg, 1))
+            return response
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"AlphaFold fetch error: {e}")
+
+
+# In-memory cache for wild-type base structures (pdb_id → PDB text)
+_WT_PDB_CACHE: dict[str, str] = {}
+
+# ── Three-letter / one-letter amino acid codes ────────────────────────────────
+_AA1_TO_3 = {
+    'A':'ALA','C':'CYS','D':'ASP','E':'GLU','F':'PHE','G':'GLY','H':'HIS',
+    'I':'ILE','K':'LYS','L':'LEU','M':'MET','N':'ASN','P':'PRO','Q':'GLN',
+    'R':'ARG','S':'SER','T':'THR','V':'VAL','W':'TRP','Y':'TYR',
+}
+
+# ── NERF: place atom D from three reference atoms A,B,C ──────────────────────
+def _nerf(
+    a: "np.ndarray", b: "np.ndarray", c: "np.ndarray",
+    r: float, theta_deg: float, phi_deg: float,
+) -> "np.ndarray":
+    import numpy as _np
+    theta = _np.radians(theta_deg)
+    phi   = _np.radians(phi_deg)
+    bc    = c - b
+    bc_n  = bc / _np.linalg.norm(bc)
+    ab    = b - a
+    n     = _np.cross(ab, bc_n)
+    if _np.linalg.norm(n) < 1e-8:
+        n = _np.array([0.0, 0.0, 1.0])
+    n  /= _np.linalg.norm(n)
+    nbc = _np.cross(n, bc_n)
+    d   = r * (
+        -_np.cos(theta) * bc_n
+        + _np.sin(theta) * (_np.cos(phi) * nbc + _np.sin(phi) * n)
+    )
+    return c + d
+
+
+# ── Sidechain build specification ────────────────────────────────────────────
+# Each entry: (atom, ref_a, ref_b, ref_c, bond_len, bond_angle_deg, dihedral)
+# dihedral is either a float (fixed) or 'chi1'/'chi2'/'chi3'/'chi4' (rotatable).
+# ref_c is the parent (bonded) atom; ref_b and ref_a define the dihedral plane.
+# Atoms are listed in build order (each atom must appear after its refs).
+#
+# Modal backbone-independent rotamers from Dunbrack 2010 used for chi angles.
+_SIDECHAIN_SPEC: dict[str, list] = {
+    # Glycine: no sidechain
+    'GLY': [],
+    # Alanine: just CB (standard position)
+    'ALA': [
+        ('CB', 'C',  'N',  'CA', 1.521, 110.5, -122.5),
+    ],
+    # Valine
+    'VAL': [
+        ('CB',  'C',   'N',   'CA',  1.521, 110.5, -122.5),
+        ('CG1', 'N',   'CA',  'CB',  1.524, 111.5, 'chi1'),   # chi1=175
+        ('CG2', 'CG1', 'CA',  'CB',  1.524, 111.5, 120.0),
+    ],
+    # Leucine
+    'LEU': [
+        ('CB',  'C',   'N',   'CA',  1.521, 110.5, -122.5),
+        ('CG',  'N',   'CA',  'CB',  1.530, 116.0, 'chi1'),   # chi1=-65
+        ('CD1', 'CA',  'CB',  'CG',  1.524, 111.5, 'chi2'),   # chi2=170
+        ('CD2', 'CD1', 'CB',  'CG',  1.524, 111.5, 120.0),
+    ],
+    # Isoleucine
+    'ILE': [
+        ('CB',  'C',   'N',   'CA',  1.521, 110.5, -122.5),
+        ('CG1', 'N',   'CA',  'CB',  1.530, 111.5, 'chi1'),   # chi1=-65
+        ('CG2', 'CG1', 'CA',  'CB',  1.524, 111.5, 120.0),
+        ('CD1', 'CA',  'CB',  'CG1', 1.524, 113.8, 'chi2'),   # chi2=170
+    ],
+    # Serine
+    'SER': [
+        ('CB',  'C',  'N',  'CA',  1.521, 110.5, -122.5),
+        ('OG',  'N',  'CA', 'CB',  1.417, 111.1, 'chi1'),    # chi1=62
+    ],
+    # Threonine
+    'THR': [
+        ('CB',  'C',   'N',  'CA',  1.521, 110.5, -122.5),
+        ('OG1', 'N',   'CA', 'CB',  1.432, 109.6, 'chi1'),   # chi1=62
+        ('CG2', 'OG1', 'CA', 'CB',  1.524, 110.6, 120.0),
+    ],
+    # Cysteine
+    'CYS': [
+        ('CB',  'C',  'N',  'CA',  1.521, 110.5, -122.5),
+        ('SG',  'N',  'CA', 'CB',  1.808, 113.8, 'chi1'),    # chi1=-65
+    ],
+    # Methionine
+    'MET': [
+        ('CB',  'C',   'N',  'CA',  1.521, 110.5, -122.5),
+        ('CG',  'N',   'CA', 'CB',  1.524, 113.8, 'chi1'),   # chi1=-65
+        ('SD',  'CA',  'CB', 'CG',  1.807, 112.7, 'chi2'),   # chi2=180
+        ('CE',  'CB',  'CG', 'SD',  1.791, 100.9, 'chi3'),   # chi3=68
+    ],
+    # Phenylalanine
+    'PHE': [
+        ('CB',  'C',   'N',   'CA',  1.521, 110.5, -122.5),
+        ('CG',  'N',   'CA',  'CB',  1.502, 113.8, 'chi1'),  # chi1=-65
+        ('CD1', 'CA',  'CB',  'CG',  1.384, 120.7, 'chi2'),  # chi2=90
+        ('CD2', 'CD1', 'CB',  'CG',  1.384, 120.7, 180.0),
+        ('CE1', 'CB',  'CG',  'CD1', 1.382, 120.7, 180.0),
+        ('CE2', 'CB',  'CG',  'CD2', 1.382, 120.7, 180.0),
+        ('CZ',  'CG',  'CD1', 'CE1', 1.382, 120.0, 0.0),
+    ],
+    # Tyrosine
+    'TYR': [
+        ('CB',  'C',   'N',   'CA',  1.521, 110.5, -122.5),
+        ('CG',  'N',   'CA',  'CB',  1.512, 113.8, 'chi1'),  # chi1=-65
+        ('CD1', 'CA',  'CB',  'CG',  1.384, 120.7, 'chi2'),  # chi2=90
+        ('CD2', 'CD1', 'CB',  'CG',  1.384, 120.7, 180.0),
+        ('CE1', 'CB',  'CG',  'CD1', 1.382, 120.7, 180.0),
+        ('CE2', 'CB',  'CG',  'CD2', 1.382, 120.7, 180.0),
+        ('CZ',  'CG',  'CD1', 'CE1', 1.378, 120.0, 0.0),
+        ('OH',  'CD1', 'CE1', 'CZ',  1.362, 119.8, 180.0),
+    ],
+    # Tryptophan
+    'TRP': [
+        ('CB',  'C',   'N',   'CA',  1.521, 110.5, -122.5),
+        ('CG',  'N',   'CA',  'CB',  1.498, 113.8, 'chi1'),  # chi1=-65
+        ('CD1', 'CA',  'CB',  'CG',  1.365, 126.9, 'chi2'),  # chi2=100
+        ('CD2', 'CD1', 'CB',  'CG',  1.430, 126.9, 180.0),
+        ('NE1', 'CB',  'CG',  'CD1', 1.374, 109.0, 180.0),
+        ('CE2', 'CB',  'CG',  'CD2', 1.409, 107.2, 180.0),
+        ('CE3', 'NE1', 'CD2', 'CE2', 1.398, 118.8, 180.0),
+        ('CZ2', 'CG',  'CD2', 'CE2', 1.394, 122.4, 180.0),
+        ('CZ3', 'CE2', 'CD2', 'CE3', 1.382, 118.8, 180.0),
+        ('CH2', 'CD2', 'CE3', 'CZ3', 1.368, 121.5, 0.0),
+    ],
+    # Histidine
+    'HIS': [
+        ('CB',  'C',   'N',   'CA',  1.521, 110.5, -122.5),
+        ('CG',  'N',   'CA',  'CB',  1.497, 113.8, 'chi1'),  # chi1=-65
+        ('ND1', 'CA',  'CB',  'CG',  1.378, 122.9, 'chi2'),  # chi2=-75
+        ('CD2', 'ND1', 'CB',  'CG',  1.354, 130.5, 180.0),
+        ('CE1', 'CB',  'CG',  'ND1', 1.321, 108.5, 180.0),
+        ('NE2', 'CG',  'ND1', 'CE1', 1.314, 109.0, 0.0),
+    ],
+    # Aspartate
+    'ASP': [
+        ('CB',  'C',   'N',   'CA',  1.521, 110.5, -122.5),
+        ('CG',  'N',   'CA',  'CB',  1.516, 113.8, 'chi1'),  # chi1=-65
+        ('OD1', 'CA',  'CB',  'CG',  1.249, 118.3, 'chi2'),  # chi2=-10
+        ('OD2', 'OD1', 'CB',  'CG',  1.249, 118.3, 180.0),
+    ],
+    # Asparagine
+    'ASN': [
+        ('CB',  'C',   'N',   'CA',  1.521, 110.5, -122.5),
+        ('CG',  'N',   'CA',  'CB',  1.516, 113.8, 'chi1'),  # chi1=-65
+        ('OD1', 'CA',  'CB',  'CG',  1.231, 120.5, 'chi2'),  # chi2=-10
+        ('ND2', 'OD1', 'CB',  'CG',  1.328, 116.4, 180.0),
+    ],
+    # Glutamate
+    'GLU': [
+        ('CB',  'C',   'N',   'CA',  1.521, 110.5, -122.5),
+        ('CG',  'N',   'CA',  'CB',  1.516, 113.8, 'chi1'),  # chi1=-65
+        ('CD',  'CA',  'CB',  'CG',  1.516, 113.8, 'chi2'),  # chi2=180
+        ('OE1', 'CB',  'CG',  'CD',  1.249, 119.0, 'chi3'),  # chi3=0
+        ('OE2', 'OE1', 'CG',  'CD',  1.249, 119.0, 180.0),
+    ],
+    # Glutamine
+    'GLN': [
+        ('CB',  'C',   'N',   'CA',  1.521, 110.5, -122.5),
+        ('CG',  'N',   'CA',  'CB',  1.516, 113.8, 'chi1'),  # chi1=-65
+        ('CD',  'CA',  'CB',  'CG',  1.516, 113.8, 'chi2'),  # chi2=180
+        ('OE1', 'CB',  'CG',  'CD',  1.231, 120.5, 'chi3'),  # chi3=0
+        ('NE2', 'OE1', 'CG',  'CD',  1.328, 116.4, 180.0),
+    ],
+    # Lysine
+    'LYS': [
+        ('CB',  'C',   'N',   'CA',  1.521, 110.5, -122.5),
+        ('CG',  'N',   'CA',  'CB',  1.524, 113.8, 'chi1'),  # chi1=-67
+        ('CD',  'CA',  'CB',  'CG',  1.524, 111.8, 'chi2'),  # chi2=180
+        ('CE',  'CB',  'CG',  'CD',  1.524, 111.8, 'chi3'),  # chi3=68
+        ('NZ',  'CG',  'CD',  'CE',  1.489, 111.7, 'chi4'),  # chi4=180
+    ],
+    # Arginine
+    'ARG': [
+        ('CB',  'C',   'N',   'CA',  1.521, 110.5, -122.5),
+        ('CG',  'N',   'CA',  'CB',  1.524, 113.8, 'chi1'),  # chi1=-65
+        ('CD',  'CA',  'CB',  'CG',  1.524, 111.8, 'chi2'),  # chi2=180
+        ('NE',  'CB',  'CG',  'CD',  1.460, 112.0, 'chi3'),  # chi3=65
+        ('CZ',  'CG',  'CD',  'NE',  1.329, 124.2, 'chi4'),  # chi4=85
+        ('NH1', 'CD',  'NE',  'CZ',  1.326, 120.0, 0.0),
+        ('NH2', 'NH1', 'NE',  'CZ',  1.326, 120.0, 180.0),
+    ],
+    # Proline (ring: chi1 and chi2 constrained)
+    'PRO': [
+        ('CB',  'C',   'N',   'CA',  1.521, 110.5, -122.5),
+        ('CG',  'N',   'CA',  'CB',  1.492, 104.5, 'chi1'),  # chi1=29
+        ('CD',  'CA',  'CB',  'CG',  1.503, 106.1, 'chi2'),  # chi2=37
+    ],
+}
+
+# Modal backbone-independent rotamer chi angles (degrees) from Dunbrack 2010
+_CHI_MODAL: dict[str, list[float]] = {
+    'ALA': [],
+    'GLY': [],
+    'VAL': [175.0],
+    'LEU': [-65.0, 170.0],
+    'ILE': [-65.0, 170.0],
+    'SER': [62.0],
+    'THR': [62.0],
+    'CYS': [-65.0],
+    'MET': [-65.0, 180.0, 68.0],
+    'PHE': [-65.0, 90.0],
+    'TYR': [-65.0, 90.0],
+    'TRP': [-65.0, 100.0],
+    'HIS': [-65.0, -75.0],
+    'ASP': [-65.0, -10.0],
+    'ASN': [-65.0, -10.0],
+    'GLU': [-65.0, 180.0, 0.0],
+    'GLN': [-65.0, 180.0, 0.0],
+    'LYS': [-67.0, 180.0, 68.0, 180.0],
+    'ARG': [-65.0, 180.0, 65.0, 85.0],
+    'PRO': [29.0, 37.0],
+}
+
+
+def _apply_mutations_full_atom(pdb_text: str, mutations: list[str]) -> str:
+    """
+    Apply point mutations to a PDB using full-atom NERF sidechain placement.
+    - Unmutated residues: ALL atoms kept (backbone + full sidechain from source structure).
+    - Mutated residues: backbone kept, new sidechain built with NERF + modal rotamers.
+    Returns the modified PDB as a string.
+    """
+    import numpy as _np
+
+    # Parse mutation list: "R61E" → {61: ('ARG', 'GLU')}
+    mut_map: dict[int, str] = {}
+    for m in mutations:
+        if len(m) < 3:
+            continue
+        try:
+            pos = int(m[1:-1])
+            mt  = m[-1].upper()
+            if mt in _AA1_TO_3:
+                mut_map[pos] = _AA1_TO_3[mt]
+        except (ValueError, IndexError):
+            continue
+
+    if not mut_map:
+        return pdb_text
+
+    # ── Parse backbone atoms from the PDB ──────────────────────────────────────
+    # backbone_coords[res_seq] = {'N': array, 'CA': array, 'C': array, 'O': array}
+    backbone: dict[int, dict[str, "_np.ndarray"]] = {}
+    for line in pdb_text.splitlines():
+        if line[:6].strip() not in ("ATOM", "HETATM"):
+            continue
+        try:
+            atom_name = line[12:16].strip()
+            res_seq   = int(line[22:26].strip())
+            x = float(line[30:38]); y = float(line[38:46]); z = float(line[46:54])
+        except (ValueError, IndexError):
+            continue
+        if atom_name in ('N', 'CA', 'C', 'O'):
+            backbone.setdefault(res_seq, {})[atom_name] = _np.array([x, y, z])
+
+    # ── Build new sidechain atoms for each mutated residue ────────────────────
+    new_atoms: dict[int, dict[str, "_np.ndarray"]] = {}
+    for pos, new_res3 in mut_map.items():
+        bb = backbone.get(pos, {})
+        if not all(k in bb for k in ('N', 'CA', 'C')):
+            continue   # skip if backbone missing
+
+        spec  = _SIDECHAIN_SPEC.get(new_res3, [])
+        chis  = _CHI_MODAL.get(new_res3, [])
+        chi_i = 0
+        placed: dict[str, "_np.ndarray"] = {**bb}
+
+        for entry in spec:
+            atom_name, ra, rb, rc, blen, bangle, dihed = entry
+            a = placed.get(ra); b = placed.get(rb); c = placed.get(rc)
+            if a is None or b is None or c is None:
+                continue  # can't place without references
+            if isinstance(dihed, str) and dihed.startswith('chi'):
+                phi = chis[chi_i] if chi_i < len(chis) else 180.0
+                chi_i += 1
+            else:
+                phi = float(dihed)
+            placed[atom_name] = _nerf(
+                _np.asarray(a, dtype=float),
+                _np.asarray(b, dtype=float),
+                _np.asarray(c, dtype=float),
+                blen, bangle, phi,
+            )
+        new_atoms[pos] = placed
+
+    # ── Rebuild PDB lines ─────────────────────────────────────────────────────
+    # We need to track serial numbers for new atoms we inject.
+    _BACKBONE_ONLY = {'N', 'CA', 'C', 'O', 'OXT'}
+    max_serial = 0
+    lines_out: list[str] = []
+    seen_injected: set[int] = set()
+
+    for line in pdb_text.splitlines(keepends=True):
+        record = line[:6].strip()
+        if record in ("ATOM", "HETATM"):
+            try:
+                serial    = int(line[6:11].strip())
+                atom_name = line[12:16].strip()
+                res_seq   = int(line[22:26].strip())
+            except (ValueError, IndexError):
+                lines_out.append(line)
+                continue
+            max_serial = max(max_serial, serial)
+
+            if res_seq not in mut_map:
+                lines_out.append(line)
+                continue
+
+            # Mutated residue: keep only backbone atoms
+            if atom_name not in _BACKBONE_ONLY:
+                continue
+
+            # Rename residue to new type
+            new_res3 = mut_map[res_seq]
+            new_line = line[:17] + new_res3 + line[20:]
+            lines_out.append(new_line)
+
+            # Inject new sidechain atoms right after the last backbone atom
+            if atom_name == 'O' and res_seq not in seen_injected:
+                seen_injected.add(res_seq)
+                placed = new_atoms.get(res_seq, {})
+                chain_id  = line[21]
+                ins_code  = line[26]
+                res_seq_s = line[22:26]
+                bfac      = line[60:66] if len(line) > 66 else "  1.00"
+                occ       = line[54:60] if len(line) > 60 else "  1.00"
+                elem_col  = "  C "
+                for atom_name_sc, coord in placed.items():
+                    if atom_name_sc in _BACKBONE_ONLY or atom_name_sc in ('N', 'CA', 'C', 'O'):
+                        continue
+                    max_serial += 1
+                    # Guess element from first letter
+                    elem = atom_name_sc[0] if atom_name_sc[0].isalpha() else 'C'
+                    # PDB ATOM format (80 chars)
+                    atom_col = f" {atom_name_sc:<3}" if len(atom_name_sc) < 4 else atom_name_sc[:4]
+                    new_l = (
+                        f"ATOM  {max_serial:5d} {atom_col} {new_res3} {chain_id}"
+                        f"{res_seq_s}{ins_code}   "
+                        f"{coord[0]:8.3f}{coord[1]:8.3f}{coord[2]:8.3f}"
+                        f"{occ.strip():>6}{bfac.strip():>6}          {elem:>2}  \n"
+                    )
+                    lines_out.append(new_l)
+        else:
+            lines_out.append(line)
+
+    return "".join(lines_out)
 
 
 # ---------- 3D Structure Viewer ----------

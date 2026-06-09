@@ -42,6 +42,9 @@ backend/app/trained_models/esm1v_ensemble_cache_ckpt*.pkl
 # App runtime cache (generated at runtime, not needed for HPC)
 backend/app/cached_data/
 
+# AlphaFold structure cache (fetched at runtime from EBI API)
+backend/app/alphafold_structures/
+
 # Binary presentation/paper exports (too large, not source code)
 *.pptx
 *.pdf

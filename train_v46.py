@@ -138,7 +138,7 @@ warnings.filterwarnings('ignore')
 # ═══════════════════════════════════════════════════════════
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FIREPROT_PATH = os.path.join(BASE_DIR, "fireprotdb_data/fireprot_upload/csvs/4_fireprotDB_bestpH.csv")
-PRODDG_PATH = os.path.join(BASE_DIR, "proddg_s2648.csv")
+PRODDG_PATH = os.path.join(BASE_DIR, "proddg_s2648.tsv")
 S669_PATH = os.path.join(BASE_DIR, "s669_full.tsv")
 THERMOMUTDB_PATH = os.path.join(BASE_DIR, "thermomutdb.json")
 CONSERVATION_CACHE_PATH = os.path.join(BASE_DIR, "backend", "app", "trained_models", "conservation_cache.pkl")
@@ -1061,10 +1061,16 @@ def parse_mutation_code(code):
 
 
 def load_fireprotdb():
-    """Load FireProtDB dataset."""
+    """Load FireProtDB dataset.
+
+    Returns (ddg_records, dtm_records). FireProtDB reports both ΔΔG and ΔTm
+    for many entries — the ΔTm records are now passed to the ΔTm regressor,
+    adding ~1,600 measurements that were previously unused.
+    """
     print("Loading FireProtDB...")
     df = pd.read_csv(FIREPROT_PATH)
     records = []
+    dtm_records = []
     for _, row in df.iterrows():
         wt = row.get('wild_type', '')
         mut = row.get('mutation', '')
@@ -1073,21 +1079,19 @@ def load_fireprotdb():
         seq = row.get('sequence', '')
         pdb = str(row.get('pdb_id', '')).split('|')[0]
 
-        if pd.isna(ddg) or wt not in AA_SET or mut not in AA_SET or wt == mut:
+        if wt not in AA_SET or mut not in AA_SET or wt == mut:
             continue
         try:
             pos = int(pos)
         except (ValueError, TypeError):
             continue
 
-        # FireProtDB has a pH column; temperature is measured at 25°C by default
         ph_val = row.get('pH', row.get('ph', 7.0))
         try:
             ph_val = float(ph_val) if pd.notna(ph_val) else 7.0
         except (ValueError, TypeError):
             ph_val = 7.0
 
-        # v15: capture real structural features for in-place slot replacement
         fp_asa_val = row.get('asa')
         try:
             fp_asa_val = float(fp_asa_val) if pd.notna(fp_asa_val) else None
@@ -1097,21 +1101,34 @@ def load_fireprotdb():
         fp_ss_val = row.get('secondary_structure')
         fp_ss_val = str(fp_ss_val) if pd.notna(fp_ss_val) else None
 
-        records.append({
+        base = {
             'wt_aa': wt, 'position': pos, 'mut_aa': mut,
-            'ddg': float(ddg), 'sequence': str(seq) if pd.notna(seq) else '',
+            'sequence': str(seq) if pd.notna(seq) else '',
             'protein_id': pdb, 'source': 'FireProtDB',
             'temperature_c': 25.0,
             'ph': ph_val,
             'fp_asa': fp_asa_val,
             'fp_ss': fp_ss_val,
-        })
+        }
+
+        if pd.notna(ddg):
+            records.append({**base, 'ddg': float(ddg)})
+
+        dtm_val = row.get('dTm', None)
+        try:
+            dtm_val = float(dtm_val) if pd.notna(dtm_val) else None
+        except (ValueError, TypeError):
+            dtm_val = None
+        if dtm_val is not None:
+            dtm_records.append({**base, 'dtm': dtm_val})
+
     print(f"  Loaded {len(records)} mutations from FireProtDB")
+    print(f"  Loaded {len(dtm_records)} ΔTm records from FireProtDB")
     fp_asa_count = sum(1 for r in records if r.get('fp_asa') is not None)
     fp_ss_count  = sum(1 for r in records if r.get('fp_ss')  is not None)
     print(f"  Real ASA: {fp_asa_count}/{len(records)} ({100*fp_asa_count/max(len(records),1):.1f}%)")
     print(f"  Real SS:  {fp_ss_count}/{len(records)} ({100*fp_ss_count/max(len(records),1):.1f}%)")
-    return records
+    return records, dtm_records
 
 
 def load_proddg():
@@ -1134,7 +1151,7 @@ def load_proddg():
 
         records.append({
             'wt_aa': wt, 'position': pos, 'mut_aa': mut,
-            'ddg': float(ddg), 'sequence': str(seq) if pd.notna(seq) else '',
+            'ddg': -float(ddg), 'sequence': str(seq) if pd.notna(seq) else '',
             'protein_id': pdb, 'source': 'ProDDG',
             'temperature_c': 25.0,  # standard biochemistry assay temp
             'ph': 7.0,
@@ -1287,9 +1304,10 @@ def main():
     # ── Step 1: Load all data ──
     print("STEP 1: Loading datasets")
     print("-" * 40)
-    fireprot = load_fireprotdb()
+    fireprot, fp_dtm_records = load_fireprotdb()
     proddg = load_proddg()
     thermomutdb, dtm_records = load_thermomutdb()
+    dtm_records = dtm_records + fp_dtm_records  # add FireProtDB ΔTm (~1,600 extra)
     s669 = load_s669()
 
     # ── Step 2: Combine training data and deduplicate ──
@@ -1817,6 +1835,7 @@ def main():
         colsample_bylevel=0.8949853302137403, min_child_weight=1,
         reg_alpha=1.4169700381674384, reg_lambda=0.7647093270905143,
         gamma=0.10617106081801003,
+        scale_pos_weight=1.5,
         eval_metric='logloss', tree_method='hist',
         random_state=42, verbosity=0, n_jobs=-1,
     )
@@ -1825,6 +1844,7 @@ def main():
         num_leaves=239, subsample=0.6404629307149422,
         colsample_bytree=0.5693373118449812, min_child_samples=7,
         reg_alpha=0.0611588834567198, reg_lambda=0.00027844727233982503,
+        scale_pos_weight=1.5,
         random_state=42, verbosity=-1, n_jobs=-1,
     )
     xgb_clf_oof = cross_val_predict(_xgb_clf_base, X_train_scaled, y_train,
@@ -1870,7 +1890,8 @@ def main():
         )),
         ('RF_clf', RandomForestClassifier(
             n_estimators=800, max_depth=None, min_samples_leaf=3,
-            max_features='sqrt', random_state=42, n_jobs=-1,
+            max_features='sqrt', class_weight={0: 1, 1: 1.5},
+            random_state=42, n_jobs=-1,
         )),
     ]
 
@@ -1908,7 +1929,7 @@ def main():
             'reg_lambda':        trial.suggest_float('reg_lambda', 1e-4, 5.0, log=True),
             'gamma':             trial.suggest_float('gamma', 0.0, 1.0),
         }
-        clf = XGBClassifier(**params, eval_metric='logloss', tree_method='hist',
+        clf = XGBClassifier(**params, scale_pos_weight=1.5, eval_metric='logloss', tree_method='hist',
                             random_state=42, verbosity=0, n_jobs=4)
         aucs = []
         for tr_idx, va_idx in GroupKFold(n_splits=5).split(X_train_scaled, y_train, groups=train_groups):
@@ -1921,7 +1942,7 @@ def main():
     _study_xgb.optimize(_xgb_opt_objective, n_trials=100, show_progress_bar=False)
     best_xgb_opt = _study_xgb.best_params
     print(f"    Best XGB_opt AUC={_study_xgb.best_value:.4f}  params={best_xgb_opt}")
-    _xgb_opt_clf = XGBClassifier(**best_xgb_opt, eval_metric='logloss', tree_method='hist',
+    _xgb_opt_clf = XGBClassifier(**best_xgb_opt, scale_pos_weight=1.5, eval_metric='logloss', tree_method='hist',
                                   random_state=42, verbosity=0, n_jobs=4)
     xgb_opt_oof = cross_val_predict(_xgb_opt_clf, X_train_scaled, y_train,
                                      cv=kf10_stack, method='predict_proba',
@@ -1945,7 +1966,7 @@ def main():
             'reg_lambda':        trial.suggest_float('reg_lambda', 1e-4, 5.0, log=True),
             'num_leaves':        trial.suggest_int('num_leaves', 20, 150),
         }
-        clf = LGBMClassifier(**params, random_state=42, verbosity=-1, n_jobs=4)
+        clf = LGBMClassifier(**params, scale_pos_weight=1.5, random_state=42, verbosity=-1, n_jobs=4)
         aucs = []
         for tr_idx, va_idx in GroupKFold(n_splits=5).split(X_train_scaled, y_train, groups=train_groups):
             clf.fit(X_train_scaled[tr_idx], y_train[tr_idx])
@@ -1957,7 +1978,7 @@ def main():
     _study_lgbm.optimize(_lgbm_opt_objective, n_trials=100, show_progress_bar=False)
     best_lgbm_opt = _study_lgbm.best_params
     print(f"    Best LGBM_opt AUC={_study_lgbm.best_value:.4f}  params={best_lgbm_opt}")
-    _lgbm_opt_clf = LGBMClassifier(**best_lgbm_opt, random_state=42, verbosity=-1, n_jobs=4)
+    _lgbm_opt_clf = LGBMClassifier(**best_lgbm_opt, scale_pos_weight=1.5, random_state=42, verbosity=-1, n_jobs=4)
     lgbm_opt_oof = cross_val_predict(_lgbm_opt_clf, X_train_scaled, y_train,
                                       cv=kf10_stack, method='predict_proba',
                                       groups=train_groups)[:, 1]
@@ -2018,7 +2039,7 @@ def main():
     print("  Training LR metas on stack_wide (v41: 5clf+8reg+MI, 43 cols, 5-fold GroupKFold)...")
     lr_probs_by_C = {}
     for C_val in [0.01, 0.1, 1.0, 10.0, 100.0]:
-        lr_c = LogisticRegression(C=C_val, max_iter=5000, random_state=42)
+        lr_c = LogisticRegression(C=C_val, max_iter=5000, class_weight={0: 1, 1: 1.5}, random_state=42)
         probs = cross_val_predict(lr_c, stack_wide, y_train,
                                   cv=kf5_stack, method='predict_proba',
                                   groups=train_groups)[:, 1]
@@ -2029,7 +2050,7 @@ def main():
     # ── 3. Meta-learners: LR sweep on both stack_A and stack_A_poly ──
     print("  Training LR metas on stack_A (baseline, 42 cols, 5-fold GroupKFold)...")
     for C_val in [0.01, 0.1, 1.0, 10.0, 100.0]:
-        lr_c = LogisticRegression(C=C_val, max_iter=5000, random_state=42)
+        lr_c = LogisticRegression(C=C_val, max_iter=5000, class_weight={0: 1, 1: 1.5}, random_state=42)
         probs = cross_val_predict(lr_c, stack_A, y_train,
                                   cv=kf5_stack, method='predict_proba',
                                   groups=train_groups)[:, 1]
@@ -2039,7 +2060,7 @@ def main():
 
     print("  Training LR metas on stack_A_poly (87 cols, 5-fold GroupKFold)...")
     for C_val in [0.01, 0.1, 1.0, 10.0, 100.0]:
-        lr_c = LogisticRegression(C=C_val, max_iter=5000, random_state=42)
+        lr_c = LogisticRegression(C=C_val, max_iter=5000, class_weight={0: 1, 1: 1.5}, random_state=42)
         probs = cross_val_predict(lr_c, stack_A_poly, y_train,
                                   cv=kf5_stack, method='predict_proba',
                                   groups=train_groups)[:, 1]
@@ -2048,7 +2069,7 @@ def main():
         print(f"    LR(C={C_val:7.2f}) stack_Poly Acc={acc:.4f}")
 
     print("  Training LR meta on stack_B (32 cols, 5-fold GroupKFold)...")
-    lr_B = LogisticRegression(C=10.0, max_iter=5000, random_state=42)
+    lr_B = LogisticRegression(C=10.0, max_iter=5000, class_weight={0: 1, 1: 1.5}, random_state=42)
     lr_probs_B = cross_val_predict(lr_B, stack_B, y_train,
                                    cv=kf5_stack, method='predict_proba',
                                    groups=train_groups)[:, 1]
@@ -2159,6 +2180,7 @@ def main():
 
     # ── 6. Train final meta-clf on full stack_A_poly ──
     # Determine which stack the winning model used, refit on full data
+    _meta_uses_wide = False
     if best_clf_name == "GBM_meta_poly":
         meta_clf_final = CatBoostCLF(iterations=800, depth=6, learning_rate=0.02,
                                      subsample=0.8, l2_leaf_reg=3.0, random_seed=42, verbose=0)
@@ -2193,6 +2215,13 @@ def main():
         meta_clf_final = LogisticRegression(C=C_final, max_iter=5000, random_state=42)
         meta_clf_final.fit(stack_A, y_train)
         _meta_uses_poly = False
+    elif "stackWide" in best_clf_name:
+        C_val_str = best_clf_name.split("_C")[1]
+        C_final = float(C_val_str)
+        meta_clf_final = LogisticRegression(C=C_final, max_iter=5000, class_weight={0: 1, 1: 1.5}, random_state=42)
+        meta_clf_final.fit(stack_wide, y_train)
+        _meta_uses_poly = False
+        _meta_uses_wide = True
     elif best_clf_name in ("soft_vote_top3", "soft_vote_all4"):
         meta_clf_final = XGBClassifier(
             n_estimators=200, max_depth=3, learning_rate=0.05,
@@ -2217,6 +2246,12 @@ def main():
     for clf_name, clf in clf_configs:
         clf.fit(X_train_scaled, y_train)
         clf_models_trained.append((clf_name, clf))
+
+    # Fit base classifiers on full training data for S669 test stack construction
+    _xgb_clf_base.fit(X_train_scaled, y_train)
+    _lgbm_clf_base.fit(X_train_scaled, y_train)
+    _xgb_opt_clf.fit(X_train_scaled, y_train)
+    _lgbm_opt_clf.fit(X_train_scaled, y_train)
 
     use_stacking = True
     cv_mae_ens     = meta_mae
@@ -2247,10 +2282,51 @@ def main():
             acc_val = accuracy_score(y_test, tb)
             print(f"  {name:20s}  MAE={mae_val:.4f}  Pearson={pr:.4f}  Acc={acc_val:.4f}")
 
-        # Final prediction: stacking or average
-        test_stack = np.column_stack([test_preds_all[n] for n, _ in models])
+        # Final prediction: build proper 87-col test stack matching stack_A_poly
+        _meta_clf_stack_built = False
         if use_stacking:
-            y_pred_ddg = meta_learner.predict(test_stack)
+            # clf_oof_mat equiv (2 cols): CB_clf, RF_clf trained on full data
+            _cb_clf_tr = next(m for n, m in clf_models_trained if n == 'CB_clf')
+            _rf_clf_tr = next(m for n, m in clf_models_trained if n == 'RF_clf')
+            test_clf_mat = np.column_stack([
+                _cb_clf_tr.predict_proba(X_test_scaled)[:, 1],
+                _rf_clf_tr.predict_proba(X_test_scaled)[:, 1],
+            ])
+            # oof_stack equiv (10 cols): 8 reg preds + XGB_clf_prob + LGBM_clf_prob
+            test_oof_stack = np.column_stack(
+                [test_preds_all[n] for n, _ in models] + [
+                    _xgb_clf_base.predict_proba(X_test_scaled)[:, 1],
+                    _lgbm_clf_base.predict_proba(X_test_scaled)[:, 1],
+                ]
+            )
+            # MI features (30 cols) + poly interactions (45 cols)
+            test_top_mi = X_test_scaled[:, top_feat_idx]
+            test_top10  = X_test_scaled[:, top10_feat_idx]
+            test_poly   = poly_transformer.transform(test_top10)[:, 10:]
+            test_stack_poly = np.hstack([test_clf_mat, test_oof_stack, test_top_mi, test_poly])
+            y_pred_ddg = meta_learner.predict(test_stack_poly)
+
+            # Build meta_clf_final's stack for S669 classification
+            if _meta_uses_poly:
+                meta_clf_test_stack = test_stack_poly
+            else:
+                # stack_wide / stack_A equiv: 6 clf probs + 8 reg preds + 30 MI
+                test_clf_mat4 = np.column_stack([
+                    _xgb_clf_base.predict_proba(X_test_scaled)[:, 1],
+                    _lgbm_clf_base.predict_proba(X_test_scaled)[:, 1],
+                    _cb_clf_tr.predict_proba(X_test_scaled)[:, 1],
+                    _rf_clf_tr.predict_proba(X_test_scaled)[:, 1],
+                    _xgb_opt_clf.predict_proba(X_test_scaled)[:, 1],
+                    _lgbm_opt_clf.predict_proba(X_test_scaled)[:, 1],
+                ])
+                test_reg_mat = np.column_stack([test_preds_all[n] for n, _ in models])
+                if _meta_uses_wide:
+                    # stack_wide: clf_mat4 + reg_mat + MI
+                    meta_clf_test_stack = np.hstack([test_clf_mat4, test_reg_mat, test_top_mi])
+                else:
+                    # stack_A: clf_oof_mat(CB+RF) + oof_stack(8reg+XGB_prob+LGBM_prob) + MI
+                    meta_clf_test_stack = np.hstack([test_clf_mat, test_oof_stack, test_top_mi])
+            _meta_clf_stack_built = True
         else:
             y_pred_ddg = np.mean([test_preds_all[n] for n, _ in models], axis=0)
 
@@ -2260,7 +2336,15 @@ def main():
         pearson_r_val, pearson_p = pearsonr(y_pred_ddg, y_test_ddg)
         spearman_r_val, spearman_p = spearmanr(y_pred_ddg, y_test_ddg)
 
-        y_pred_binary = (y_pred_ddg < 0).astype(int)
+        # Use meta_clf_final for classification if stacking is on
+        if _meta_clf_stack_built:
+            try:
+                meta_clf_proba = meta_clf_final.predict_proba(meta_clf_test_stack)[:, 1]
+                y_pred_binary = (meta_clf_proba > best_clf_thr).astype(int)
+            except Exception:
+                y_pred_binary = (y_pred_ddg < 0).astype(int)
+        else:
+            y_pred_binary = (y_pred_ddg < 0).astype(int)
         acc = accuracy_score(y_test, y_pred_binary)
         f1 = f1_score(y_test, y_pred_binary)
         prec = precision_score(y_test, y_pred_binary, zero_division=0)
@@ -2352,7 +2436,7 @@ def main():
         print(f"  {i+1:2d}. {name:20s} {avg_imp[j]:.4f}")
 
     # ── Step 10: Train ΔTm regressor on ThermoMutDB ──
-    print("\nSTEP 10: Training ΔTm regressor (ThermoMutDB, 6,107 entries)")
+    print("\nSTEP 10: Training ΔTm regressor (ThermoMutDB + FireProtDB)")
     print("-" * 40)
     print("  Source: ThermoMutDB (Pucci et al. 2021, Nucleic Acids Res.)")
     print("  Target: ΔTm (°C) — measured change in melting temperature upon mutation")
@@ -2456,6 +2540,12 @@ def main():
         'meta_type': meta_type,
         # Wide-stack classifier (direct binary prediction, more accurate)
         'clf_models': clf_models_trained,
+        'aux_clf_models': [
+            ('XGB_clf',  _xgb_clf_base),
+            ('LGBM_clf', _lgbm_clf_base),
+            ('XGB_opt',  _xgb_opt_clf),
+            ('LGBM_opt', _lgbm_opt_clf),
+        ],
         'meta_clf': meta_clf_final,
         'meta_clf_threshold': float(best_clf_thr),
         'use_clf_meta': best_clf_acc > reg_acc,
@@ -2465,6 +2555,7 @@ def main():
         'top10_feat_idx': top10_feat_idx.tolist(),
         'poly_transformer': poly_transformer,
         'meta_uses_poly': _meta_uses_poly,
+        'meta_uses_wide': _meta_uses_wide,
     }
     with open(os.path.join(MODEL_DIR, "mutation_regressor.pkl"), "wb") as f:
         pickle.dump(ensemble, f)

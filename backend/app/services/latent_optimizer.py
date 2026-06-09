@@ -304,7 +304,7 @@ def _scan_beneficial_mutations(
             mutation_meta.append((pos, wt_aa, mut_aa))
 
     # Single batch scored at user's actual temperature and pH — real ML features
-    all_ddg, all_prob = _clf.predict_mutations_batch_raw(
+    all_ddg, all_prob, _ = _clf.predict_mutations_batch_raw(
         mutation_tuples, sequence=sequence,
         temperature=temperature, ph=ph,
     )

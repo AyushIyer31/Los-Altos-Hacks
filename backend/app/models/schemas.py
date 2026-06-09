@@ -72,3 +72,19 @@ class PDBSearchResult(BaseModel):
     resolution: float | None
     sequence: str
     family: str = "Related Hydrolase"
+
+
+class StructureResolveRequest(BaseModel):
+    """
+    Protein metadata for structure resolution.
+    Any subset of fields may be provided; the resolver uses them in priority order.
+    """
+    # Protein identifiers (higher items in this list take priority)
+    pdb_id: Optional[str] = None        # "5XJH" or "AF-P35637-F1"
+    uniprot_id: Optional[str] = None    # "P35637"
+    gene: Optional[str] = None          # "FUS"
+    name: Optional[str] = None          # "RNA-binding protein FUS"
+    organism: Optional[str] = None      # "Homo sapiens"
+    sequence: Optional[str] = None      # Full amino acid sequence of the mutant
+    # Mutations to apply via NERF sidechain placement
+    mutations: list[str] = []           # ["S121E", "D186H"]

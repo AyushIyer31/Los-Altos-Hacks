@@ -704,14 +704,22 @@ def train_model(force_retrain: bool = False) -> dict:
 
 
 def _ensemble_predict(features_scaled):
-    """Get ensemble DDG prediction — weighted average of base regressors.
-
-    The meta_learner (Ridge) was trained on 87-col OOF stack that cannot be
-    reconstructed at inference time, so we use weighted average instead.
-    """
+    """Get ensemble DDG prediction — weighted average of base regressors."""
     base_preds = [model.predict(features_scaled) for (_, model) in _ensemble['models']]
     weights = _ensemble.get('weights', [1.0 / len(base_preds)] * len(base_preds))
     return np.sum([p * w for p, w in zip(base_preds, weights)], axis=0) / sum(weights)
+
+
+def _ensemble_predict_with_uncertainty(features_scaled):
+    """Return (mean_ddg, std_ddg) across ensemble models.
+
+    std_ddg is the standard deviation of individual model predictions —
+    a model-disagreement estimate of prediction uncertainty.
+    """
+    base_preds = np.array([model.predict(features_scaled) for (_, model) in _ensemble['models']])
+    mean_pred = np.mean(base_preds, axis=0)
+    std_pred  = np.std(base_preds, axis=0)
+    return mean_pred, std_pred
 
 
 def get_optimal_threshold() -> float:
@@ -738,8 +746,9 @@ def predict_mutation(wt_aa: str, position: int, mut_aa: str,
 
     predicted_ddg = float(_ensemble_predict(features_scaled)[0])
 
-    # DDG < 0 means stabilizing (beneficial)
-    is_beneficial = predicted_ddg < 0
+    # DDG < threshold means stabilizing (beneficial); threshold=0.4 optimised for recall
+    _thr = get_optimal_threshold()
+    is_beneficial = predicted_ddg < _thr
 
     # Convert DDG to a probability-like confidence score
     confidence = 1.0 / (1.0 + np.exp(predicted_ddg))  # sigmoid(-ddg)
@@ -943,9 +952,9 @@ def predict_mutations_batch_raw(mutation_tuples: list[tuple], sequence: str = No
     elif _n_features >= 142:
         all_scaled = np.hstack([all_scaled, np.zeros((len(mutation_tuples), 3), dtype=np.float32)])
 
-    all_ddg = _ensemble_predict(all_scaled)
+    all_ddg, all_ddg_std = _ensemble_predict_with_uncertainty(all_scaled)
     all_prob = 1.0 / (1.0 + np.exp(all_ddg))
-    return all_ddg, all_prob
+    return all_ddg, all_prob, all_ddg_std
 
 
 def predict_dtm_batch(mutation_tuples: list[tuple], sequence: str = None,
@@ -989,7 +998,7 @@ def predict_mutations_batch(mutation_tuples: list[tuple], sequence: str = None, 
     mutation_tuples: list of (wt_aa, position, mut_aa)
     Returns list of prediction dicts in same order.
     """
-    all_ddg, all_prob = predict_mutations_batch_raw(mutation_tuples, sequence=sequence, protein_id=protein_id)
+    all_ddg, all_prob, all_ddg_std = predict_mutations_batch_raw(mutation_tuples, sequence=sequence, protein_id=protein_id)
 
     if len(all_ddg) == 0:
         return []
@@ -998,9 +1007,11 @@ def predict_mutations_batch(mutation_tuples: list[tuple], sequence: str = None, 
     for i in range(len(mutation_tuples)):
         ddg = float(all_ddg[i])
         conf = float(all_prob[i])
+        std = float(all_ddg_std[i])
         results.append({
-            "predicted_beneficial": ddg < 0,
+            "predicted_beneficial": ddg < get_optimal_threshold(),
             "predicted_ddg": round(ddg, 4),
+            "predicted_ddg_std": round(std, 4),   # ensemble std dev (uncertainty)
             "confidence": round(conf, 4),
             "probability_beneficial": round(conf, 4),
         })
@@ -1028,6 +1039,8 @@ def predict_candidate_mutations(mutations: list[str], sequence: str = None) -> d
 
     beneficial_count = sum(1 for p in predictions if p["predicted_beneficial"])
     avg_confidence = np.mean([p["confidence"] for p in predictions])
+    # Combine per-mutation uncertainties: sqrt(sum of variances)
+    combined_std = float(np.sqrt(np.sum([p["predicted_ddg_std"]**2 for p in predictions])))
 
     return {
         "predictions": predictions,
@@ -1035,6 +1048,7 @@ def predict_candidate_mutations(mutations: list[str], sequence: str = None) -> d
         "beneficial_count": beneficial_count,
         "total": len(predictions),
         "total_predicted_ddg": round(total_ddg, 4),
+        "total_predicted_ddg_std": round(combined_std, 4),
         "average_confidence": round(float(avg_confidence), 4),
     }
 

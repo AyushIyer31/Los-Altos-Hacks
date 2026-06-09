@@ -1601,16 +1601,20 @@ footer {
 // ═══════════════════════════════════════════════════════════
 // Configuration
 // ═══════════════════════════════════════════════════════════
-const API = 'https://pet-lab-api-9518756006.us-central1.run.app';
+const API = 'http://localhost:8000';
 
 const PRESETS = [
-  { name: 'IsPETase', organism: 'I. sakaiensis', pdbId: '5XJH', desc: 'Wild-type, denatures at 40\u00b0C', residues: 312,
+  { name: 'IsPETase', organism: 'I. sakaiensis', pdbId: '5XJH', uniprotId: 'A0A0K8P6T7', gene: 'PETase',
+    desc: 'Wild-type, denatures at 40\u00b0C', residues: 312,
     sequence: 'MNFPRASRLMQAAVLGGLMAVSAAATAQTNPYARGPNPTAASLEASAGPFTVRSFTVSRPSGYGAGTVYYPTNAGGTVGAIAIVPGYTARQSSIKWWGPRLASHGFVVITIDTNSTLDQPSSRSSQQMAALRQVASLNGTSSSPIYGKVDTARMGVMGWSMGGGGSLISAANNPSLKAAAPQAPWDSSTNFSSVTVPTLIFACENDSIAPVNSSALPIYDSMSRNAKQFLEINGGSHSCANSGNSNQALIGKKGVAWMKRFMDNDTRYSTFACENPNSTRVSDFRTANCSLEDPAANKARKEAELAAATAEQ' },
-  { name: 'ThermoPETase', organism: 'Engineered', pdbId: '6IJ6', desc: '3 mutations, active at 72\u00b0C', residues: 312,
+  { name: 'ThermoPETase', organism: 'Engineered', pdbId: '6IJ6', uniprotId: 'A0A0K8P6T7', gene: 'PETase',
+    desc: '3 mutations, active at 72\u00b0C', residues: 312,
     sequence: 'MNFPRASRLMQAAVLGGLMAVSAAATAQTNPYARGPNPTAASLEASAGPFTVRSFTVSRPSGYGAGTVYYPTNAGGTVGAIAIVPGYTARQSSIKWWGPRLASHGFVVITIDTNSTLDQPESRSSQQMAALRQVASLNGTSSSPIYGKVDTARMGVMGWSMGGGGSLISAANNPSLKAAAPQAPWHSSTNFSSVTVPTLIFACENDSIAPVNSSALPIYDSMSRNAKQFLEINGGSHSCANSGNSNQALIGKKGVAWMKRFMDNDTRYSTFACENPNSTAVSDFRTANCSLEDPAANKARKEAELAAATAEQ' },
-  { name: 'FAST-PETase', organism: 'Engineered', pdbId: 'Lu et al. 2022', desc: '5 mutations, full PET in 1 week', residues: 312,
+  { name: 'FAST-PETase', organism: 'Engineered', pdbId: '7SH4', uniprotId: 'A0A0K8P6T7', gene: 'PETase',
+    desc: '5 mutations, full PET in 1 week', residues: 312,
     sequence: 'MNFPRASRLMQAAVLGGLMAVSAAATAQTNPYARGPNPTAASLEASAGPFTVRSFTVSRPSGYGAGTVYYPTNAGGTVGAIAIVPGYTARQSSIKWWGPRLASHGFVVITIDTNSTLDQPESRSSQQMAALRQVASLNGTSSSPIYGKVDTARMGVMGWSMGGGGSLISAANNPSLKAAAPQAPWHSSTNFSSVTVPTLIFACENDSIAPVNSSALPIYDSMSRNAKQFLEIKGGSHFCANSGNSNQALIGKKGVAWMKRFMDNDTRYSTFACENPNSTAVSDFRTANCSLEDPAANKARKEAELAAATAEQ' },
-  { name: 'LCC', organism: 'Metagenome', pdbId: '4EB0', desc: 'Leaf-branch compost cutinase', residues: 261,
+  { name: 'LCC', organism: 'Metagenome', pdbId: '4EB0', uniprotId: 'G9BY57', gene: 'LCC',
+    desc: 'Leaf-branch compost cutinase', residues: 261,
     sequence: 'SNPYQRGPNPTRSALTADGPFSVATYTVSRLSVSGFGGGVIYYPTGTSLTFGGIAMSPGYTADASSLAWLGRRLASHGFVVLVINTNSRFDYPDSRASQLSAALNYLRTSSPSAVRARLDANRLAVAGHSMGGGGTLRIAEQNPSLKAAVPLTPWHTDKTFNTSVPVLIVGAEADTVAPVSQHAIPFYQNLPSTTPKVYVELDNASHFAPNSNNAAISVYTISWMKLWVDNDTRYRQFLCNVNDPALSDFRTNNRHCQ' },
 ];
 
@@ -1626,39 +1630,39 @@ const FAMILY_COLORS = {
 // Disease Protein Presets
 // ═══════════════════════════════════════════════════════════
 const DISEASE_PRESETS = [
-  { name: 'SOD1', organism: 'H. sapiens', pdbId: 'AF-P00441-F1', desc: 'Superoxide dismutase [Cu-Zn] \u2014 misfolding causes ALS', residues: 154, disease: 'ALS', confidence: 97.9,
+  { name: 'SOD1', organism: 'H. sapiens', pdbId: 'AF-P00441-F1', uniprotId: 'P00441', gene: 'SOD1', desc: 'Superoxide dismutase [Cu-Zn] \u2014 misfolding causes ALS', residues: 154, disease: 'ALS', confidence: 97.9,
     sequence: 'MATKAVCVLKGDGPVQGIINFEQKESNGPVKVWGSIKGLTEGLHGFHVHEFGDNTAGCTSAGPHFNPLSRKHGGPKDEERHVGDLGNVTADKDGVADVSIEDSVISLSGDHCIIGRTLVVHEKADDLGKGGNEESTKTGNAGSRLACGVIGIAQ' },
-  { name: 'FUS', organism: 'H. sapiens', pdbId: 'AF-Q17RS7-F1', desc: 'RNA-binding protein FUS \u2014 aggregates in ALS/FTD', residues: 908, disease: 'ALS', confidence: 61.2,
-    sequence: 'MGVNDLWQILEPVKQHIPLRNLGGKTIAVDLSLWVCEAQTVKKMMGSVMKPHLRNLFFRISYLTQMDVKLVFVMEGEPPKLKADVISKRNQSRYGSSGKSWSQKTGRSHFKSVLRECLHMLECLGIPWVQAAGEAEAMCAYLNAGGHVDGCLTNDGDTFLYGAQTVYRNFTMNTKDPHVDCYTMSSIKSKLGLDRDALVGLAILLGCDYLPKGVPGVGKEQALKLIQILKGQSLLQRFNRWNETSCNSSPQLLVTKKLAHCSVCSHPGSPKDHERNGCRLCKSDKYCEPHDYEYCCPCEWHRTEHDRQLSEVENNIKKKACCCEGFPFHEVIQEFLLNKDKLVKVIRYQRPDLLLFQRFTLEKMEWPNHYACEKLLVLLTHYDMIERKLGSRNSNQLQPIRIVKTRIRNGVHCFEIEWEKPEHYAMEDKQHGEFALLTIEEESLFEAAYPEIVAVYQKQKLEIKGKKQKRIKPKENNLPEPDEVMSFQSHMTLKPTCEIFHKQNSKLNSGISPDPTLPQESISASLNSLLLPKNTPCLNAQEQFMSSLRPLAIQQIKAVSKSLISESSQPNTSSHNISVIADLHLSTIDWEGTSFSNSPA' },
-  { name: 'TARDBP', organism: 'H. sapiens', pdbId: 'AF-Q13148-F1', desc: 'TDP-43 \u2014 cytoplasmic aggregation in ALS', residues: 414, disease: 'ALS', confidence: 65.2,
+  { name: 'FUS', organism: 'H. sapiens', pdbId: 'AF-P35637-F1', uniprotId: 'P35637', gene: 'FUS', desc: 'RNA-binding protein FUS \u2014 aggregates in ALS/FTD', residues: 526, disease: 'ALS', confidence: 53.6,
+    sequence: 'MASNDYTQQATQSYGAYPTQPGQGYSQQSSQPYGQQSYSGYSQSTDTSGYGQSSYSSYGQSQNTGYGTQSTPQGYGSTGGYGSSQSSQSSYGQQSSYPGYGQQPAPSSTSGSYGSSSQSSSYGQPQSGSYSQQPSYGGQQQSYGQQQSYNPPQGYGQQNQYNSSSGGGGGGGGGGNYGQDQSSMSSGGGSGGGYGNQDQSGGGGSGGYGQQDRGGRGRGGSGGGGGGGGGGYNRSSGGYEPRGRGGGRGGRGGMGGSDRGGFNKFGGPRDQGSRHDSEQDNSDNNTIFVQGLGENVTIESVADYFKQIGIIKTNKKTGQPMINLYTDRETGKLKGEATVSFDDPPSAKAAIDWFDGKEFSGNPIKVSFATRRADFNRGGGNGRGGRGRGGPMGRGGYGGGGSGGGGRGGFPSGGGGGGGQQRAGDWKCPNPTCENMNFSWRNECNQCKAPKPDGPGGGPGGSHMGGNYGDDRRGGRGGYDRGGYRGRGGDRGGFRGGRGGGDRGGFGPGKMDSRGEHRQDRRERPY' },
+  { name: 'TARDBP', organism: 'H. sapiens', pdbId: 'AF-Q13148-F1', uniprotId: 'Q13148', gene: 'TARDBP', desc: 'TDP-43 \u2014 cytoplasmic aggregation in ALS', residues: 414, disease: 'ALS', confidence: 65.2,
     sequence: 'MSEYIRVTEDENDEPIEIPSEDDGTVLLSTVTAQFPGACGLRYRNPVSQCMRGVRLVEGILHAPDAGWGNLVYVVNYPKDNKRKMDETDASSAVKVKRAVQKTSDLIVLGLPWKTTEQDLKEYFSTFGEVLMVQVKKDLKTGHSKGFGFVRFTEYETQVKVMSQRHMIDGRWCDCKLPNSKQSQDEPLRSRKVFVGRCTEDMTEDELREFFSQYGDVMDVFIPKPFRAFAFVTFADDQIAQSLCGEDLIIKGISVHISNAEPKHNSNRQLERSGRFGGNPGGFGNQGGFGNSRGGGAGLGNNQGSNMGGGMNFGAFSINPAMMAAAQAALQSSWGMMGMLASQQNQSGPSGNNQNQGNMQREPNQAFGSGNNSYSGSNSGAAIGWGSASNAGSGSGFNGGFGSSMDSKSSGWGM' },
-  { name: 'SNCA', organism: 'H. sapiens', pdbId: 'AF-P37840-F1', desc: 'Alpha-synuclein \u2014 Lewy body aggregation', residues: 140, disease: "Parkinson's", confidence: 75.2,
+  { name: 'SNCA', organism: 'H. sapiens', pdbId: 'AF-P37840-F1', uniprotId: 'P37840', gene: 'SNCA', desc: 'Alpha-synuclein \u2014 Lewy body aggregation', residues: 140, disease: "Parkinson's", confidence: 75.2,
     sequence: 'MDVFMKGLSKAKEGVVAAAEKTKQGVAEAAGKTKEGVLYVGSKTKEGVVHGVATVAEKTKEQVTNVGGAVVTGVTAVAQKTVEGAGSIAAATGFVKKDQLGKNEEGAPQEGILEDMPVDPDNEAYEMPSEEGYQDYEPEA' },
-  { name: 'PARK7', organism: 'H. sapiens', pdbId: 'AF-Q99497-F1', desc: 'Protein DJ-1 \u2014 oxidative stress sensor', residues: 189, disease: "Parkinson's", confidence: 98.4,
+  { name: 'PARK7', organism: 'H. sapiens', pdbId: 'AF-Q99497-F1', uniprotId: 'Q99497', gene: 'PARK7', desc: 'Protein DJ-1 \u2014 oxidative stress sensor', residues: 189, disease: "Parkinson's", confidence: 98.4,
     sequence: 'MASKRALVILAKGAEEMETVIPVDVMRRAGIKVTVAGLAGKDPVQCSRDVVICPDASLEDAKKEGPYDVVVLPGGNLGAQNLSESAAVKEILKEQENRKGLIAAICAGPTALLAHEIGFGSKVTTHPLAKDKMMNGGHYTYSENRVEKDGLILTSRGPGTSFEFALAIVEALNGKEVAAQVKAPLVLKD' },
-  { name: 'PINK1', organism: 'H. sapiens', pdbId: 'AF-Q9BXM7-F1', desc: 'PTEN-induced kinase 1 \u2014 mitophagy regulator', residues: 581, disease: "Parkinson's", confidence: 77.2,
+  { name: 'PINK1', organism: 'H. sapiens', pdbId: 'AF-Q9BXM7-F1', uniprotId: 'Q9BXM7', gene: 'PINK1', desc: 'PTEN-induced kinase 1 \u2014 mitophagy regulator', residues: 581, disease: "Parkinson's", confidence: 77.2,
     sequence: 'MAVRQALGRGLQLGRALLLRFTGKPGRAYGLGRPGPAAGCVRGERPGWAAGPGAEPRRVGLGLPNRLRFFRQSVAGLAARLQRQFVVRAWGCAGPCGRAVFLAFGLGLGLIEEKQAESRRAVSACQEIQAIFTQKSKPGPDPLDTRRLQGFRLEEYLIGQSIGKGCSAAVYEATMPTLPQNLEVTKSTGLLPGRGPGTSAPGEGQERAPGAPAFPLAIKMMWNISAGSSSEAILNTMSQELVPASRVALAGEYGAVTYRKSKRGPKQLAPHPNIIRVLRAFTSSVPLLPGALVDYPDVLPSRLHPEGLGHGRTLFLVMKNYPCTLRQYLCVNTPSPRLAAMMLLQLLEGVDHLVQQGIAHRDLKSDNILVELDPDGCPWLVIADFGCCLADESIGLQLPFSSWYVDRGGNGCLMAPEVSTARPGPRAVIDYSKADAWAVGAIAYEIFGLVNPFYGQGKAHLESRSYQEAQLPALPESVPPDVRQLVRALLQREASKRPSARVAANVLHLSLWGEHILALKNLKLDKMVGWLLQQSAATLLANRLTEKCCVETKMKMLFLANLECETLCQAALLLCSWRAAL' },
-  { name: 'APP', organism: 'H. sapiens', pdbId: 'AF-P05067-F1', desc: 'Amyloid-beta precursor protein', residues: 770, disease: "Alzheimer's", confidence: 67.4,
+  { name: 'APP', organism: 'H. sapiens', pdbId: 'AF-P05067-F1', uniprotId: 'P05067', gene: 'APP', desc: 'Amyloid-beta precursor protein', residues: 770, disease: "Alzheimer's", confidence: 67.4,
     sequence: 'MLPGLALLLLAAWTARALEVPTDGNAGLLAEPQIAMFCGRLNMHMNVQNGKWDSDPSGTKTCIDTKEGILQYCQEVYPELQITNVVEANQPVTIQNWCKRGRKQCKTHPHFVIPYRCLVGEFVSDALLVPDKCKFLHQERMDVCETHLHWHTVAKETCSEKSTNLHDYGMLLPCGIDKFRGVEFVCCPLAEESDNVDSADAEEDDSDVWWGGADTDYADGSEDKVVEVAEEEEVAEVEEEEADDDEDDEDGDEVEEEAEEPYEEATERTTSIATTTTTTTESVEEVVREVCSEQAETGPCRAMISRWYFDVTEGKCAPFFYGGCGGNRNNFDTEEYCMAVCGSAMSQSLLKTTQEPLARDPVKLPTTAASTPDAVDKYLETPGDENEHAHFQKAKERLEAKHRERMSQVMREWEEAERQAKNLPKADKKAVIQHFQEKVESLEQEAANERQQLVETHMARVEAMLNDRRRLALENYITALQAVPPRPRHVFNMLKKYVRAEQKDRQHTLKHFEHVRMVDPKKAAQIRSQVMTHLRVIYERMNQSLSLLYNVPAVAEEIQDEVDELLQKEQNYSDDVLANMISEPRISYGNDALMPSLTET' },
-  { name: 'MAPT', organism: 'H. sapiens', pdbId: 'AF-P10636-F1', desc: 'Tau protein \u2014 neurofibrillary tangles', residues: 758, disease: "Alzheimer's", confidence: 49.2,
+  { name: 'MAPT', organism: 'H. sapiens', pdbId: 'AF-P10636-F1', uniprotId: 'P10636', gene: 'MAPT', desc: 'Tau protein \u2014 neurofibrillary tangles', residues: 758, disease: "Alzheimer's", confidence: 49.2,
     sequence: 'MAEPRQEFEVMEDHAGTYGLGDRKDQGGYTMHQDQEGDTDAGLKESPLQTPTEDGSEEPGSETSDAKSTPTAEDVTAPLVDEGAPGKQAAAQPHTEIPEGTTAEEAGIGDTPSLEDEAAGHVTQEPESGKVVQEGFLREPGPPGLSHQLMSGMPGAPLLPEGPREATRQPSGTGPEDTEGGRHAPELLKHQLLGDLHQEGPPLKGAGGKERPGSKEEVDEDRDVDESSPQDSPPSKASPAQDGRPPQTAAREATSIPGFPAEGAIPLPVDFLSKVSTEIPASEPDGPSVGRAKGQDAPLEFTFHVEITPNVQKEQAHSEEHLGRAAFPGAPGEGPEARGPSLGEDTKEADLPEPSEKQPAAAPRGKPVSRVPQLKARMVSKSKDGTGSDDKKAKTSTRSSAKTLKNRPCLSPKHPTPGSSDPLIQPSSPAVCPEPPSSPKYVSSVTSRTGSSGAKEMKLKGADGKTKIATPRGAAPPGQKGQANATRIPAKTPPAPKTPPSSGEPPKSGDRSGYSSPGSPGTPGSRSRTPSLPTPPTREPKKVAVVRTPPKSPSSAKSRLQTAPVPMPDLKNVKSKIGSTENLKHQPGGGKVQIINKKLD' },
-  { name: 'PSEN1', organism: 'H. sapiens', pdbId: 'AF-P49768-F1', desc: 'Presenilin-1 \u2014 gamma-secretase component', residues: 467, disease: "Alzheimer's", confidence: 72.1,
+  { name: 'PSEN1', organism: 'H. sapiens', pdbId: 'AF-P49768-F1', uniprotId: 'P49768', gene: 'PSEN1', desc: 'Presenilin-1 \u2014 gamma-secretase component', residues: 467, disease: "Alzheimer's", confidence: 72.1,
     sequence: 'MTELPAPLSYFQNAQMSEDNHLSNTVRSQNDNRERQEHNDRRSLGHPEPLSNGRPQGNSRQVVEQDEEEDEELTLKYGAKHVIMLFVPVTLCMVVVVATIKSVSFYTRKDGQLIYTPFTEDTETVGQRALHSILNAAIMISVIVVMTILLVVLYKYRCYKVIHAWLIISSLLLLFFFSFIYLGEVFKTYNVAVDYITVALLIWNFGVVGMISIHWKGPLRLQQAYLIMISALMALVFIKYLPEWTAWLILAVISVYDLVAVLCPKGPLRMLVETAQERNETLFPALIYSSTMVWLVNMAEGDPEAQRRVSKNSKYNAESTERESQDTVAENDDGGFSEEWEAQRDSHLGPHRSTPESRAAVQELSSSILAGEDPEERGVKLGLGDFIFYSVLVGKASATASGDWNTTIACFVAILIGLCLTLLLLAIFKKALPALPISITFGLVFYFATDYLVQPFMDQLAFHQFYI' },
-  { name: 'TP53', organism: 'H. sapiens', pdbId: 'AF-P04637-F1', desc: 'Tumor protein p53 \u2014 guardian of the genome', residues: 393, disease: 'Cancer', confidence: 75.1,
+  { name: 'TP53', organism: 'H. sapiens', pdbId: 'AF-P04637-F1', uniprotId: 'P04637', gene: 'TP53', desc: 'Tumor protein p53 \u2014 guardian of the genome', residues: 393, disease: 'Cancer', confidence: 75.1,
     sequence: 'MEEPQSDPSVEPPLSQETFSDLWKLLPENNVLSPLPSQAMDDLMLSPDDIEQWFTEDPGPDEAPRMPEAAPPVAPAPAAPTPAAPAPAPSWPLSSSVPSQKTYQGSYGFRLGFLHSGTAKSVTCTYSPALNKMFCQLAKTCPVQLWVDSTPPPGTRVRAMAIYKQSQHMTEVVRRCPHHERCSDSDGLAPPQHLIRVEGNLRVEYLDDRNTFRHSVVVPYEPPEVGSDCTTIHYNYMCNSSCMGGMNRRPILTIITLEDSSGNLLGRNSFEVRVCACPGRDRRTEEENLRKKGEPHHELPPGSTKRALPNNTSSSPQPKKKPLDGEYFTLQIRGRERFEMFRELNEALELKDAQAGKEPGGSRAHSSHLKSKKGQSTSRHKKLMFKTEGPDSD' },
-  { name: 'BRCA1', organism: 'H. sapiens', pdbId: 'AF-P38398-F1', desc: 'Breast cancer type 1 susceptibility protein', residues: 1863, disease: 'Cancer', confidence: 41.6,
+  { name: 'BRCA1', organism: 'H. sapiens', pdbId: 'AF-P38398-F1', uniprotId: 'P38398', gene: 'BRCA1', desc: 'Breast cancer type 1 susceptibility protein', residues: 1863, disease: 'Cancer', confidence: 41.6,
     sequence: 'MDLSALRVEEVQNVINAMQKILECPICLELIKEPVSTKCDHIFCKFCMLKLLNQKKGPSQCPLCKNDITKRSLQESTRFSQLVEELLKIICAFQLDTGLEYANSYNFAKKENNSPEHLKDEVSIIQSMGYRNRAKRLLQSEPENPSLQETSLSVQLSNLGTVRTLRTKQRIQPQKTSVYIELGSDSSEDTVNKATYCSVGDQELLQITPQGTRDEISLDSAKKAACEFSETDVTNTEHHQPSNNDLNTTEKRAAERHPEKYQGSSVSNLHVEPCGTNTHASSLQHENSSLLLTKDRMNVEKAEFCNKSKQPGLARSQHNRWAGSKETCNDRRTPSTEKKVDLNADPLCERKEWNKQKLPCSENPRDTEDVPWITLNSSIQKVNEWFSRSDELLGSDDSHDGESESNAKVADVLDVLNEVDEYSGSSEKIDLLASDPHEALICKSERVHSKSVESNIEDKIFGKTYRKKASLPNLSHVTENLIIGAFVTEPQIIQERPLTNKLKRKRRPTSGLHPEDFIKKADLAVQKTPEMINQGTNQTEQNGQVMNITNSGHENKTKGDSIQNEKNPNPIESLEKESAFKTKAEPISSSISNMELELNI' },
-  { name: 'CFTR', organism: 'H. sapiens', pdbId: 'AF-P13569-F1', desc: 'CFTR \u2014 chloride channel, F508del most common mutation', residues: 1480, disease: 'Cystic Fibrosis', confidence: 75.6,
+  { name: 'CFTR', organism: 'H. sapiens', pdbId: 'AF-P13569-F1', uniprotId: 'P13569', gene: 'CFTR', desc: 'CFTR \u2014 chloride channel, F508del most common mutation', residues: 1480, disease: 'Cystic Fibrosis', confidence: 75.6,
     sequence: 'MQRSPLEKASVVSKLFFSWTRPILRKGYRQRLELSDIYQIPSVDSADNLSEKLEREWDRELASKKNPKLINALRRCFFWRFMFYGIFLYLGEVTKAVQPLLLGRIIASYDPDNKEERSIAIYLGIGLCLLFIVRTLLLHPAIFGLHHIGMQMRIAMFSLIYKKTLKLSSRVLDKISIGQLVSLLSNNLNKFDEGLALAHFVWIAPLQVALLMGLIWELLQASAFCGLGFLIVLALFQAGLGRMMMKYRDQRAGKISERLVITSEMIENIQSVKAYCWEEAMEKMIENLRQTELKLTRKAAYVRYFNSSAFFFSGFFVVFLSVLPYALIKGIILRKIFTTISFCIVLRMAVTRQFPWAVQTWYDSLGAINKIQDFLQKQEYKTLEYNLTTTEVVMENVTAFWEEGFGELFEKAKQNNNNRKTSNGDDSLFFSNFSLLGTPVLKDINFKIERGQLLAVAGSTGAGKTSLLMVIMGELEPSEGKIKHSGRISFCSQFSWIMPGTIKENIIFGVSYDEYRYRSVIKACQLEEDISKFAEKDNIVLGEGGITLSGGQRARISLARAVYKDADLYLLDSPFGYLDVLTEKEIFESCVCKLMANKTR' },
-  { name: 'HBB', organism: 'H. sapiens', pdbId: 'AF-P68871-F1', desc: 'Hemoglobin subunit beta \u2014 E6V causes sickle cell disease', residues: 147, disease: 'Sickle Cell', confidence: 97.2,
+  { name: 'HBB', organism: 'H. sapiens', pdbId: 'AF-P68871-F1', uniprotId: 'P68871', gene: 'HBB', desc: 'Hemoglobin subunit beta \u2014 E6V causes sickle cell disease', residues: 147, disease: 'Sickle Cell', confidence: 97.2,
     sequence: 'MVHLTPEEKSAVTALWGKVNVDEVGGEALGRLLVVYPWTQRFFESFGDLSTPDAVMGNPKVKAHGKKVLGAFSDGLAHLDNLKGTFATLSELHCDKLHVDPENFRLLGNVLVCVLAHHFGKEFTPPVQAAYQKVVAGVANALAHKYH' },
-  { name: 'PRNP', organism: 'H. sapiens', pdbId: 'AF-P04156-F1', desc: 'Major prion protein \u2014 misfolding causes CJD/BSE', residues: 253, disease: 'Prion Disease', confidence: 64.2,
+  { name: 'PRNP', organism: 'H. sapiens', pdbId: 'AF-P04156-F1', uniprotId: 'P04156', gene: 'PRNP', desc: 'Major prion protein \u2014 misfolding causes CJD/BSE', residues: 253, disease: 'Prion Disease', confidence: 64.2,
     sequence: 'MANLGCWMLVLFVATWSDLGLCKKRPKPGGWNTGGSRYPGQGSPGGNRYPPQGGGGWGQPHGGGWGQPHGGGWGQPHGGGWGQPHGGGWGQGGGTHSQWNKPSKPKTNMKHMAGAAAAGAVVGGLGGYMLGSAMSRPIIHFGSDYEDRYYRENMHRYPNQVYYRPMDEYSNQNNFVHDCVNITIKQHTVTTTTKGENFTETDVKMMERVVEQMCITQYERESQAYYQRGSSMVLFSSPPVILLISFLIFLIVG' },
-  { name: 'INS', organism: 'H. sapiens', pdbId: 'AF-P01308-F1', desc: 'Insulin \u2014 pancreatic hormone, misfolding causes diabetes', residues: 110, disease: 'Diabetes', confidence: 52.9,
+  { name: 'INS', organism: 'H. sapiens', pdbId: 'AF-P01308-F1', uniprotId: 'P01308', gene: 'INS', desc: 'Insulin \u2014 pancreatic hormone, misfolding causes diabetes', residues: 110, disease: 'Diabetes', confidence: 52.9,
     sequence: 'MALWMRLLPLLALLALWGPDPAAAFVNQHLCGSHLVEALYLVCGERGFFYTPKTRREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN' },
-  { name: 'GBA1', organism: 'H. sapiens', pdbId: 'AF-P04062-F1', desc: 'Glucocerebrosidase \u2014 lysosomal enzyme deficiency', residues: 536, disease: "Gaucher's", confidence: 93.2,
+  { name: 'GBA1', organism: 'H. sapiens', pdbId: 'AF-P04062-F1', uniprotId: 'P04062', gene: 'GBA', desc: 'Glucocerebrosidase \u2014 lysosomal enzyme deficiency', residues: 536, disease: "Gaucher's", confidence: 93.2,
     sequence: 'MEFSSPSREECPKPLSRVSIMAGSLTGLLLLQAVSWASGARPCIPKSFGYSSVVCVCNATYCDSFDPPTFPALGTFSRYESTRSGRRMELSMGPIQANHTGTGLLLTLQPEQKFQKVKGFGGAMTDAAALNILALSPPAQNLLLKSYFSEEGIGYNIIRVPMASCDFSIRTYTYADTPDDFQLHNFSLPEEDTKLKIPLIHRALQLAQRPVSLLASPWTSPTWLKTNGAVNGKGSLKGQPGDIYHQTWARYFVKFLDAYAEHKLQFWAVTAENEPSAGLLSGYPFQCLGFTPEHQRDFIARDLGPTLANSTHHNVRLLMLDDQRLLLPHWAKVVLTDPEAAKYVHGIAVHWYLDFLAPAKATLGETHRLFPNTMLFASEACVGSKFWEQSVRLGSWDRGMQYSHSIITNLLYHVVGWTDWNLALNPEGGPNWVRNFVDSPIIVDITKDTFYKQPMFYHLGHFSKFIPEGSQRVGLVASQKNDLDAVALMHPDGSAVVVVLNRSSKDVPLTIKDPAVGFLETISPGYSIHTYLWRRQ' },
-  { name: 'PAH', organism: 'H. sapiens', pdbId: 'AF-P00439-F1', desc: 'Phenylalanine-4-hydroxylase \u2014 enzyme deficiency causes PKU', residues: 452, disease: 'PKU', confidence: 88.7,
+  { name: 'PAH', organism: 'H. sapiens', pdbId: 'AF-P00439-F1', uniprotId: 'P00439', gene: 'PAH', desc: 'Phenylalanine-4-hydroxylase \u2014 enzyme deficiency causes PKU', residues: 452, disease: 'PKU', confidence: 88.7,
     sequence: 'MSTAVLENPGLGRKLSDFGQETSYIEDNCNQNGAISLIFSLKEEVGALAKVLRLFEENDVNLTHIESRPSRLKKDEYEFFTHLDKRSLPALTNIIKILRHDIGATVHELSRDKKKDTVPWFPRTIQELDRFANQILSYGAELDADHPGFKDPVYRARRKQFADIAYNYRHGQPIPRVEYMEEEKKTWGTVFKTLKSLYKTHACYEYNHIFPLLEKYCGFHEDNIPQLEDVSQFLQTCTGFRLRPVAGLLSSRDFLGGLAFRVFHCTQYIRHGSKPMYTPEPDICHELLGHVPLFSDRSFAQFSQEIGLASLGAPDEYIEKLATIYWFTVEFGLCKQGDSIKAYGAGLLSSFGELQYCLSEKPKLLPLELEKTAIQNYTVTEFQPLYYVAESFNDAKEKVRNFAATIPRPFSVRYDPYTQRIEVLDNTQQLKILADSINSEIGILCSALQKIK' },
 ];
 
@@ -2969,6 +2973,45 @@ function renderResults() {
         </div>
       </div>
 
+      ${(() => {
+        const wtThermal = simThermalFactor(env.temperature, factors.base_profile.T_opt, factors.base_profile.width);
+        const mutThermal = factors.thermal;
+        const gainPP = ((mutThermal - wtThermal) * 100).toFixed(1);
+        const isImproved = mutThermal > wtThermal;
+        const gainColor = isImproved ? 'var(--success)' : 'var(--error)';
+        const wtPct = (wtThermal * 100).toFixed(0);
+        const mutPct = (mutThermal * 100).toFixed(0);
+        // Relative % only makes sense when WT has meaningful baseline activity
+        const wtTooLow = wtThermal < 0.05;
+        const relImprove = !wtTooLow ? (((mutThermal - wtThermal) / wtThermal) * 100).toFixed(0) : null;
+        const improveLine = wtTooLow
+          ? `<div style="font-size:24px;font-weight:800;color:${gainColor}">${isImproved ? '+' : ''}${gainPP}pp gain</div><div style="font-size:10px;color:var(--text-tertiary)">WT near-zero at ${env.temperature}&deg;C — % ratio not meaningful</div>`
+          : `<div style="font-size:24px;font-weight:800;color:${gainColor}">${isImproved ? '+' : ''}${relImprove}% improvement</div><div style="font-size:10px;color:var(--text-tertiary)">${isImproved ? '+' : ''}${gainPP} percentage points</div>`;
+        return `<div style="padding:12px 16px;background:var(--surface);border-radius:8px;border:1px solid var(--border);margin-bottom:8px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div style="font-size:12px;font-weight:700;color:var(--text-primary)">Productivity at ${env.temperature}&deg;C &mdash; Before vs After Optimization</div>
+            <div style="text-align:right">${improveLine}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="flex:1;text-align:center">
+              <div style="font-size:10px;color:var(--text-tertiary);margin-bottom:4px">Wild-type</div>
+              <div style="font-size:22px;font-weight:800;color:var(--text-secondary)">${wtPct}%</div>
+              <div style="margin-top:5px;height:6px;border-radius:3px;background:var(--border)">
+                <div style="height:100%;width:${wtPct}%;border-radius:3px;background:var(--text-tertiary)"></div>
+              </div>
+            </div>
+            <div style="font-size:18px;color:${gainColor}">→</div>
+            <div style="flex:1;text-align:center">
+              <div style="font-size:10px;color:var(--text-tertiary);margin-bottom:4px">Optimized</div>
+              <div style="font-size:22px;font-weight:800;color:${isImproved ? 'var(--success)' : 'var(--error)'}">${mutPct}%</div>
+              <div style="margin-top:5px;height:6px;border-radius:3px;background:var(--border)">
+                <div style="height:100%;width:${mutPct}%;border-radius:3px;background:${isImproved ? 'var(--success)' : 'var(--error)'}"></div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      })()}
+
       <div style="padding:12px 16px;background:${factors.combined > 0.6 ? 'rgba(16,185,129,0.06)' : factors.combined > 0.3 ? 'rgba(232,145,12,0.06)' : 'rgba(214,64,69,0.06)'};border-radius:8px;border:1px solid ${factors.combined > 0.6 ? 'rgba(16,185,129,0.12)' : factors.combined > 0.3 ? 'rgba(232,145,12,0.15)' : 'rgba(214,64,69,0.15)'}">
         <div style="display:flex;align-items:center;justify-content:space-between">
           <div>
@@ -3185,11 +3228,11 @@ function renderCandidateCard(c, wtScore) {
         <div class="grade">${gradeLabel(c.combined_score)}</div>
       </div>
     </div>
-    ${(hasLit || classOk || c.rank <= 3) ? `<div class="cand-badges">
-      ${c.rank <= 3 ? `<span class="badge" onclick="event.stopPropagation(); show3DViewer(${JSON.stringify(c.mutations).replace(/"/g,'&quot;')});" style="cursor:pointer;background:rgba(59,111,245,0.08);color:var(--primary);border:1px solid rgba(59,111,245,0.15)">View 3D</span>` : ''}
+    <div class="cand-badges">
+      <span class="badge" onclick="event.stopPropagation(); show3DViewer(${JSON.stringify(c).replace(/"/g,'&quot;')});" style="cursor:pointer;background:rgba(59,111,245,0.08);color:var(--primary);border:1px solid rgba(59,111,245,0.15)">View 3D</span>
       ${hasLit ? `<span class="badge" style="background:rgba(16,185,129,0.08);color:var(--success);border:1px solid rgba(16,185,129,0.15)">Validated</span>` : ''}
       ${classOk ? `<span class="badge" style="background:rgba(16,185,129,0.08);color:var(--accent);border:1px solid rgba(16,185,129,0.15)">ML Confirmed ${(c.classifier_prediction.average_confidence*100).toFixed(0)}%</span>` : ''}
-    </div>` : ''}
+    </div>
   </div>`;
 }
 
@@ -3223,9 +3266,14 @@ function showCandidateDetail(c) {
         <span style="font-size:12px;font-weight:600;font-family:monospace;color:${cp.all_beneficial ? 'var(--accent)' : 'var(--text-tertiary)'}">${(cp.average_confidence*100).toFixed(1)}%</span>
       </div>
       <p style="font-size:13px;color:var(--text-secondary);margin-bottom:8px">${cp.all_beneficial ? `All ${cp.total} mutations predicted beneficial.` : `${cp.beneficial_count}/${cp.total} predicted beneficial.`}</p>
+      ${cp.total_predicted_ddg != null ? `<div style="font-size:12px;color:var(--text-tertiary);margin-bottom:8px;font-family:monospace">
+        Total ΔΔG: <strong style="color:${cp.total_predicted_ddg < 0 ? 'var(--success)' : 'var(--error)'}">${cp.total_predicted_ddg > 0 ? '+' : ''}${cp.total_predicted_ddg.toFixed(2)} kcal/mol</strong>
+        ${cp.total_predicted_ddg_std != null ? `<span style="color:var(--text-tertiary)"> ± ${cp.total_predicted_ddg_std.toFixed(2)}</span>` : ''}
+        <span style="font-size:10px;color:var(--text-tertiary);margin-left:4px">(ensemble uncertainty)</span>
+      </div>` : ''}
       ${(cp.per_mutation || []).map(pm => `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
         <span>${pm.predicted_beneficial ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="3" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--error)" stroke-width="3" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>'} <span style="font-family:monospace;font-weight:600;font-size:12px">${pm.mutation}</span></span>
-        <span style="font-size:11px;font-family:monospace;color:var(--text-tertiary)">${(pm.probability_beneficial*100).toFixed(1)}%</span>
+        <span style="font-size:11px;font-family:monospace;color:var(--text-tertiary)">${pm.predicted_ddg != null ? `${pm.predicted_ddg > 0 ? '+' : ''}${pm.predicted_ddg.toFixed(2)}${pm.predicted_ddg_std != null ? ` ± ${pm.predicted_ddg_std.toFixed(2)}` : ''} kcal/mol` : `${(pm.probability_beneficial*100).toFixed(1)}%`}</span>
       </div>`).join('')}
     </div>`;
   }
@@ -3345,27 +3393,125 @@ window._3dMutations = [];
 window._3dCurrentStyle = 'cartoon';
 window._3dShowLabels = true;
 
-function show3DViewer(mutations) {
-  const preset = PRESETS.find(p => p.name === selectedPreset);
-  const pdbId = preset ? preset.pdbId : null;
-  const validPdb = /^[A-Z0-9]{4}$/i.test(pdbId) ? pdbId : null;
+function show3DViewer(candidateOrMutations) {
+  // Normalize: accept either a mutations array (legacy) or a full candidate object
+  let mutList, candidateMeta;
+  if (Array.isArray(candidateOrMutations)) {
+    mutList       = candidateOrMutations;
+    candidateMeta = null;
+  } else {
+    mutList       = (candidateOrMutations && candidateOrMutations.mutations) || [];
+    candidateMeta = candidateOrMutations || null;
+  }
+
+  const preset = PRESETS.find(p => p.name === selectedPreset)
+              || DISEASE_PRESETS.find(p => p.name === selectedPreset);
   const enzymeName = preset ? preset.name : 'Custom Enzyme';
-  const useESMFold = !validPdb;
+
+  // Per-mutation ML metadata from classifier_prediction.per_mutation
+  const perMutMeta = {};
+  if (candidateMeta && candidateMeta.classifier_prediction && candidateMeta.classifier_prediction.per_mutation) {
+    for (const pm of candidateMeta.classifier_prediction.per_mutation) {
+      perMutMeta[pm.mutation] = pm;
+    }
+  }
+  window._3dMutMeta = perMutMeta;
 
   // Parse mutations
-  const parsedMuts = (mutations || []).map(m => parseMutation(m)).filter(Boolean);
+  const parsedMuts = mutList.map(m => parseMutation(m)).filter(Boolean);
   window._3dMutations = parsedMuts;
+  window._3dShowLabels = true;
+
+  // Build the mutant sequence for the resolver
+  const basePreset = PRESETS.concat(DISEASE_PRESETS).find(p => p.name === selectedPreset);
+  const baseSeq    = currentSequence || (basePreset && basePreset.sequence) || '';
+  let mutantSeq = baseSeq;
+  if (baseSeq && mutList.length) {
+    const arr = baseSeq.split('');
+    mutList.forEach(m => {
+      const match = m.match(/^([A-Za-z])(\d+)([A-Za-z])$/);
+      if (match) {
+        const pos = parseInt(match[2]) - 1;
+        if (pos >= 0 && pos < arr.length) arr[pos] = match[3].toUpperCase();
+      }
+    });
+    mutantSeq = arr.join('');
+  }
+
+  // Helper: color a mutation dot in the UI list by confidence
+  function mutDotColor(label) {
+    const meta = perMutMeta[label];
+    if (!meta) return '#E74C3C';
+    if (meta.predicted_beneficial && meta.confidence >= 0.75) return '#10B981';
+    if (meta.predicted_beneficial && meta.confidence >= 0.5)  return '#F59E0B';
+    if (!meta.predicted_beneficial)                           return '#EF4444';
+    return '#E74C3C';
+  }
+
+  // Per-mutation ML detail row
+  function mutMetaHtml(m) {
+    const meta = perMutMeta[m.label];
+    if (!meta) return '';
+    const ddg  = meta.predicted_ddg  != null ? `${meta.predicted_ddg > 0 ? '+' : ''}${meta.predicted_ddg.toFixed(2)} kcal/mol` : null;
+    const conf = meta.confidence     != null ? `${(meta.confidence * 100).toFixed(0)}%` : null;
+    const bene = meta.predicted_beneficial;
+    return `<div style="display:flex;gap:8px;align-items:center;margin-top:3px;flex-wrap:wrap">
+      ${ddg  ? `<span style="font-size:10px;font-family:'SF Mono',monospace;color:${meta.predicted_ddg < 0 ? '#10B981' : '#EF4444'}">DDG ${ddg}</span>` : ''}
+      ${conf ? `<span style="font-size:10px;color:var(--text-tertiary)">conf ${conf}</span>` : ''}
+      <span style="font-size:10px;padding:1px 5px;border-radius:3px;background:${bene ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)'};color:${bene ? '#10B981' : '#EF4444'}">${bene ? 'beneficial' : 'harmful'}</span>
+    </div>`;
+  }
 
   const mutListHtml = parsedMuts.map(m =>
-    `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.05);">
-      <div style="width:8px;height:8px;border-radius:50%;background:#E74C3C;flex-shrink:0"></div>
+    `<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+      <div style="width:8px;height:8px;border-radius:50%;background:${mutDotColor(m.label)};flex-shrink:0;margin-top:4px"></div>
       <div style="flex:1">
-        <span style="font-weight:700;font-family:'SF Mono',monospace;font-size:13px">${m.label}</span>
-        <span style="color:var(--text-tertiary);font-size:11px;margin-left:4px">${m.from3} &rarr; ${m.to3}</span>
+        <div style="display:flex;gap:6px;align-items:baseline">
+          <span style="font-weight:700;font-family:'SF Mono',monospace;font-size:13px">${m.label}</span>
+          <span style="color:var(--text-tertiary);font-size:11px">${m.from3} &rarr; ${m.to3}</span>
+          <span style="font-size:11px;color:var(--text-tertiary);margin-left:auto">pos ${m.pos}</span>
+        </div>
+        ${mutMetaHtml(m)}
       </div>
-      <span style="font-size:11px;color:var(--text-tertiary)">pos ${m.pos}</span>
     </div>`
   ).join('');
+
+  // Build optimization summary panel (only if we have candidate metadata)
+  let optSummaryHtml = '';
+  if (candidateMeta) {
+    const cp   = candidateMeta.classifier_prediction || {};
+    const dtm  = candidateMeta.predicted_dtm != null ? `${candidateMeta.predicted_dtm > 0 ? '+' : ''}${candidateMeta.predicted_dtm.toFixed(1)} &deg;C` : null;
+    const stab = (candidateMeta.predicted_stability_score * 100).toFixed(0);
+    const act  = (candidateMeta.predicted_activity_score  * 100).toFixed(0);
+    optSummaryHtml = `
+    <div style="margin-top:14px;background:var(--surface);border-radius:12px;border:1px solid var(--border);padding:14px 16px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-tertiary);margin-bottom:10px">Optimization Results — Candidate #${candidateMeta.rank}</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+        <div style="flex:1;min-width:100px;background:rgba(59,111,245,0.06);border:1px solid rgba(59,111,245,0.12);border-radius:8px;padding:8px 10px;text-align:center">
+          <div style="font-size:18px;font-weight:800;color:var(--primary)">${stab}%</div>
+          <div style="font-size:10px;color:var(--text-tertiary);margin-top:1px">Stability</div>
+        </div>
+        <div style="flex:1;min-width:100px;background:rgba(232,98,26,0.06);border:1px solid rgba(232,98,26,0.12);border-radius:8px;padding:8px 10px;text-align:center">
+          <div style="font-size:18px;font-weight:800;color:var(--warning)">${act}%</div>
+          <div style="font-size:10px;color:var(--text-tertiary);margin-top:1px">Activity</div>
+        </div>
+        ${dtm ? `<div style="flex:1;min-width:100px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.12);border-radius:8px;padding:8px 10px;text-align:center">
+          <div style="font-size:18px;font-weight:800;color:var(--accent)">${dtm}</div>
+          <div style="font-size:10px;color:var(--text-tertiary);margin-top:1px">Predicted &Delta;Tm</div>
+        </div>` : ''}
+        ${cp.total_predicted_ddg != null ? `<div style="flex:1;min-width:100px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.12);border-radius:8px;padding:8px 10px;text-align:center">
+          <div style="font-size:18px;font-weight:800;color:${cp.total_predicted_ddg < 0 ? 'var(--accent)' : 'var(--error)'}">${cp.total_predicted_ddg > 0 ? '+' : ''}${cp.total_predicted_ddg.toFixed(2)}</div>
+          <div style="font-size:10px;color:var(--text-tertiary);margin-top:1px">Total &Delta;&Delta;G (kcal/mol)</div>
+        </div>` : ''}
+      </div>
+      <div style="font-size:11px;color:var(--text-tertiary)">
+        Mutation sites colored by ML classifier confidence:
+        <span style="color:#10B981">green = beneficial &ge;75%</span> &middot;
+        <span style="color:#F59E0B">amber = uncertain</span> &middot;
+        <span style="color:#EF4444">red = predicted harmful</span>
+      </div>
+    </div>`;
+  }
 
   document.getElementById('modalContent').innerHTML = `
     <div class="modal-handle"></div>
@@ -3373,11 +3519,11 @@ function show3DViewer(mutations) {
     <!-- Header -->
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px">
       <div>
-        <h3 style="font-size:20px;font-weight:800;letter-spacing:-0.5px;margin-bottom:2px">Structural Analysis</h3>
-        <p style="font-size:13px;color:var(--text-secondary)">
-          <span style="font-family:'SF Mono',monospace;font-weight:600;background:var(--surface);padding:2px 6px;border-radius:4px">${useESMFold ? 'ESMFold' : validPdb.toUpperCase()}</span>
-          &nbsp;${enzymeName} &middot; ${parsedMuts.length} mutation${parsedMuts.length !== 1 ? 's' : ''} highlighted
-        </p>
+        <h3 style="font-size:20px;font-weight:800;letter-spacing:-0.5px;margin-bottom:4px">Structural Analysis</h3>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span id="structureSourceBadge" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.1)">Resolving structure...</span>
+          <span style="font-size:13px;color:var(--text-secondary)">${enzymeName} &middot; ${parsedMuts.length} mutation${parsedMuts.length !== 1 ? 's' : ''} highlighted</span>
+        </div>
       </div>
     </div>
 
@@ -3386,92 +3532,141 @@ function show3DViewer(mutations) {
       <div id="viewer3d" style="width:100%;height:460px;background:#0f1023;position:relative;">
         <div id="viewer3dLoading" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:rgba(255,255,255,0.7);font-size:13px;gap:8px;">
           <div style="width:28px;height:28px;border:3px solid rgba(255,255,255,0.15);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite"></div>
-          ${useESMFold ? 'Predicting 3D structure with ESMFold AI...' : 'Fetching structure from RCSB PDB...'}
+          Resolving best available structure from all databases...
         </div>
       </div>
 
       <!-- Guided Tour — Cinematic Full-Viewer Lower-Third -->
       <div id="tourOverlay" style="display:none;position:absolute;inset:0;z-index:20;pointer-events:none">
-        <!-- Timeline at top -->
         <div style="position:absolute;top:0;left:0;right:0;height:3px;background:rgba(255,255,255,0.05);pointer-events:none">
           <div id="tourProgress" style="height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--accent));transition:none"></div>
         </div>
-        <!-- Top-left: exit + step counter -->
         <div style="position:absolute;top:14px;left:14px;display:flex;align-items:center;gap:10px;pointer-events:auto">
-          <button onclick="endGuidedTour()" style="background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.55);border-radius:7px;font-size:11px;font-weight:600;letter-spacing:0.5px;padding:5px 12px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.55)'">✕ EXIT TOUR</button>
+          <button onclick="endGuidedTour()" style="background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.55);border-radius:7px;font-size:11px;font-weight:600;letter-spacing:0.5px;padding:5px 12px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.55)'">&#x2715; EXIT TOUR</button>
           <div id="tourStepLabel" style="font-size:9px;font-weight:700;letter-spacing:2.5px;color:rgba(255,255,255,0.3);text-transform:uppercase;background:rgba(0,0,0,0.4);padding:5px 10px;border-radius:5px;backdrop-filter:blur(8px)"></div>
         </div>
-        <!-- Top-right: pause button -->
         <div style="position:absolute;top:14px;right:14px;pointer-events:auto">
-          <button onclick="tourTogglePause()" id="tourPauseBtn" style="background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.55);border-radius:7px;font-size:13px;padding:5px 12px;cursor:pointer;width:38px">⏸</button>
+          <button onclick="tourTogglePause()" id="tourPauseBtn" style="background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.55);border-radius:7px;font-size:13px;padding:5px 12px;cursor:pointer;width:38px">&#x23F8;</button>
         </div>
-        <!-- Dot nav — right side vertical -->
         <div id="tourDots" style="position:absolute;right:16px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:auto"></div>
-        <!-- Lower-third gradient + content -->
         <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to bottom,transparent 0%,rgba(3,3,12,0.7) 30%,rgba(3,3,12,0.97) 100%);padding:60px 36px 24px;pointer-events:auto" id="tourLowerThird">
-          <!-- Mutation type badge -->
           <div id="tourBadge" style="display:inline-flex;align-items:center;gap:6px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);border:1px solid rgba(16,185,129,0.35);background:rgba(16,185,129,0.06);padding:4px 10px;border-radius:5px;margin-bottom:12px"></div>
-          <!-- Title -->
           <div id="tourTitle" style="font-size:clamp(22px,3vw,32px);font-weight:900;color:#fff;letter-spacing:-0.8px;line-height:1.1;margin-bottom:6px;text-shadow:0 2px 20px rgba(0,0,0,0.8)"></div>
-          <!-- Subtitle (WT→MUT) -->
           <div id="tourSubtitle" style="font-size:13px;color:rgba(255,255,255,0.4);font-family:'SF Mono',monospace;letter-spacing:0.5px;margin-bottom:14px"></div>
-          <!-- Body explanation -->
           <div id="tourBody" style="font-size:13px;color:rgba(255,255,255,0.72);line-height:1.75;max-width:620px;text-shadow:0 1px 8px rgba(0,0,0,0.6)"></div>
-          <!-- Nav row -->
           <div style="display:flex;gap:8px;align-items:center;margin-top:20px">
-            <button onclick="tourPrev()" id="tourPrevBtn" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);padding:7px 18px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;letter-spacing:0.3px;transition:all 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.07)'">← BACK</button>
-            <button onclick="tourNext()" id="tourNextBtn" style="background:rgba(59,111,245,0.35);border:1px solid rgba(59,111,245,0.5);color:#fff;padding:7px 22px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:0.5px;transition:all 0.2s" onmouseover="this.style.background='rgba(59,111,245,0.55)'" onmouseout="this.style.background='rgba(59,111,245,0.35)'">NEXT →</button>
+            <button onclick="tourPrev()" id="tourPrevBtn" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);padding:7px 18px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;letter-spacing:0.3px;transition:all 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.07)'">&#x2190; BACK</button>
+            <button onclick="tourNext()" id="tourNextBtn" style="background:rgba(59,111,245,0.35);border:1px solid rgba(59,111,245,0.5);color:#fff;padding:7px 22px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:0.5px;transition:all 0.2s" onmouseover="this.style.background='rgba(59,111,245,0.55)'" onmouseout="this.style.background='rgba(59,111,245,0.35)'">NEXT &#x2192;</button>
           </div>
         </div>
       </div>
 
-      <!-- Legend overlay -->
-      <div id="viewer3dLegend" style="display:none;position:absolute;top:12px;left:12px;background:rgba(15,16,35,0.85);backdrop-filter:blur(8px);border-radius:8px;padding:10px 14px;font-size:11px;color:rgba(255,255,255,0.9);line-height:1.6;pointer-events:none">
-        <div style="font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:rgba(255,255,255,0.5);margin-bottom:4px">${useESMFold ? 'AI-Predicted Structure' : 'Legend'}</div>
-        <div style="display:flex;align-items:center;gap:6px"><div style="width:10px;height:3px;background:linear-gradient(90deg,#3366ff,#33ff66,#ffff33,#ff6633,#ff3366);border-radius:1px"></div> Backbone (N&rarr;C terminus)</div>
-        <div style="display:flex;align-items:center;gap:6px"><div style="width:10px;height:10px;border-radius:50%;background:#E74C3C"></div> Mutation site (engineered)</div>
-        <div style="display:flex;align-items:center;gap:6px"><div style="width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3)"></div> Wild-type residue</div>
+      <!-- pLDDT confidence legend -->
+      <div id="viewer3dLegend" style="display:none;position:absolute;top:12px;left:12px;background:rgba(10,10,20,0.88);backdrop-filter:blur(10px);border-radius:8px;padding:10px 14px;font-size:11px;color:rgba(255,255,255,0.9);line-height:1.8;pointer-events:none;min-width:170px">
+        <div id="legendTitle" style="font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:rgba(255,255,255,0.45);margin-bottom:5px">Model Confidence</div>
+        <div id="legendPlddt" style="display:block">
+          <div style="display:flex;align-items:center;gap:7px"><div style="width:12px;height:12px;border-radius:3px;background:#0053D6;flex-shrink:0"></div><span>Very high &nbsp;<span style="color:rgba(255,255,255,0.45)">(pLDDT &gt; 90)</span></span></div>
+          <div style="display:flex;align-items:center;gap:7px"><div style="width:12px;height:12px;border-radius:3px;background:#65CBF3;flex-shrink:0"></div><span>Confident &nbsp;<span style="color:rgba(255,255,255,0.45)">(70-90)</span></span></div>
+          <div style="display:flex;align-items:center;gap:7px"><div style="width:12px;height:12px;border-radius:3px;background:#FFDB13;flex-shrink:0"></div><span>Low &nbsp;<span style="color:rgba(255,255,255,0.45)">(50-70)</span></span></div>
+          <div style="display:flex;align-items:center;gap:7px"><div style="width:12px;height:12px;border-radius:3px;background:#FF7D45;flex-shrink:0"></div><span>Very low &nbsp;<span style="color:rgba(255,255,255,0.45)">(&lt; 50)</span></span></div>
+          <div style="margin-top:5px;padding-top:5px;border-top:1px solid rgba(255,255,255,0.1)">
+            <div style="display:flex;align-items:center;gap:7px"><div style="width:12px;height:12px;border-radius:50%;background:#10B981;flex-shrink:0"></div><span>Mutation (beneficial)</span></div>
+            <div style="display:flex;align-items:center;gap:7px"><div style="width:12px;height:12px;border-radius:50%;background:#F59E0B;flex-shrink:0"></div><span>Mutation (uncertain)</span></div>
+            <div style="display:flex;align-items:center;gap:7px"><div style="width:12px;height:12px;border-radius:50%;background:#EF4444;flex-shrink:0"></div><span>Mutation (predicted harmful)</span></div>
+          </div>
+        </div>
+        <div id="legendSpectrum" style="display:none">
+          <div style="display:flex;align-items:center;gap:6px"><div style="width:60px;height:6px;background:linear-gradient(90deg,#3366ff,#33ff66,#ffff33,#ff6633);border-radius:2px"></div><span style="color:rgba(255,255,255,0.5);font-size:10px">N &#x2192; C</span></div>
+          <div style="display:flex;align-items:center;gap:7px;margin-top:4px"><div style="width:12px;height:12px;border-radius:50%;background:#E74C3C;flex-shrink:0"></div><span>Mutation site</span></div>
+        </div>
       </div>
 
+      <!-- Hover residue tooltip -->
+      <div id="residueTooltip" style="display:none;position:absolute;background:rgba(10,10,20,0.92);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:7px 10px;font-size:11px;color:#fff;pointer-events:none;z-index:10;white-space:nowrap"></div>
+
       <!-- Controls overlay -->
-      <div style="position:absolute;bottom:12px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:center">
-        <div style="display:flex;gap:4px">
-          <button onclick="setViewerStyle('cartoon')" id="btn3d_cartoon" class="viewer-btn viewer-btn-active">Cartoon</button>
+      <div style="position:absolute;bottom:12px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px">
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
+          <button onclick="setViewerStyle('plddt')" id="btn3d_plddt" class="viewer-btn viewer-btn-active" title="Color by AlphaFold confidence score">Confidence</button>
+          <button onclick="setViewerStyle('cartoon')" id="btn3d_cartoon" class="viewer-btn" title="Color by sequence position">Spectrum</button>
           <button onclick="setViewerStyle('stick')" id="btn3d_stick" class="viewer-btn">Sticks</button>
-          <button onclick="setViewerStyle('ballstick')" id="btn3d_ballstick" class="viewer-btn">Ball & Stick</button>
+          <button onclick="setViewerStyle('ballstick')" id="btn3d_ballstick" class="viewer-btn">Ball &amp; Stick</button>
           <button onclick="setViewerStyle('surface')" id="btn3d_surface" class="viewer-btn">Surface</button>
         </div>
-        <div style="display:flex;gap:4px">
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
           <button onclick="toggleMutLabels()" id="btn3d_labels" class="viewer-btn viewer-btn-active" title="Toggle mutation labels">Labels</button>
           <button onclick="focusMutations()" class="viewer-btn" title="Zoom to mutation sites" style="background:rgba(231,76,69,0.3);color:#fff">Focus Mutations</button>
           <button onclick="resetView()" class="viewer-btn" title="Reset camera">Reset</button>
-          ${parsedMuts.length > 0 ? `<button onclick="startGuidedTour()" id="btn3d_tour" class="viewer-btn" title="Guided mutation tour" style="background:rgba(59,111,245,0.4);color:#fff;border-color:rgba(59,111,245,0.5)">Guided Tour</button>` : ''}
-          <button onclick="downloadPDB()" class="viewer-btn" title="Download structure as PDB file" style="background:rgba(16,185,129,0.35);color:#fff;border-color:rgba(16,185,129,0.5)">&#8681; Download PDB</button>
+          ${parsedMuts.length > 0 ? `<button onclick="startGuidedTour()" id="btn3d_tour" class="viewer-btn" style="background:rgba(59,111,245,0.4);color:#fff;border-color:rgba(59,111,245,0.5)">Guided Tour</button>` : ''}
+          <button onclick="downloadPDB()" class="viewer-btn" style="background:rgba(16,185,129,0.35);color:#fff;border-color:rgba(16,185,129,0.5)">&#8681; Download PDB</button>
         </div>
       </div>
     </div>
 
-    <!-- Mutation Details Panel -->
-    ${parsedMuts.length > 0 ? `
-    <div style="margin-top:16px;background:var(--surface);border-radius:12px;border:1px solid var(--border);padding:16px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-        <div style="width:10px;height:10px;border-radius:50%;background:#E74C3C"></div>
-        <h4 style="font-size:14px;font-weight:700">Engineered Mutations</h4>
-        <span style="font-size:11px;color:var(--text-tertiary);margin-left:auto">${parsedMuts.length} substitution${parsedMuts.length !== 1 ? 's' : ''}</span>
+    <!-- pLDDT Confidence Chart -->
+    <div id="plddtChartPanel" style="display:none;margin-top:14px;background:var(--surface);border-radius:12px;border:1px solid var(--border);padding:14px 16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div>
+          <span style="font-size:13px;font-weight:700">Confidence per Residue</span>
+          <span style="font-size:11px;color:var(--text-tertiary);margin-left:8px">AlphaFold pLDDT score</span>
+        </div>
+        <span id="plddtAvgBadge" style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px"></span>
       </div>
-      ${mutListHtml}
-      <p style="font-size:11px;color:var(--text-tertiary);margin-top:10px;line-height:1.5">
-        Red-highlighted residues indicate positions where the AI-designed mutations are introduced.
-        These substitutions were selected by the noise-filtered GradientBoosting classifier (CV accuracy 80%) trained on ${(9000).toLocaleString()} mutations from FireProtDB, extremophile organisms, and biophysics-derived data, with ESM-2 protein language model embeddings.
+      <canvas id="plddtCanvas" height="70" style="width:100%;display:block;cursor:crosshair"></canvas>
+      <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:10px;color:var(--text-tertiary)">
+        <span>Residue 1</span><span id="plddtMidLabel"></span><span id="plddtEndLabel"></span>
+      </div>
+    </div>
+
+    ${optSummaryHtml}
+
+    <!-- Mutation Verification Panel -->
+    ${parsedMuts.length > 0 ? `
+    <div id="mutVerifyPanel" style="margin-top:16px;background:var(--surface);border-radius:12px;border:1px solid var(--border);padding:16px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <div style="width:10px;height:10px;border-radius:50%;background:#E74C3C"></div>
+        <h4 style="font-size:14px;font-weight:700">Mutation Verification</h4>
+        <span id="mutVerifyBadge" style="font-size:11px;color:var(--text-tertiary);margin-left:auto">${parsedMuts.length} substitution${parsedMuts.length !== 1 ? 's' : ''} &mdash; verifying...</span>
+      </div>
+      <div id="mutVerifyCards" style="display:flex;flex-direction:column;gap:8px">
+        ${parsedMuts.map(m => `
+        <div id="mutcard_${m.pos}" style="border-radius:8px;border:1px solid var(--border);padding:10px 12px;font-size:12px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-family:'SF Mono',monospace;font-weight:700;font-size:13px;background:rgba(231,76,60,0.12);color:#E74C3C;padding:2px 7px;border-radius:5px">${m.label}</span>
+            <span style="color:var(--text-secondary)">${m.from3} &rarr; ${m.to3}</span>
+            <span id="mutcard_check_${m.pos}" style="margin-left:auto;font-size:11px;color:var(--text-tertiary)">checking...</span>
+          </div>
+        </div>`).join('')}
+      </div>
+      <p id="mutVerifyNote" style="font-size:11px;color:var(--text-tertiary);margin-top:10px;line-height:1.5">
+        Base structure with mutated sidechains rebuilt using NERF geometry (Dunbrack 2010 modal rotamers). Backbone is unchanged; only sidechain atoms differ from wild-type. Auto-zoomed to mutation sites — click <em>Reset</em> to see full protein.
       </p>
     </div>` : ''}
 
-    <!-- Citation -->
+    <!-- Structure Citation -->
     <div style="margin-top:12px;padding:12px 14px;background:var(--surface);border-radius:8px;border:1px solid var(--border);font-size:11px;color:var(--text-tertiary);line-height:1.5">
-      <strong style="color:var(--text-secondary)">Structure source:</strong> ${useESMFold
-        ? 'ESMFold AI prediction (Lin et al., 2023). Structure predicted from amino acid sequence using Meta\'s ESM-2 protein language model.'
-        : 'RCSB Protein Data Bank (rcsb.org), PDB ID: ' + validPdb.toUpperCase() + '.'}
-      Visualized with 3Dmol.js (Rego & Koes, 2015). Mutation sites predicted by PET Lab ML pipeline.
+      <strong style="color:var(--text-secondary)">Structure source:</strong>
+      <span id="citationSourceText">Resolving from AlphaFold DB and RCSB PDB...</span>
+      The downloaded PDB includes REMARK lines identifying all applied mutations.
+      Visualized with 3Dmol.js (Rego &amp; Koes, 2015).
+      <strong style="color:var(--text-secondary)">Tip:</strong> point mutations look similar in Cartoon view — use <em>Sticks</em> or <em>Ball &amp; Stick</em> + <em>Focus Mutations</em> to inspect sidechain changes.
+    </div>
+
+    <!-- AlphaFold DB Direct Lookup -->
+    <div style="margin-top:12px;padding:14px 16px;background:rgba(59,111,245,0.04);border-radius:10px;border:1px solid rgba(59,111,245,0.15)">
+      <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:4px">Load any protein from AlphaFold Database</div>
+      <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:10px">214 million structures available. Enter a UniProt accession (e.g. <code>P35637</code> for FUS).</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="afUniprotInput" type="text" placeholder="UniProt ID (e.g. P35637)"
+          style="flex:1;padding:8px 12px;border-radius:7px;border:1px solid rgba(255,255,255,0.12);background:var(--surface-3);color:var(--text-primary);font-size:13px;font-family:inherit;outline:none"
+          onkeydown="if(event.key==='Enter')loadAlphaFoldByUniProt()"
+        />
+        <button onclick="loadAlphaFoldByUniProt()" id="afLoadBtn"
+          style="padding:8px 16px;border-radius:7px;background:var(--primary);color:#fff;font-size:12px;font-weight:700;border:none;cursor:pointer;white-space:nowrap;transition:opacity 0.2s">
+          Load Structure
+        </button>
+      </div>
+      <div id="afLookupStatus" style="font-size:11px;margin-top:6px;color:var(--text-tertiary);display:none"></div>
     </div>
 
     <p style="font-size:11px;color:var(--text-tertiary);margin-top:8px;text-align:center">Drag to rotate &middot; Scroll to zoom &middot; Right-drag to pan</p>
@@ -3489,52 +3684,211 @@ function show3DViewer(mutations) {
   `;
   document.getElementById('modal').classList.add('show');
 
-  // Fetch PDB and render
+  // Fetch and render structure
   setTimeout(() => {
-    let structurePromise;
+    // Build the resolve request with ALL available protein metadata
+    const resolveBody = {
+      pdb_id:      preset ? (preset.pdbId || null) : null,
+      uniprot_id:  preset ? (preset.uniprotId || null) : null,
+      gene:        preset ? (preset.gene || null) : null,
+      name:        preset ? preset.name : null,
+      organism:    preset ? preset.organism : null,
+      sequence:    mutantSeq || null,
+      mutations:   mutList,
+    };
 
-    if (useESMFold && currentSequence) {
-      // Use ESMFold to predict structure from sequence
-      const seq = currentSequence.substring(0, 400); // ESMFold limit
-      structurePromise = fetch('https://api.esmatlas.com/foldSequence/v1/pdb/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: seq,
-      }).then(r => {
-        if (!r.ok) throw new Error('ESMFold prediction failed (status ' + r.status + ')');
-        return r.text();
-      });
-    } else {
-      // Fetch from RCSB PDB
-      const fetchPdb = validPdb ? validPdb.toUpperCase() : '5XJH';
-      structurePromise = fetch('https://files.rcsb.org/download/' + fetchPdb + '.pdb')
-        .then(r => { if (!r.ok) throw new Error('PDB not found'); return r.text(); });
-    }
+    let structurePromise = fetch(API + '/structure/resolve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(resolveBody),
+      signal: AbortSignal.timeout(45000),
+    }).then(r => {
+      if (!r.ok) throw new Error('Structure resolution failed (' + r.status + ')');
+      // Read provenance headers
+      window._3dStructureSource  = r.headers.get('X-Structure-Source') || 'resolved';
+      window._3dSourceType       = r.headers.get('X-Source-Type')      || 'unknown';
+      window._3dIsExperimental   = r.headers.get('X-Is-Experimental')  === 'true';
+      window._3dResolvedPdbId    = r.headers.get('X-Resolved-PDB-ID')  || '';
+      window._3dResolvedUniProt  = r.headers.get('X-Resolved-UniProt') || '';
+      window._3dResolution       = r.headers.get('X-Resolution')       || null;
+      window._3dPlddtAvg         = r.headers.get('X-PLDDT-Avg')        || null;
+      window._3dMethod           = r.headers.get('X-Method')           || '';
+      return r.text();
+    });
 
     structurePromise
       .then(pdbData => {
         const el = document.getElementById('viewer3d');
         if (!el) return;
         document.getElementById('viewer3dLoading').style.display = 'none';
-        document.getElementById('viewer3dLegend').style.display = 'block';
+        document.getElementById('viewer3dLegend').style.display  = 'block';
 
+        // Update source badge with actual provenance
+        const srcType  = window._3dSourceType || '';
+        const isExp    = window._3dIsExperimental;
+        const pdbIdStr = window._3dResolvedPdbId  || '';
+        const uniStr   = window._3dResolvedUniProt || '';
+        const res      = window._3dResolution;
+        const plddt    = window._3dPlddtAvg;
+        const method   = window._3dMethod || '';
+        const src      = window._3dStructureSource || '';
+
+        const badge = document.getElementById('structureSourceBadge');
+        if (badge) {
+          if (srcType === 'alphafold') {
+            badge.style.background = 'rgba(59,111,245,0.12)';
+            badge.style.color      = '#5B8CFF';
+            badge.style.border     = '1px solid rgba(59,111,245,0.25)';
+            const plddtStr = plddt ? ` · avg pLDDT ${plddt}` : '';
+            badge.textContent = `AlphaFold DB (predicted${plddtStr})`;
+          } else if (srcType === 'rcsb') {
+            badge.style.background = 'rgba(16,185,129,0.12)';
+            badge.style.color      = '#10B981';
+            badge.style.border     = '1px solid rgba(16,185,129,0.25)';
+            const resStr = res ? ` · ${parseFloat(res).toFixed(1)}Å` : '';
+            const methodShort = method.replace('DIFFRACTION','').replace('MICROSCOPY','cryo-EM').trim().toLowerCase();
+            badge.textContent = `RCSB PDB ${pdbIdStr} (${methodShort}${resStr})`;
+          } else if (srcType === 'cache') {
+            badge.style.background = 'rgba(255,255,255,0.06)';
+            badge.style.color      = 'rgba(255,255,255,0.5)';
+            badge.textContent      = 'Cached structure';
+          } else {
+            badge.textContent = pdbIdStr || src.slice(0, 60) || 'Resolved';
+          }
+        }
+
+        // Update legend title; hide Confidence button for RCSB (no pLDDT data)
+        const legendTitle = document.getElementById('legendTitle');
+        if (legendTitle) {
+          if (srcType === 'alphafold') legendTitle.textContent = 'AlphaFold Confidence';
+          else if (srcType === 'rcsb') legendTitle.textContent = `RCSB ${pdbIdStr} Structure`;
+          else legendTitle.textContent = 'Structure Confidence';
+        }
+        if (srcType === 'rcsb') {
+          const plddtBtn = document.getElementById('btn3d_plddt');
+          if (plddtBtn) plddtBtn.style.display = 'none';
+          const specBtn = document.getElementById('btn3d_cartoon');
+          if (specBtn) specBtn.classList.add('viewer-btn-active');
+          // Hide pLDDT tier list in legend — show only mutation key
+          const lp = document.getElementById('legendPlddt');
+          const ls = document.getElementById('legendSpectrum');
+          if (lp) lp.style.display = 'none';
+          if (ls) ls.style.display = 'block';
+        }
+
+        // ── Disordered-region warning ──────────────────────────────────────────
+        // Show if: AlphaFold source AND (avg pLDDT < 65 OR known IDR protein)
+        const _IDR_PROTEINS = new Set([
+          'FUS','TDP-43','TARDBP','hnRNPA1','hnRNPA2B1','Tau','MAPT',
+          'Alpha-synuclein','SNCA','Huntingtin','HTT','Ataxin-1','ATXN1',
+          'Ataxin-3','ATXN3','p53','TP53','BRCA1','BRCA2',
+        ]);
+        const plddtNum = plddt ? parseFloat(plddt) : null;
+        const nameKey  = (enzymeName || '').replace(/\s+/g,'');
+        const isDisordered = srcType === 'alphafold' && (
+          (plddtNum !== null && plddtNum < 65) ||
+          _IDR_PROTEINS.has(enzymeName) ||
+          _IDR_PROTEINS.has(nameKey)
+        );
+        if (isDisordered) {
+          const viewerWrap = document.getElementById('viewer3d');
+          if (viewerWrap && viewerWrap.parentElement) {
+            const banner = document.createElement('div');
+            banner.id = 'idrWarningBanner';
+            banner.style.cssText = 'margin-top:10px;padding:10px 14px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:8px;display:flex;gap:10px;align-items:flex-start;font-size:12px;line-height:1.5;color:rgba(255,255,255,0.75)';
+            const plddtInfo = plddtNum !== null ? ` (avg pLDDT ${plddtNum.toFixed(1)})` : '';
+            banner.innerHTML = `
+              <span style="font-size:18px;flex-shrink:0;margin-top:-1px">⚠️</span>
+              <div>
+                <strong style="color:#F59E0B;font-size:12px">Intrinsically disordered protein${plddtInfo}</strong><br>
+                This protein contains regions with no stable 3D structure in solution.
+                AlphaFold models a single conformation, but the orange/yellow regions are
+                <strong>not a reliable representation of the actual shape</strong> — they exist
+                as a dynamic ensemble of conformations. The structure shown here is useful
+                for identifying folded domains and mutation positions, but should not be
+                interpreted as a ground-truth conformation.
+              </div>`;
+            viewerWrap.parentElement.after(banner);
+          }
+        }
+
+        // Update citation text
+        const citEl = document.getElementById('citationSourceText');
+        if (citEl) {
+          if (src) citEl.textContent = src + (mutList.length ? '; sidechains at mutated positions rebuilt with NERF (Dunbrack 2010 modal rotamers).' : '.');
+        }
+
+        // Update the verification note with accurate source info
+        const noteEl = document.getElementById('mutVerifyNote');
+        if (noteEl && srcType) {
+          const baseDesc = isExp
+            ? `RCSB PDB ${pdbIdStr}${res ? ' (' + parseFloat(res).toFixed(1) + 'Å ' + method.toLowerCase() + ')' : ''}`
+            : `AlphaFold DB predicted structure${uniStr ? ' (UniProt ' + uniStr + ')' : ''}`;
+          noteEl.innerHTML = `Base structure: <strong>${baseDesc}</strong>. Mutated sidechain atoms rebuilt using NERF geometry (Dunbrack 2010 modal rotamers). Backbone unchanged from source structure &mdash; only sidechain atoms differ. Auto-zoomed to mutation sites; click <em>Reset</em> for full view.`;
+        }
+
+        // Initialize viewer
         window._3dviewer = $3Dmol.createViewer(el, { backgroundColor: '0x0a0a12' });
         window._3dviewer.addModel(pdbData, 'pdb');
         window._3dPdbData = pdbData;
 
-        applyViewerStyle('cartoon');   // already calls render()
-        window._3dviewer.zoomTo();
+        // Parse pLDDT scores from B-factor column
+        window._3dPLDDT = parsePLDDTFromPDB(pdbData);
+
+        // Default style: AlphaFold → confidence coloring; RCSB → spectrum (no pLDDT data)
+        applyViewerStyle(srcType === 'rcsb' ? 'cartoon' : 'plddt');
+
+        // Auto-zoom
+        if (window._3dMutations && window._3dMutations.length > 0) {
+          window._3dviewer.zoomTo({ resi: window._3dMutations.map(m => m.pos) }, 0);
+        } else {
+          window._3dviewer.zoomTo();
+        }
+
+        // Hover tooltip
+        el.addEventListener('mousemove', function(e) { window._3dMouseX = e.offsetX; window._3dMouseY = e.offsetY; });
+        window._3dviewer.setHoverable({}, true, function(atom) {
+          const tip = document.getElementById('residueTooltip');
+          if (!tip || !atom) return;
+          const b = atom.b || 0;
+          const col = _plddtColor(b);
+          // Show mutation metadata if applicable
+          const mutMeta = window._3dMutations ? window._3dMutations.find(x => x.pos === atom.resi) : null;
+          let html = `<b>${atom.resn} ${atom.resi}</b>`;
+          if (window._3dSourceType === 'alphafold') {
+            html += ` &nbsp; pLDDT <span style="color:${col};font-weight:700">${b.toFixed(1)}</span>`;
+          }
+          if (mutMeta) {
+            const mm = (window._3dMutMeta || {})[mutMeta.label] || {};
+            html += ` &nbsp; <span style="color:#F59E0B">&#x2605; ${mutMeta.label}</span>`;
+            if (mm.predicted_ddg != null) html += ` &nbsp; DDG ${mm.predicted_ddg > 0 ? '+' : ''}${mm.predicted_ddg.toFixed(2)}`;
+            if (mm.confidence != null)    html += ` &nbsp; ${(mm.confidence * 100).toFixed(0)}% conf`;
+          }
+          tip.innerHTML = html;
+          tip.style.display = 'block';
+          tip.style.left = ((window._3dMouseX || 10) + 12) + 'px';
+          tip.style.top  = ((window._3dMouseY || 10) - 10) + 'px';
+        }, function() {
+          const tip = document.getElementById('residueTooltip');
+          if (tip) tip.style.display = 'none';
+        });
+
+        // Render pLDDT chart — only meaningful for AlphaFold structures
+        if (srcType !== 'rcsb') {
+          renderPLDDTChart(window._3dPLDDT, window._3dMutations || []);
+        }
+
+        // Verify mutations in PDB
+        verifyMutationsInPDB(pdbData, window._3dMutations || []);
       })
       .catch(err => {
         const loading = document.getElementById('viewer3dLoading');
-        if (loading) {
-          loading.innerHTML = useESMFold
-            ? '<div style="color:#E74C3C;font-weight:600">ESMFold unavailable</div><div style="font-size:11px;margin-top:4px">The ESMFold API may be temporarily down. Try again later.</div>'
-            : 'Could not load structure: ' + err.message;
-        }
+        if (loading) loading.innerHTML = '<span style="color:#EF4444">Could not load structure: ' + (err.message || 'network error') + '</span>';
       });
   }, 100);
 }
+
+
 
 function downloadPDB() {
   const data = window._3dPdbData;
@@ -3543,7 +3897,8 @@ function downloadPDB() {
     return;
   }
   const muts = (window._3dMutations || []).map(m => m.label).join('_') || 'wildtype';
-  const preset = PRESETS.find(p => p.name === selectedPreset);
+  const preset = PRESETS.find(p => p.name === selectedPreset)
+              || DISEASE_PRESETS.find(p => p.name === selectedPreset);
   const enzyme = preset ? preset.name.replace(/\s+/g, '_') : 'enzyme';
   const filename = `${enzyme}_${muts}.pdb`;
   const blob = new Blob([data], { type: 'chemical/x-pdb' });
@@ -3565,73 +3920,137 @@ function applyViewerStyle(style, tourResi) {
   v.removeAllLabels();
   v.removeAllShapes();
 
+  // Toggle legend between pLDDT and spectrum modes
+  const legendPlddt    = document.getElementById('legendPlddt');
+  const legendSpectrum = document.getElementById('legendSpectrum');
+  const legendTitle    = document.getElementById('legendTitle');
+  if (style === 'plddt') {
+    if (legendPlddt)    legendPlddt.style.display    = 'block';
+    if (legendSpectrum) legendSpectrum.style.display = 'none';
+    const srcType = window._3dSourceType || '';
+    if (legendTitle) legendTitle.textContent = srcType === 'rcsb' ? 'Experimental Structure' : 'AlphaFold Confidence';
+  } else if (style === 'cartoon') {
+    if (legendPlddt)    legendPlddt.style.display    = 'none';
+    if (legendSpectrum) legendSpectrum.style.display = 'block';
+    if (legendTitle)    legendTitle.textContent      = 'Spectrum (N→C)';
+  }
+
   // ── Base protein rendering ──
-  if (style === 'cartoon') {
+  if (style === 'plddt') {
+    const plddtMap = window._3dPLDDT || {};
+    v.setStyle({}, { cartoon: {
+      colorfunc: function(atom) {
+        const b = plddtMap[atom.resi] !== undefined ? plddtMap[atom.resi] : (atom.b || 50);
+        if (b >= 90) return '#0053D6';
+        if (b >= 70) return '#65CBF3';
+        if (b >= 50) return '#FFDB13';
+        return '#FF7D45';
+      },
+      opacity: 1.0, thickness: 0.35, arrows: true
+    }});
+  } else if (style === 'cartoon') {
     v.setStyle({}, { cartoon: { color: 'spectrum', opacity: 1.0, thickness: 0.35, arrows: true } });
   } else if (style === 'stick') {
     v.setStyle({}, { stick: { radius: 0.1, colorscheme: 'Jmol' } });
   } else if (style === 'ballstick') {
     v.setStyle({}, { stick: { radius: 0.09, colorscheme: 'Jmol' }, sphere: { scale: 0.22, colorscheme: 'Jmol' } });
   } else if (style === 'surface') {
-    v.setStyle({}, { cartoon: { color: 'spectrum', opacity: 0.28, thickness: 0.3 } });
+    const plddtMap = window._3dPLDDT || {};
+    v.setStyle({}, { cartoon: {
+      colorfunc: function(atom) {
+        const b = plddtMap[atom.resi] !== undefined ? plddtMap[atom.resi] : (atom.b || 50);
+        if (b >= 90) return '#0053D6';
+        if (b >= 70) return '#65CBF3';
+        if (b >= 50) return '#FFDB13';
+        return '#FF7D45';
+      },
+      opacity: 0.25, thickness: 0.3
+    }});
     v.addSurface($3Dmol.SurfaceType.SAS, { opacity: 0.72, colorscheme: 'whiteCarbon' }, {}, {});
   }
 
   // ── Mutation sites ──
-  // During tour: only render the active resi with full detail to keep rendering fast.
-  // At rest (tourResi=null): render all sites lightly.
-  const inTour = tourResi !== null && tourResi !== undefined;
-  mutResidues.forEach(resi => {
-    const isActive = inTour && resi === tourResi;
-    // During tour, skip non-active sites (too costly to rebuild all shapes every step)
+  // Colors driven by ML classifier confidence/benefit stored in window._3dMutMeta.
+  // During tour: only render the active resi; at rest: render all sites.
+  const mutMeta = window._3dMutMeta || {};
+  const inTour  = tourResi !== null && tourResi !== undefined;
+
+  function _mutColor(label, isActive) {
+    if (isActive) return '#10B981';
+    const meta = mutMeta[label];
+    if (!meta) return '#E74C3C';
+    if (meta.predicted_beneficial && meta.confidence >= 0.75) return '#10B981';
+    if (meta.predicted_beneficial && meta.confidence >= 0.5)  return '#F59E0B';
+    if (!meta.predicted_beneficial)                           return '#EF4444';
+    return '#E74C3C';
+  }
+  function _mutColor2(label, isActive) {
+    if (isActive) return '#34D399';
+    const c = _mutColor(label, false);
+    return c === '#10B981' ? '#34D399' : c === '#F59E0B' ? '#FCD34D' : '#FF6B6B';
+  }
+
+  muts.forEach(m => {
+    const isActive = inTour && m.pos === tourResi;
     if (inTour && !isActive) return;
 
-    const color  = isActive ? '#10B981' : '#E74C3C';
-    const color2 = isActive ? '#34D399' : '#FF6B6B';
+    const color  = _mutColor(m.label, isActive);
+    const color2 = _mutColor2(m.label, isActive);
 
-    v.setStyle({ resi: resi }, {
+    v.setStyle({ resi: m.pos }, {
       cartoon: { color: color, opacity: 1.0, thickness: 0.45 },
       stick:   { radius: isActive ? 0.20 : 0.14, color: color2 },
     });
 
-    // Single glow sphere per site (was two — halves geometry work)
-    v.addSphere({ center: { resi: resi }, radius: isActive ? 1.1 : 0.85,
+    v.addSphere({ center: { resi: m.pos }, radius: isActive ? 1.1 : 0.85,
                   color: color, opacity: isActive ? 0.65 : 0.45 });
   });
 
-  // ── Labels (only outside tour to avoid per-step label rebuild) ──
+  // ── Labels (with DDG + confidence when available) ──
+  function _mutLabel(m) {
+    const meta = mutMeta[m.label];
+    if (!meta) return m.label;
+    const ddgStr  = meta.predicted_ddg  != null ? ` ${meta.predicted_ddg > 0 ? '+' : ''}${meta.predicted_ddg.toFixed(1)}` : '';
+    const confStr = meta.confidence     != null ? ` ${(meta.confidence * 100).toFixed(0)}%` : '';
+    return m.label + ddgStr + confStr;
+  }
+
   if (window._3dShowLabels && !inTour) {
     muts.forEach(m => {
-      v.addLabel(m.label, {
-        position:        { resi: m.pos },
-        backgroundColor: 'rgba(200,50,50,0.88)',
+      const meta   = mutMeta[m.label];
+      const isBene = meta && meta.predicted_beneficial;
+      const bgAlpha = 0.88;
+      const bg = isBene ? `rgba(16,185,129,${bgAlpha})` :
+                 (meta && !meta.predicted_beneficial) ? `rgba(239,68,68,${bgAlpha})` : `rgba(200,50,50,${bgAlpha})`;
+      v.addLabel(_mutLabel(m), {
+        position:          { resi: m.pos },
+        backgroundColor:   bg,
         backgroundOpacity: 0.9,
-        fontColor:       'white',
-        fontSize:        12,
-        fontOpacity:     1,
-        borderRadius:    4,
-        padding:         4,
-        showBackground:  true,
-        alignment:       'center',
-        inFront:         true,
+        fontColor:         'white',
+        fontSize:          12,
+        fontOpacity:       1,
+        borderRadius:      4,
+        padding:           4,
+        showBackground:    true,
+        alignment:         'center',
+        inFront:           true,
       }, { resi: m.pos }, true);
     });
   } else if (window._3dShowLabels && inTour && tourResi) {
-    // Only label the active residue during tour
     const m = muts.find(x => x.pos === tourResi);
     if (m) {
-      v.addLabel(m.label, {
-        position:        { resi: m.pos },
-        backgroundColor: 'rgba(16,185,129,0.9)',
+      v.addLabel(_mutLabel(m), {
+        position:          { resi: m.pos },
+        backgroundColor:   'rgba(16,185,129,0.9)',
         backgroundOpacity: 0.9,
-        fontColor:       'white',
-        fontSize:        14,
-        fontOpacity:     1,
-        borderRadius:    4,
-        padding:         4,
-        showBackground:  true,
-        alignment:       'center',
-        inFront:         true,
+        fontColor:         'white',
+        fontSize:          14,
+        fontOpacity:       1,
+        borderRadius:      4,
+        padding:           4,
+        showBackground:    true,
+        alignment:         'center',
+        inFront:           true,
       }, { resi: m.pos }, true);
     }
   }
@@ -3644,7 +4063,7 @@ function setViewerStyle(style) {
   applyViewerStyle(style);
 
   // Update button states
-  ['cartoon', 'stick', 'ballstick', 'surface'].forEach(s => {
+  ['plddt', 'cartoon', 'stick', 'ballstick', 'surface'].forEach(s => {
     const btn = document.getElementById('btn3d_' + s);
     if (btn) btn.classList.toggle('viewer-btn-active', s === style);
   });
@@ -3667,6 +4086,326 @@ function focusMutations() {
 function resetView() {
   if (!window._3dviewer) return;
   window._3dviewer.zoomTo();
+}
+
+async function loadAlphaFoldByUniProt() {
+  const input = document.getElementById('afUniprotInput');
+  const btn   = document.getElementById('afLoadBtn');
+  const status = document.getElementById('afLookupStatus');
+  if (!input || !btn) return;
+
+  const uid = input.value.trim().toUpperCase();
+  if (!uid) { input.focus(); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Loading…';
+  status.style.display = 'block';
+  status.style.color = 'var(--text-tertiary)';
+  status.textContent = `Fetching AlphaFold structure for ${uid}…`;
+
+  try {
+    const r = await fetch(API + '/structure/alphafold/' + encodeURIComponent(uid), {
+      signal: AbortSignal.timeout(30000),
+    });
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({ detail: r.statusText }));
+      throw new Error(err.detail || r.statusText);
+    }
+
+    const pdbText = await r.text();
+    const src     = r.headers.get('X-Structure-Source') || `AlphaFold DB — ${uid}`;
+    const gene    = r.headers.get('X-Gene-Name') || uid;
+    const org     = r.headers.get('X-Organism') || '';
+    const plddt   = r.headers.get('X-PLDDT-Avg');
+
+    // Load into existing viewer if open, otherwise just store
+    if (window._3dviewer) {
+      window._3dviewer.removeAllModels();
+      window._3dviewer.removeAllLabels();
+      window._3dviewer.addModel(pdbText, 'pdb');
+      window._3dPdbData = pdbText;
+      window._3dPLDDT   = parsePLDDTFromPDB(pdbText);
+      window._3dMutations = [];
+      applyViewerStyle('plddt');
+      window._3dviewer.zoomTo();
+
+      // Update hover
+      const el = document.getElementById('viewer3d');
+      if (el) {
+        window._3dviewer.setHoverable({}, true, function(atom) {
+          const tip = document.getElementById('residueTooltip');
+          if (!tip || !atom) return;
+          const b = atom.b || 0;
+          const col = _plddtColor(b);
+          tip.innerHTML = `<b>${atom.resn} ${atom.resi}</b> &nbsp; pLDDT <span style="color:${col};font-weight:700">${b.toFixed(1)}</span>`;
+          tip.style.display = 'block';
+          tip.style.left = ((window._3dMouseX || 10) + 12) + 'px';
+          tip.style.top  = ((window._3dMouseY || 10) - 10) + 'px';
+        }, function() {
+          const tip = document.getElementById('residueTooltip');
+          if (tip) tip.style.display = 'none';
+        });
+      }
+
+      renderPLDDTChart(window._3dPLDDT, []);
+
+      const legendTitle = document.querySelector('#viewer3dLegend div:first-child');
+      if (legendTitle) legendTitle.textContent = `AlphaFold — ${gene}`;
+      const citEl = document.getElementById('citationSourceText');
+      if (citEl) citEl.textContent = src + '.';
+    }
+
+    status.style.color = '#10B981';
+    status.textContent = `Loaded: ${gene}${org ? ' (' + org + ')' : ''}${plddt ? ' · avg pLDDT ' + plddt : ''}. Cached locally for instant future access.`;
+  } catch (err) {
+    status.style.color = '#D45555';
+    status.textContent = 'Error: ' + (err.message || 'Could not fetch structure');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Load Structure';
+  }
+}
+
+// ── Amino acid chemistry reference ──────────────────────────────────────────
+const _AA_PROPS = {
+  ALA:{charge:'neutral', polar:false, size:'small',  desc:'nonpolar, aliphatic'},
+  ARG:{charge:'+1',      polar:true,  size:'large',  desc:'positively charged, forms H-bonds'},
+  ASN:{charge:'neutral', polar:true,  size:'medium', desc:'polar, H-bond donor/acceptor'},
+  ASP:{charge:'−1',      polar:true,  size:'medium', desc:'negatively charged (acidic)'},
+  CYS:{charge:'neutral', polar:true,  size:'small',  desc:'polar, can form disulfide bonds'},
+  GLN:{charge:'neutral', polar:true,  size:'large',  desc:'polar, H-bond donor/acceptor'},
+  GLU:{charge:'−1',      polar:true,  size:'large',  desc:'negatively charged (acidic)'},
+  GLY:{charge:'neutral', polar:false, size:'tiny',   desc:'no sidechain, high conformational freedom'},
+  HIS:{charge:'0/+1',    polar:true,  size:'large',  desc:'can be +1 at low pH, imidazole ring'},
+  ILE:{charge:'neutral', polar:false, size:'large',  desc:'hydrophobic, branched'},
+  LEU:{charge:'neutral', polar:false, size:'large',  desc:'hydrophobic, aliphatic'},
+  LYS:{charge:'+1',      polar:true,  size:'large',  desc:'positively charged, long flexible chain'},
+  MET:{charge:'neutral', polar:false, size:'large',  desc:'hydrophobic, contains sulfur'},
+  PHE:{charge:'neutral', polar:false, size:'large',  desc:'hydrophobic, aromatic ring'},
+  PRO:{charge:'neutral', polar:false, size:'medium', desc:'rigid ring, breaks helices'},
+  SER:{charge:'neutral', polar:true,  size:'small',  desc:'polar, H-bond donor/acceptor'},
+  THR:{charge:'neutral', polar:true,  size:'medium', desc:'polar, H-bond donor/acceptor'},
+  TRP:{charge:'neutral', polar:true,  size:'xlarge', desc:'aromatic, largest sidechain'},
+  TYR:{charge:'neutral', polar:true,  size:'xlarge', desc:'aromatic, H-bond donor/acceptor'},
+  VAL:{charge:'neutral', polar:false, size:'medium', desc:'hydrophobic, branched'},
+};
+
+function _chargeBadge(charge) {
+  if (charge === '+1')   return '<span style="background:rgba(59,111,245,0.15);color:#3B6FF5;padding:1px 5px;border-radius:3px;font-size:10px">+1</span>';
+  if (charge === '−1')   return '<span style="background:rgba(231,76,60,0.15);color:#E74C3C;padding:1px 5px;border-radius:3px;font-size:10px">−1</span>';
+  if (charge === '0/+1') return '<span style="background:rgba(232,145,12,0.15);color:#E8910C;padding:1px 5px;border-radius:3px;font-size:10px">±</span>';
+  return '<span style="background:rgba(150,150,150,0.15);color:var(--text-tertiary);padding:1px 5px;border-radius:3px;font-size:10px">0</span>';
+}
+
+function parsePLDDTFromPDB(pdbText) {
+  // Returns {resSeq: plddt} using the B-factor column (cols 60-66 in ATOM records)
+  const map = {};
+  pdbText.split('\n').forEach(line => {
+    if (!line.startsWith('ATOM')) return;
+    const resi = parseInt(line.slice(22, 26).trim());
+    const bfac = parseFloat(line.slice(60, 66).trim());
+    if (!isNaN(resi) && !isNaN(bfac) && !(resi in map)) map[resi] = bfac;
+  });
+  return map;
+}
+
+function _plddtColor(v) {
+  if (v >= 90) return '#0053D6';
+  if (v >= 70) return '#65CBF3';
+  if (v >= 50) return '#FFDB13';
+  return '#FF7D45';
+}
+
+function renderPLDDTChart(plddtMap, mutations) {
+  const panel  = document.getElementById('plddtChartPanel');
+  const canvas = document.getElementById('plddtCanvas');
+  if (!panel || !canvas) return;
+
+  const entries = Object.entries(plddtMap).map(([r, v]) => ({ r: +r, v }))
+                        .sort((a, b) => a.r - b.r);
+  if (entries.length < 2) return;
+
+  panel.style.display = 'block';
+
+  // Average badge
+  const avg = entries.reduce((s, e) => s + e.v, 0) / entries.length;
+  const badge = document.getElementById('plddtAvgBadge');
+  if (badge) {
+    badge.textContent = `Avg pLDDT: ${avg.toFixed(1)}`;
+    badge.style.background = _plddtColor(avg) + '33';
+    badge.style.color = _plddtColor(avg);
+  }
+
+  // Axis labels
+  const mid = entries[Math.floor(entries.length / 2)];
+  const el1 = document.getElementById('plddtMidLabel');
+  const el2 = document.getElementById('plddtEndLabel');
+  if (el1) el1.textContent = mid.r;
+  if (el2) el2.textContent = entries[entries.length - 1].r;
+
+  // Draw chart
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.offsetWidth || 600;
+  const H = 70;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const minR = entries[0].r;
+  const maxR = entries[entries.length - 1].r;
+  const xScale = r => ((r - minR) / (maxR - minR)) * W;
+  const yScale = v => H - 4 - ((v / 100) * (H - 8));
+
+  // Filled area under curve, colored by pLDDT tier
+  entries.forEach((e, i) => {
+    if (i === 0) return;
+    const x0 = xScale(entries[i - 1].r), y0 = yScale(entries[i - 1].v);
+    const x1 = xScale(e.r),              y1 = yScale(e.v);
+    ctx.beginPath();
+    ctx.moveTo(x0, y0);
+    ctx.lineTo(x1, y1);
+    ctx.lineTo(x1, H);
+    ctx.lineTo(x0, H);
+    ctx.closePath();
+    ctx.fillStyle = _plddtColor(e.v) + '55';
+    ctx.fill();
+  });
+
+  // Line
+  ctx.beginPath();
+  ctx.lineWidth = 1.5;
+  entries.forEach((e, i) => {
+    const x = xScale(e.r), y = yScale(e.v);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+  ctx.stroke();
+
+  // Dashed 70 and 90 threshold lines
+  [70, 90].forEach(thresh => {
+    const y = yScale(thresh);
+    ctx.beginPath();
+    ctx.setLineDash([3, 4]);
+    ctx.lineWidth = 0.8;
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.moveTo(0, y); ctx.lineTo(W, y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.font = '9px sans-serif';
+    ctx.fillText(thresh, 2, y - 2);
+  });
+
+  // Mutation site markers
+  const mutResis = mutations.map(m => m.pos);
+  mutResis.forEach(resi => {
+    const x = xScale(resi);
+    ctx.beginPath();
+    ctx.moveTo(x, 0); ctx.lineTo(x, H);
+    ctx.strokeStyle = '#E74C3C';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    // Triangle marker at top
+    ctx.beginPath();
+    ctx.moveTo(x - 4, 0); ctx.lineTo(x + 4, 0); ctx.lineTo(x, 7);
+    ctx.closePath();
+    ctx.fillStyle = '#E74C3C';
+    ctx.fill();
+  });
+
+  // Tooltip on mouse move
+  canvas.onmousemove = function(e) {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const frac = mx / W;
+    const resi = Math.round(minR + frac * (maxR - minR));
+    const tip = document.getElementById('residueTooltip');
+    if (!tip) return;
+    const val = plddtMap[resi];
+    if (val !== undefined) {
+      tip.innerHTML = `Residue <b>${resi}</b> &mdash; pLDDT <span style="color:${_plddtColor(val)};font-weight:700">${val.toFixed(1)}</span>`;
+      tip.style.display = 'block';
+      tip.style.left = (e.clientX - document.getElementById('viewer3d').getBoundingClientRect().left - 10) + 'px';
+      tip.style.top  = '8px';
+    }
+  };
+  canvas.onmouseleave = function() {
+    const tip = document.getElementById('residueTooltip');
+    if (tip) tip.style.display = 'none';
+  };
+}
+
+function verifyMutationsInPDB(pdbText, parsedMuts) {
+  if (!parsedMuts || parsedMuts.length === 0) return;
+
+  // Parse residue names from ATOM records: resSeq → resName
+  const pdbResidues = {};
+  pdbText.split('\n').forEach(line => {
+    if (!line.startsWith('ATOM') && !line.startsWith('HETATM')) return;
+    const resName = line.slice(17, 20).trim();
+    const resSeq  = parseInt(line.slice(22, 26).trim());
+    if (!isNaN(resSeq) && resName) pdbResidues[resSeq] = resName;
+  });
+
+  let allOk = true;
+  parsedMuts.forEach(m => {
+    const card  = document.getElementById('mutcard_' + m.pos);
+    const check = document.getElementById('mutcard_check_' + m.pos);
+    if (!card || !check) return;
+
+    const foundRes = pdbResidues[m.pos];
+    const ok = foundRes === m.to3;
+    if (!ok) allOk = false;
+
+    const wtProps  = _AA_PROPS[m.from3] || {};
+    const mutProps = _AA_PROPS[m.to3]   || {};
+    const chargeChanged = wtProps.charge !== mutProps.charge;
+    const polarChanged  = wtProps.polar  !== mutProps.polar;
+
+    // Build chemistry delta line
+    let delta = [];
+    if (chargeChanged) delta.push(`charge ${wtProps.charge || '?'} → ${mutProps.charge || '?'}`);
+    if (polarChanged)  delta.push(mutProps.polar ? 'gains polarity' : 'loses polarity');
+    if (wtProps.size !== mutProps.size) delta.push(`size ${wtProps.size || '?'} → ${mutProps.size || '?'}`);
+    const deltaStr = delta.length ? delta.join(', ') : 'similar chemistry';
+
+    check.innerHTML = ok
+      ? '<span style="color:#10B981;font-weight:700">✓ confirmed in PDB</span>'
+      : `<span style="color:#E74C3C;font-weight:700">⚠ found ${foundRes || 'missing'}</span>`;
+
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="font-family:'SF Mono',monospace;font-weight:700;font-size:13px;background:rgba(231,76,60,0.12);color:#E74C3C;padding:2px 7px;border-radius:5px">${m.label}</span>
+        <span style="color:var(--text-secondary);font-size:12px">${m.from3} &rarr; ${m.to3}</span>
+        ${ok ? '<span style="margin-left:auto;font-size:11px;color:#10B981;font-weight:700">✓ confirmed in PDB</span>'
+              : `<span style="margin-left:auto;font-size:11px;color:#E74C3C;font-weight:700">⚠ found ${foundRes || 'missing'}</span>`}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center">
+        <div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:6px 8px">
+          <div style="font-size:10px;color:var(--text-tertiary);margin-bottom:2px;text-transform:uppercase;letter-spacing:0.5px">Wild-type</div>
+          <div style="font-weight:700;font-size:12px">${m.from3} ${_chargeBadge(wtProps.charge)}</div>
+          <div style="font-size:10px;color:var(--text-tertiary);margin-top:2px">${wtProps.desc || ''}</div>
+        </div>
+        <div style="color:var(--text-tertiary);font-size:16px;text-align:center">→</div>
+        <div style="background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.2);border-radius:6px;padding:6px 8px">
+          <div style="font-size:10px;color:var(--text-tertiary);margin-bottom:2px;text-transform:uppercase;letter-spacing:0.5px">Mutant</div>
+          <div style="font-weight:700;font-size:12px">${m.to3} ${_chargeBadge(mutProps.charge)}</div>
+          <div style="font-size:10px;color:var(--text-tertiary);margin-top:2px">${mutProps.desc || ''}</div>
+        </div>
+      </div>
+      ${chargeChanged || polarChanged ? `<div style="margin-top:6px;font-size:10px;background:rgba(232,145,12,0.08);border-radius:4px;padding:4px 8px;color:var(--warning)">⚡ ${deltaStr}</div>` : ''}
+    `;
+  });
+
+  const badge = document.getElementById('mutVerifyBadge');
+  if (badge) {
+    badge.innerHTML = allOk
+      ? `<span style="color:#10B981;font-weight:700">✓ all ${parsedMuts.length} mutation${parsedMuts.length !== 1 ? 's' : ''} confirmed in structure</span>`
+      : `<span style="color:#E74C3C;font-weight:700">⚠ structure mismatch — check below</span>`;
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -3756,12 +4495,23 @@ function buildTourSteps() {
       ? `<div style="margin-top:10px;padding:8px 10px;background:rgba(16,185,129,0.08);border-left:2px solid var(--accent);border-radius:0 6px 6px 0;font-size:11px;color:rgba(255,255,255,0.6)"><strong style="color:var(--accent)">Thermostability hotspot</strong> — position ${m.pos} is in a region experimentally shown to be hypersensitive to mutation in PETase family enzymes.</div>`
       : '';
 
+    // Per-mutation ML metadata (from classifier_prediction.per_mutation)
+    const mlMeta  = (window._3dMutMeta || {})[m.label] || null;
+    const mlChips = mlMeta ? (() => {
+      const ddg    = mlMeta.predicted_ddg  != null ? `<span style="font-size:11px;font-family:'SF Mono',monospace;color:${mlMeta.predicted_ddg < 0 ? '#10B981' : '#EF4444'};font-weight:700">DDG ${mlMeta.predicted_ddg > 0 ? '+' : ''}${mlMeta.predicted_ddg.toFixed(2)} kcal/mol</span>` : '';
+      const conf   = mlMeta.confidence     != null ? `<span style="font-size:11px;color:rgba(255,255,255,0.5)">${(mlMeta.confidence * 100).toFixed(0)}% confidence</span>` : '';
+      const bene   = mlMeta.predicted_beneficial;
+      const beneBadge = `<span style="font-size:10px;padding:2px 7px;border-radius:4px;background:${bene ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)'};color:${bene ? '#10B981' : '#EF4444'};font-weight:700">${bene ? 'Predicted beneficial' : 'Predicted harmful'}</span>`;
+      return `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">${beneBadge}${ddg}${conf}</div>`;
+    })() : '';
+
     steps.push({
       type: 'mutation',
       durationMs: TOUR_STEP_MS,
       title: m.label,
       subtitle: fromFull + '  →  ' + toFull + '  ·  position ' + m.pos,
       body: `
+        ${mlChips}
         <div style="display:flex;gap:8px;margin-bottom:12px;align-items:stretch">
           <div style="flex:1;padding:8px 10px;background:rgba(255,80,80,0.07);border:1px solid rgba(255,80,80,0.15);border-radius:8px;text-align:center">
             <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:4px">Wild-type</div>
