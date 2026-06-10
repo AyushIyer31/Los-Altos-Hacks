@@ -1601,7 +1601,9 @@ footer {
 // ═══════════════════════════════════════════════════════════
 // Configuration
 // ═══════════════════════════════════════════════════════════
-const API = 'http://localhost:8000';
+const API = window.location.hostname === 'localhost'
+  ? 'http://localhost:8000'
+  : 'https://pet-lab-api-9518756006.us-central1.run.app';
 
 const PRESETS = [
   { name: 'IsPETase', organism: 'I. sakaiensis', pdbId: '5XJH', uniprotId: 'A0A0K8P6T7', gene: 'PETase',
