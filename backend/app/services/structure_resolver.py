@@ -12,7 +12,8 @@ Priority (highest to lowest):
   2. UniProt accession -> AlphaFold EBI, then RCSB search
   3. Gene name + optional organism -> UniProt REST search -> step 2
   4. Protein name + optional organism -> UniProt REST search -> step 2
-  5. Sequence similarity -> RCSB sequence search (last resort)
+  5. Sequence similarity -> RCSB sequence search
+  6. ESMFold de-novo prediction (last resort for novel sequences)
 """
 
 import os
@@ -23,6 +24,7 @@ import httpx
 
 _AF_DIR  = pathlib.Path(os.path.dirname(__file__)).parent / "alphafold_structures"
 _PDB_DIR = pathlib.Path(os.path.dirname(__file__)).parent / "cached_data" / "structures"
+_ESM_DIR = pathlib.Path(os.path.dirname(__file__)).parent / "cached_data" / "esmfold"
 
 # Confirmed PDB-ID -> UniProt mappings for common preset proteins.
 # Keeps the resolver from hitting RCSB when AlphaFold is preferred.
@@ -132,9 +134,18 @@ async def resolve(
             if result:
                 return result
 
-    # ── 5. Sequence similarity (last resort) ─────────────────────────────────
+    # ── 5. Sequence similarity (RCSB experimental match) ─────────────────────
     if sequence and len(sequence) >= 20:
         result = await _rcsb_by_sequence(sequence)
+        if result:
+            return result
+
+    # ── 6. ESMFold de-novo prediction (last resort for novel sequences) ──────
+    # Unlike AlphaFold DB (lookup only), ESMFold predicts a structure directly
+    # from any sequence — the right fallback for custom/engineered proteins
+    # that have no PDB entry and no UniProt accession.
+    if sequence and 20 <= len(sequence) <= 400:
+        result = await _esmfold(sequence)
         if result:
             return result
 
@@ -193,6 +204,61 @@ async def _alphafold(uniprot: str) -> ResolvedStructure | None:
                 method="ALPHAFOLD PREDICTION",
                 resolution=None,
                 plddt_avg=round(float(plddt_val), 1) if plddt_val else None,
+            )
+    except Exception:
+        return None
+
+
+async def _esmfold(sequence: str) -> ResolvedStructure | None:
+    """Predict a structure de-novo from sequence via Meta's ESMFold API.
+
+    The ESM Atlas fold endpoint accepts any protein sequence (<=400 aa) and
+    returns a full PDB with per-residue pLDDT in the B-factor column — the same
+    confidence scale as AlphaFold. Used as the final fallback when no
+    experimental or precomputed predicted structure exists.
+    """
+    import hashlib
+    seq = "".join(sequence.split()).upper()
+    key = hashlib.sha256(seq.encode()).hexdigest()[:16]
+    local = _ESM_DIR / f"{key}.pdb"
+
+    if local.exists():
+        pdb_text = local.read_text()
+        return ResolvedStructure(
+            pdb_text=pdb_text,
+            source=f"ESMFold prediction ({len(seq)} aa, cached)",
+            source_type="esmfold",
+            is_experimental=False,
+            resolved_pdb_id="ESMFOLD",
+            resolved_uniprot_id=None,
+            method="ESMFOLD PREDICTION",
+            resolution=None,
+            plddt_avg=_plddt_avg(pdb_text),
+        )
+    try:
+        async with httpx.AsyncClient(timeout=120.0) as c:
+            r = await c.post(
+                "https://api.esmatlas.com/foldSequence/v1/pdb/",
+                content=seq,
+                headers={"Content-Type": "text/plain"},
+            )
+            if r.status_code != 200 or not r.text.startswith(("ATOM", "HEADER", "REMARK", "MODEL")):
+                return None
+            # ESMFold reports pLDDT on a 0-1 scale in the B-factor column;
+            # rescale to 0-100 to match AlphaFold and the frontend confidence colors.
+            pdb_text = _rescale_plddt_0_100(r.text)
+            _ESM_DIR.mkdir(parents=True, exist_ok=True)
+            local.write_text(pdb_text)
+            return ResolvedStructure(
+                pdb_text=pdb_text,
+                source=f"ESMFold prediction ({len(seq)} aa)",
+                source_type="esmfold",
+                is_experimental=False,
+                resolved_pdb_id="ESMFOLD",
+                resolved_uniprot_id=None,
+                method="ESMFOLD PREDICTION",
+                resolution=None,
+                plddt_avg=_plddt_avg(pdb_text),
             )
     except Exception:
         return None
@@ -350,6 +416,37 @@ async def _rcsb_by_sequence(sequence: str) -> ResolvedStructure | None:
             return await _rcsb(hits[0]["identifier"])
     except Exception:
         return None
+
+
+def _rescale_plddt_0_100(pdb_text: str) -> str:
+    """Rescale B-factor (pLDDT) column from a 0-1 scale to 0-100.
+
+    ESMFold returns per-residue confidence on a 0-1 scale; AlphaFold and the
+    frontend confidence coloring both use 0-100. Only rescales when every
+    B-factor is <= 1.0 (i.e. the structure is on the 0-1 scale) so it is a
+    no-op for structures already on the standard scale.
+    """
+    lines = pdb_text.splitlines(keepends=True)
+    max_b = 0.0
+    for line in lines:
+        if line[:4] in ("ATOM", "HETA"):
+            try:
+                max_b = max(max_b, float(line[60:66]))
+            except (ValueError, IndexError):
+                continue
+    if max_b > 1.0:
+        return pdb_text  # already 0-100
+
+    out = []
+    for line in lines:
+        if line[:4] in ("ATOM", "HETA"):
+            try:
+                b = float(line[60:66]) * 100.0
+                line = line[:60] + f"{b:6.2f}" + line[66:]
+            except (ValueError, IndexError):
+                pass
+        out.append(line)
+    return "".join(out)
 
 
 def _plddt_avg(pdb_text: str) -> float | None:

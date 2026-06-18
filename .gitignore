@@ -26,6 +26,10 @@ fireprotdb_data/fireprot_upload/pdbs/
 Processed_K50_dG_datasets/
 pdb_structures/
 
+# Tsuboyama mega-scale raw downloads (>100MB — regenerate via download + convert_tsuboyama.py)
+datasets/stability_megascale/Processed_K50_dG_datasets.zip
+datasets/stability_megascale/Tsuboyama2023_*.csv
+
 # Logs
 *.log
 catboost_info/

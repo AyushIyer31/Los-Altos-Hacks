@@ -1,0 +1,40 @@
+{
+  "seed": 42,
+  "kmer": 5,
+  "num_perm": 128,
+  "bands": 32,
+  "rows_per_band": 4,
+  "combined": {
+    "rows": 41279,
+    "degraders": 16040,
+    "non_degraders": 25239,
+    "pct_degrader": 38.9
+  },
+  "n_clusters": 15883,
+  "independent_plasticenz": {
+    "rows": 709,
+    "degraders": 214,
+    "non_degraders": 495,
+    "pct_degrader": 30.2
+  },
+  "scrubbed_homologs_of_plasticenz": {
+    "rows": 2468,
+    "degraders": 1705,
+    "non_degraders": 763,
+    "pct_degrader": 69.1
+  },
+  "train": {
+    "rows": 28263,
+    "degraders": 9678,
+    "non_degraders": 18585,
+    "pct_degrader": 34.2
+  },
+  "test_indist": {
+    "rows": 9839,
+    "degraders": 4443,
+    "non_degraders": 5396,
+    "pct_degrader": 45.2
+  },
+  "no_cluster_straddles_train_test": true,
+  "no_plasticenz_homolog_in_train": true
+}

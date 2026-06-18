@@ -1,0 +1,50 @@
+{
+  "model": "XGBoost on 25 composition features (repo degrader-finder design)",
+  "split": "MMseqs2 30% identity; CV is cluster-grouped; PlasticEnz = confirmed holdout",
+  "in_distribution_cluster_cv_5fold": {
+    "auroc_mean": 0.9707,
+    "auroc_sd": 0.0094,
+    "auprc_mean": 0.9544,
+    "auprc_sd": 0.0161,
+    "auroc_per_fold": [
+      0.9832,
+      0.9552,
+      0.9737,
+      0.9747,
+      0.9666
+    ],
+    "auprc_per_fold": [
+      0.9708,
+      0.9257,
+      0.9578,
+      0.9676,
+      0.9503
+    ],
+    "pooled_oof_auroc": 0.97,
+    "pooled_oof_auprc": 0.953
+  },
+  "independent_plasticenz_confirmed": {
+    "n": 709,
+    "n_pos": 214,
+    "auroc": 0.6266,
+    "auroc_95ci": [
+      0.5766,
+      0.6716
+    ],
+    "auprc": 0.4888,
+    "auprc_95ci": [
+      0.4218,
+      0.5587
+    ],
+    "auprc_random_baseline": 0.3018
+  },
+  "precision_vs_prevalence": {
+    "operating_threshold": 0.5,
+    "tpr": 0.6869,
+    "fpr": 0.5414,
+    "precision_at_test_prevalence_0.30": 0.3542,
+    "precision_at_prevalence_0.05": 0.0626,
+    "precision_at_prevalence_0.01": 0.0127,
+    "note": "real-world degrader prevalence is ~1%; precision drops sharply vs the 30% test mix"
+  }
+}

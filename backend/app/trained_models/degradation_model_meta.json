@@ -1,0 +1,68 @@
+{
+  "model": "HistGradientBoostingRegressor",
+  "target": "log1p(aromatic_products_mg_per_L)",
+  "n_rows": 3616,
+  "n_enzymes": 65,
+  "n_features": 32,
+  "feature_names": [
+    "aa_A",
+    "aa_C",
+    "aa_D",
+    "aa_E",
+    "aa_F",
+    "aa_G",
+    "aa_H",
+    "aa_I",
+    "aa_K",
+    "aa_L",
+    "aa_M",
+    "aa_N",
+    "aa_P",
+    "aa_Q",
+    "aa_R",
+    "aa_S",
+    "aa_T",
+    "aa_V",
+    "aa_W",
+    "aa_Y",
+    "seq_len",
+    "frac_aromatic",
+    "frac_positive",
+    "frac_negative",
+    "net_charge_frac",
+    "gravy",
+    "temp_C",
+    "pH",
+    "crystallinity_pct",
+    "substrate_amorphous_film",
+    "substrate_amorphous_powder",
+    "substrate_crystalline_powder"
+  ],
+  "cv_random_known_enzymes": {
+    "r2_mean": 0.9305091593144594,
+    "r2_std": 0.013675978241554722,
+    "mae_mg_per_L_mean": 41.23091601665164
+  },
+  "cv_groupkfold_unseen_enzymes": {
+    "r2_mean": 0.47885297099022905,
+    "r2_std": 0.1656320554475034,
+    "mae_mg_per_L_mean": 101.38072288070254
+  },
+  "temp_range_C": [
+    30.0,
+    70.0
+  ],
+  "pH_range": [
+    4.5,
+    9.0
+  ],
+  "substrates": [
+    "amorphous_film",
+    "amorphous_powder",
+    "crystalline_powder"
+  ],
+  "units": "mg/L aromatic products (TPA+MHET+BHET) released",
+  "substrate_loading_mg_per_L": 29000,
+  "source": "Erickson et al. 2022, Nat Commun 13:7850 (10.1038/s41467-022-35237-x)",
+  "note": "Predicts mg/L aromatic products (TPA+MHET+BHET) released at 2.9% (29 g/L) PET loading, 0.7 mg enzyme/g PET, 96 h. GroupKFold metric reflects generalization to novel sequences; small-enzyme-count data, treat unseen-enzyme predictions as indicative."
+}

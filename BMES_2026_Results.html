@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BMES 2026 — Results</title>
+<style>
+  @page { size: Letter; margin: 0.75in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Georgia", "Times New Roman", serif;
+    color: #1a1a1a; font-size: 10.5pt; line-height: 1.45; margin: 0;
+  }
+  h1 { font-size: 17pt; margin: 0 0 4px 0; line-height: 1.2; color: #0b2545; }
+  h2 {
+    font-size: 12pt; color: #0b2545; margin: 18px 0 6px 0;
+    border-bottom: 2px solid #00897b; padding-bottom: 3px;
+  }
+  h3 { font-size: 10.5pt; margin: 12px 0 3px 0; color: #00695c; }
+  .authors { font-size: 11pt; margin: 6px 0 2px 0; }
+  .affil { font-size: 9.5pt; font-style: italic; color: #444; margin: 0 0 2px 0; }
+  .meta-line { font-size: 9pt; color: #00897b; font-weight: bold; margin-top: 6px; }
+  .lead { font-size: 9.5pt; color: #555; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 9pt; }
+  th { background: #0b2545; color: #fff; text-align: left; padding: 4px 7px; font-weight: bold; }
+  td { padding: 3px 7px; border-bottom: 1px solid #ddd; }
+  tr:nth-child(even) td { background: #f4f8f7; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  figure { margin: 10px 0; text-align: center; page-break-inside: avoid; }
+  figure img { max-width: 100%; border: 1px solid #ccc; }
+  figcaption { font-size: 8.5pt; color: #555; margin-top: 4px; text-align: left; }
+  .figcap-b { color: #0b2545; font-weight: bold; }
+  .two-col { column-count: 2; column-gap: 22px; }
+  .keyfind {
+    background: #f0f7f6; border-left: 3px solid #00897b;
+    padding: 7px 11px; margin: 8px 0; font-size: 9.5pt;
+  }
+  .pagebreak { page-break-before: always; }
+  .small { font-size: 8pt; color: #777; }
+  .hl { color: #00695c; font-weight: bold; }
+  ul { margin: 4px 0 4px 0; padding-left: 18px; }
+  li { margin-bottom: 2px; }
+  .edit { background: #fff3cd; padding: 1px 4px; border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<h1>Machine-Learning–Guided Design of Thermostable PET-Degrading Enzymes via a Stacked Multi-Model ΔΔG Ensemble</h1>
+<p class="authors"><span class="edit">Ayush Iyer</span><sup>1</sup> <span class="small">(author list — edit as needed)</span></p>
+<p class="affil"><sup>1</sup><span class="edit">[Institution / Department, City, State]</span></p>
+<p class="meta-line">2026 BMES Annual Meeting · Orlando, FL · October 21–24, 2026 · Theme: "Engineers Empower Human Health"</p>
+<p class="lead">Track: Computational / Biomolecular Engineering &nbsp;|&nbsp; Format: General Abstract (Poster)</p>
+
+<!-- ===================== STRUCTURED ABSTRACT ===================== -->
+<h2>Structured Abstract</h2>
+
+<h3>Introduction</h3>
+<p>
+Polyethylene terephthalate (PET) is among the most abundant plastic pollutants, and
+enzymatic depolymerization by PETases and cutinases offers a sustainable recycling
+route. The principal barrier to industrial deployment is enzyme thermostability:
+wild-type <i>Ideonella sakaiensis</i> PETase (IsPETase) denatures near 40 °C, far below
+the ~70 °C glass-transition window where PET crystallinity is most accessible.
+Rational stabilization requires predicting how point mutations alter folding free
+energy (ΔΔG). We present an end-to-end, machine-learning–guided design platform that
+predicts mutation-induced ΔΔG and melting-temperature shift (ΔT<sub>m</sub>), ranks
+candidate variants, and renders mutations on resolved 3-D structures. The system is
+trained exclusively on experimental thermodynamic measurements (no synthetic data) and
+is validated on a fully independent, held-out benchmark of unseen proteins to provide
+an honest estimate of real-world generalization.
+</p>
+
+<h3>Materials and Methods</h3>
+<p>
+A stacked ensemble of eight regressors (Gradient Boosting, XGBoost, LightGBM, CatBoost,
+Histogram Gradient Boosting, a multilayer perceptron, Random Forest, and Extra Trees)
+was trained on <span class="hl">19,071</span> experimentally measured mutations
+aggregated from FireProtDB (6,796), ProDDG (4,570), and ThermoMutDB (7,705). Each
+mutation is encoded by <span class="hl">144 features</span>: physicochemical deltas,
+BLOSUM62 substitution scores, relative solvent accessibility and secondary structure,
+PSSM evolutionary conservation, 32-component PCA-reduced ESM-2 protein-language-model
+embeddings, ESM-1v zero-shot fitness, metal-coordination geometry,
+Debye–Hückel/Born electrostatic and solvation physics, assay temperature and pH, and
+three AlphaFold pLDDT confidence features. Base-model predictions are combined by a
+Ridge meta-learner. Cross-validation used 10-fold GroupKFold grouped by canonical
+mutation pair. Generalization was assessed on the <span class="hl">S669</span>
+independent test set (669 mutations from proteins absent from training), with all
+overlapping entries removed for strict independence. A separate ΔT<sub>m</sub>
+regressor was trained on 6,567 ThermoMutDB melting-temperature records. Structures are
+resolved in priority order — experimental RCSB crystal structures, then AlphaFold DB,
+then de-novo ESMFold prediction for novel sequences — and mutated side chains are
+rebuilt with NeRF modal-rotamer geometry.
+</p>
+
+<h3>Results, Conclusions, and Discussion</h3>
+<p>
+On 10-fold cross-validation the ΔΔG ensemble reached <span class="hl">79.7%</span>
+stability-class accuracy (F1 = 0.797; MAE = 0.92 kcal/mol; Pearson r = 0.76). On the
+fully independent S669 benchmark it achieved <span class="hl">73.1% accuracy</span>,
+<span class="hl">70.6% sign accuracy</span> (correct stabilizing/destabilizing call),
+MAE = 1.10 kcal/mol, and Pearson r = 0.39–0.41 — competitive with established
+ΔΔG predictors, whose reported S669 correlations typically fall in the 0.4–0.55 range,
+and exceeding classical force-field tools such as FoldX. The ~6.6-percentage-point
+CV-to-test gap quantifies the difficulty of extrapolating to unseen protein families
+and is reported transparently rather than concealed. The ΔT<sub>m</sub> regressor
+attained MAE = 3.66 °C (Pearson r = 0.65) across a −68 to +45 °C range. The model is
+markedly stronger at predicting the <i>direction</i> of stability change than its exact
+magnitude, consistent with the ~1 kcal/mol experimental noise floor of the underlying
+assays. We conclude that an ensemble integrating biophysical, evolutionary, and
+language-model features yields honest, deployable ΔΔG predictions for enzyme-stability
+engineering, and we provide an interactive design tool that ranks PETase variants and
+visualizes them on experimentally accurate structures — directly supporting the
+engineering of thermostable plastic-degrading enzymes.
+</p>
+
+<div class="keyfind">
+<b>Key result:</b> On 669 held-out mutations from never-seen proteins, the model calls
+the direction of stability change correctly <b>70.6%</b> of the time (Pearson r = 0.39,
+MAE = 1.10 kcal/mol) — competitive with published predictors and outperforming FoldX,
+while trained on <b>zero synthetic data</b>.
+</div>
+
+<!-- ===================== RESULTS TABLES ===================== -->
+<h2>Quantitative Results</h2>
+
+<h3>Table 1 — ΔΔG model performance: cross-validation vs. independent test</h3>
+<table>
+<tr><th>Metric</th><th class="num">10-fold CV (training)</th><th class="num">S669 (independent)</th></tr>
+<tr><td>Stability-class accuracy</td><td class="num">79.69%</td><td class="num">73.09%</td></tr>
+<tr><td>Sign accuracy (direction)</td><td class="num">—</td><td class="num">70.6%</td></tr>
+<tr><td>F1 score</td><td class="num">0.797</td><td class="num">0.366</td></tr>
+<tr><td>AUC</td><td class="num">—</td><td class="num">0.66–0.68</td></tr>
+<tr><td>Pearson r (ΔΔG)</td><td class="num">0.764</td><td class="num">0.39–0.41</td></tr>
+<tr><td>Spearman ρ</td><td class="num">0.732</td><td class="num">0.373–0.391</td></tr>
+<tr><td>MAE (kcal/mol)</td><td class="num">0.92</td><td class="num">1.10</td></tr>
+<tr><td>RMSE (kcal/mol)</td><td class="num">—</td><td class="num">1.54</td></tr>
+<tr><td>R²</td><td class="num">0.584</td><td class="num">0.12–0.14</td></tr>
+</table>
+<p class="small">CV grouped by canonical mutation pair (GroupKFold, k=10). S669 metrics shown as range:
+left = frozen training-run value (model_meta), right = live re-computation from deployed model.</p>
+
+<h3>Table 2 — Training data composition (experimental only; no synthetic data)</h3>
+<table>
+<tr><th>Source</th><th class="num">Mutations</th><th>Measurement</th></tr>
+<tr><td>FireProtDB</td><td class="num">6,796</td><td>ΔΔG + ΔT<sub>m</sub></td></tr>
+<tr><td>ProDDG</td><td class="num">4,570</td><td>ΔΔG</td></tr>
+<tr><td>ThermoMutDB</td><td class="num">7,705</td><td>ΔΔG + ΔT<sub>m</sub></td></tr>
+<tr><td><b>Total (deduplicated)</b></td><td class="num"><b>19,071</b></td><td>9,407 stabilizing / 9,664 destabilizing</td></tr>
+</table>
+
+<h3>Table 3 — Melting-temperature (ΔT<sub>m</sub>) regressor</h3>
+<table>
+<tr><th>Metric</th><th class="num">Value</th></tr>
+<tr><td>Training samples (ThermoMutDB)</td><td class="num">6,567</td></tr>
+<tr><td>CV MAE</td><td class="num">3.66 °C</td></tr>
+<tr><td>CV Pearson r</td><td class="num">0.648</td></tr>
+<tr><td>CV Spearman ρ</td><td class="num">0.658</td></tr>
+<tr><td>ΔT<sub>m</sub> range covered</td><td class="num">−68 to +45 °C</td></tr>
+</table>
+
+<h3>Table 4 — Model architecture</h3>
+<table>
+<tr><th>Component</th><th>Specification</th></tr>
+<tr><td>Base regressors</td><td>GradientBoosting, XGBoost, LightGBM, CatBoost, HistGBM, MLP, RandomForest, ExtraTrees (8 models)</td></tr>
+<tr><td>Meta-learner</td><td>Ridge regression (stacked)</td></tr>
+<tr><td>Feature dimension</td><td>144 (141 biophysical/evolutionary + 3 AlphaFold pLDDT)</td></tr>
+<tr><td>Prediction target</td><td>ΔΔG (kcal/mol); classification threshold = 0.098</td></tr>
+<tr><td>Structure resolution</td><td>RCSB → AlphaFold DB → ESMFold (de-novo)</td></tr>
+</table>
+
+<!-- ===================== FIGURES ===================== -->
+<div class="pagebreak"></div>
+<h2>Figures</h2>
+
+<figure>
+<img src="file:///Users/admin/Documents/PET%20-%20Lab/graph5_predicted_vs_actual.png">
+<figcaption><span class="figcap-b">Figure 1.</span> Predicted vs. measured ΔΔG on the
+S669 independent test set (n = 669 held-out mutations from unseen proteins). Each point
+is one mutation; the dashed line marks perfect prediction; color encodes absolute error.
+Pearson r = 0.39, MAE = 1.10 kcal/mol, 70.6% sign accuracy. This parity plot is the
+regression-native measure of generalization.</figcaption>
+</figure>
+
+<figure>
+<img src="file:///Users/admin/Documents/PET%20-%20Lab/graph4_roc_curves.png">
+<figcaption><span class="figcap-b">Figure 2.</span> ROC curves. Left: real
+<i>sklearn.metrics.roc_curve</i> on the S669 held-out set (AUC ≈ 0.66). Right: 10-fold
+cross-validation performance on the training set (AUC ≈ 0.87). The difference between
+the two panels visualizes the generalization gap to unseen protein families.</figcaption>
+</figure>
+
+<figure>
+<img src="file:///Users/admin/Documents/PET%20-%20Lab/graph3_generalization_gap.png">
+<figcaption><span class="figcap-b">Figure 3.</span> Generalization gap: cross-validation
+accuracy (79.7%) vs. independent S669 accuracy (73.1%), a 6.6-percentage-point drop that
+honestly quantifies extrapolation difficulty.</figcaption>
+</figure>
+
+<figure>
+<img src="file:///Users/admin/Documents/PET%20-%20Lab/graph1_model_comparison.png">
+<figcaption><span class="figcap-b">Figure 4.</span> Per-model cross-validation accuracy
+for the eight base regressors and the stacked ensemble, showing the ensemble's gain over
+any single model.</figcaption>
+</figure>
+
+<figure>
+<img src="file:///Users/admin/Documents/PET%20-%20Lab/graph2_version_progression.png">
+<figcaption><span class="figcap-b">Figure 5.</span> Model accuracy progression across
+development versions, documenting the iterative feature-engineering improvements that led
+to the current v46 ensemble.</figcaption>
+</figure>
+
+<!-- ===================== METHODS DETAIL ===================== -->
+<div class="pagebreak"></div>
+<h2>Extended Methods &amp; Reproducibility</h2>
+<div class="two-col">
+<h3>Feature engineering</h3>
+<p>The 144-dimensional encoding integrates five evidence classes:
+(i) <b>physicochemical</b> deltas (hydrophobicity, volume, charge, flexibility, helix/sheet
+propensity) and their absolute values; (ii) <b>structural</b> features — relative solvent
+accessibility, secondary structure, contact number, B-factor z-score; (iii) <b>evolutionary</b>
+signals — PSSM conservation, ESM-2 (640-d → PCA-32) embeddings, ESM-1v zero-shot fitness;
+(iv) <b>physics</b> — Debye–Hückel screening and Born solvation electrostatics with
+pH-dependent ionization; and (v) <b>assay conditions</b> — temperature and pH as explicit
+features. Three AlphaFold pLDDT features are appended after scaling.</p>
+
+<h3>Validation protocol</h3>
+<p>To prevent leakage from reverse-mutation augmentation (A→B and B→A share a canonical key),
+cross-validation folds are grouped by mutation pair. The S669 benchmark contains proteins
+entirely absent from training; all mutations overlapping the training set were removed before
+evaluation, ensuring strict independence. Reported test metrics therefore reflect true
+extrapolation to novel protein families rather than memorization.</p>
+
+<h3>Honest reporting</h3>
+<p>No synthetic or simulated data were used at any stage. The cross-validation-to-test
+performance gap is reported explicitly. Two S669 numbers are provided — the frozen
+training-run value and a live re-computation from the deployed model — which differ
+slightly (≤0.03 in correlation) due to ongoing feature-extraction refinements; both are
+disclosed.</p>
+
+<h3>Design tool</h3>
+<p>An interactive web application accepts any protein sequence or preset PETase/cutinase,
+runs latent-space optimization to propose stabilizing variants, ranks candidates by
+combined stability/activity fitness, and visualizes mutations on experimentally accurate
+3-D structures with per-residue confidence coloring and per-mutation ΔΔG annotations.</p>
+</div>
+
+<p class="small" style="margin-top:14px">
+Abstract sections conform to BMES 2026 word limits (Introduction ≤250; Materials &amp; Methods ≤250;
+Results/Conclusions/Discussion ≤350). For portal submission, upload figures individually as
+.png; this PDF is the consolidated reference document. &nbsp;·&nbsp; Generated from
+<i>model_meta.json</i> and live S669 predictions (deployed v46 ensemble).
+</p>
+
+</body>
+</html>

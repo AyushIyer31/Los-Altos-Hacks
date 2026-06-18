@@ -1390,7 +1390,7 @@ footer {
       SEQUENCE
       <span id="seqLength" style="font-size:10px;font-weight:600;color:var(--success);background:rgba(16,185,129,0.1);padding:2px 6px;border-radius:4px;display:none"></span>
     </div>
-    <textarea class="seq-input" id="seqInput" placeholder="Select a preset above or paste a sequence..." oninput="updateSeqLength()"></textarea>
+    <textarea class="seq-input" id="seqInput" placeholder="Select a preset above or paste a sequence..." oninput="updateSeqLength();currentBrowsePdbId=null;"></textarea>
 
     <div id="petConditions">
     <div class="section-label" style="margin-top:24px">REACTION CONDITIONS</div>
@@ -1690,6 +1690,7 @@ let selectedFamily = 'All';
 let selectedDiseaseFamily = 'All';
 let selectedPreset = null;
 let currentSequence = null;
+let currentBrowsePdbId = null;  // PDB ID from Browse Proteins selection
 let currentResult = null;
 let chartInstance = null;
 
@@ -2365,6 +2366,7 @@ function selectDiseasePreset(name) {
   const p = DISEASE_PRESETS.find(x => x.name === name);
   if (!p) return;
   selectedPreset = name;
+  currentBrowsePdbId = null;
   document.getElementById('seqInput').value = p.sequence;
   updateSeqLength();
   renderDiseasePresets();
@@ -2558,18 +2560,19 @@ function showPDBDetail(d) {
     </div>
     <div class="section-label">PROTEIN SEQUENCE</div>
     <div class="seq-display">${d.sequence}</div>
-    <button class="btn-primary" onclick="closeModal();selectSequenceForOptimize('${d.sequence}')">Optimize This Enzyme</button>
+    <button class="btn-primary" onclick="closeModal();selectSequenceForOptimize('${d.sequence}','${d.pdb_id}')">Optimize This Enzyme</button>
   `;
   document.getElementById('modal').classList.add('show');
 }
 
-function selectSequenceForOptimize(seq) {
+function selectSequenceForOptimize(seq, pdbId) {
   // Strip non-standard residues before loading into the optimizer
   const validAA = new Set('ACDEFGHIKLMNPQRSTVWY');
   const cleaned = seq.toUpperCase().split('').filter(c => validAA.has(c)).join('');
   document.getElementById('seqInput').value = cleaned;
   updateSeqLength();
   selectedPreset = null;
+  currentBrowsePdbId = pdbId || null;
   renderPresets();
   showPage('optimize');
 }
@@ -2591,6 +2594,7 @@ function selectPreset(name) {
   const p = PRESETS.find(x => x.name === name);
   if (!p) return;
   selectedPreset = name;
+  currentBrowsePdbId = null;
   document.getElementById('seqInput').value = p.sequence;
   updateSeqLength();
   renderPresets();
@@ -2766,6 +2770,27 @@ async function runOptimization() {
       contamination_scenario: document.getElementById('contamScenario').value,
     };
 
+    // Real PET-degradation prediction (Erickson 2022-trained model) for the
+    // best candidate — replaces the thermal-Gaussian "efficiency".
+    currentResult._degradation = null;
+    try {
+      const best = currentResult.candidates && currentResult.candidates[0];
+      if (best && best.sequence) {
+        const sr = await fetch(API + '/simulate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sequence: best.sequence,
+            temperature: currentResult._env.temperature,
+            ph: currentResult._env.ph,
+            substrate: 'amorphous_film',
+            include_profile: true,
+          }),
+        });
+        if (sr.ok) currentResult._degradation = await sr.json();
+      }
+    } catch (e) { /* degradation panel is optional; fall back silently */ }
+
     renderResults();
     showPage('results');
   } catch (e) {
@@ -2848,6 +2873,64 @@ function computeEnvironmentalFactors(env, candidate) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// Real PET-degradation panel (Erickson 2022-trained model, /simulate)
+// ═══════════════════════════════════════════════════════════
+function renderDegradationPanel(deg, env) {
+  if (!deg || !deg.profile || !deg.profile.length) {
+    return `<div class="card" style="margin-bottom:16px">
+      <div class="card-header">Predicted PET Degradation</div>
+      <p style="font-size:12.5px;color:var(--text-tertiary);line-height:1.5">
+        Real degradation prediction unavailable (model/endpoint offline). The
+        "temp match" figure above is a thermal-fit estimate only, not a measured
+        degradation rate.</p>
+    </div>`;
+  }
+  const prof = deg.profile;
+  const pct = p => (p.percent_depolymerized != null ? p.percent_depolymerized : 0);
+  const maxP = Math.max(...prof.map(pct), 1e-6);
+  const peak = prof.reduce((a, b) => pct(b) > pct(a) ? b : a, prof[0]);
+  const mi = deg.model_info || {};
+  const r2k = mi.r2_known_enzymes != null ? (mi.r2_known_enzymes).toFixed(2) : '—';
+  const r2u = mi.r2_unseen_enzymes != null ? (mi.r2_unseen_enzymes).toFixed(2) : '—';
+  const fmtPct = v => v >= 1 ? v.toFixed(1) : v.toPrecision(2);
+
+  const bars = prof.map(p => {
+    const h = Math.max(2, (pct(p) / maxP) * 100);
+    const isSel = Math.abs(p.temp_C - env.temperature) < 5;
+    const isPeak = p.temp_C === peak.temp_C;
+    const col = isSel ? 'var(--accent)' : isPeak ? 'var(--success)' : 'var(--border)';
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+      <div style="font-size:9px;color:var(--text-tertiary)">${fmtPct(pct(p))}%</div>
+      <div style="width:60%;height:90px;display:flex;align-items:flex-end">
+        <div style="width:100%;height:${h}%;background:${col};border-radius:3px 3px 0 0"></div>
+      </div>
+      <div style="font-size:10px;color:${isSel ? 'var(--accent)' : 'var(--text-tertiary)'};font-weight:${isSel ? 700 : 400}">${p.temp_C}&deg;</div>
+    </div>`;
+  }).join('');
+
+  return `<div class="card" style="margin-bottom:16px">
+    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
+      <span>Predicted PET Degradation &mdash; Real Model</span>
+      <span style="font-size:10px;color:var(--text-tertiary);font-weight:400">Erickson 2022 &middot; ${mi.n_rows || ''} measurements</span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:4px">
+      <div style="font-size:30px;font-weight:800;color:var(--accent)">${fmtPct(deg.percent_depolymerized)}%</div>
+      <div style="font-size:12px;color:var(--text-secondary)">of PET depolymerized at ${env.temperature}&deg;C, pH ${env.ph} &mdash; ${deg.products_mg_per_L.toFixed(1)} mg/L products</div>
+    </div>
+    <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:14px">
+      Fraction of PET broken into monomers (TPA+MHET+BHET) in 96 h at 2.9% loading.
+      Predicted optimum: <strong style="color:var(--success)">${peak.temp_C}&deg;C</strong> (${fmtPct(pct(peak))}%).
+    </div>
+    <div style="display:flex;gap:6px;align-items:flex-end;padding:8px 0;border-top:1px solid var(--border)">${bars}</div>
+    <div style="font-size:10px;color:var(--text-tertiary);margin-top:10px;line-height:1.5">
+      % PET depolymerized vs temperature (amorphous PET film, low-dose 96 h screen).
+      Scale is small by design: the best enzyme here (LCC-ICCG) reaches only ~2%, and most register 0%.
+      Model R&sup2; = ${r2k} on known enzymes / ${r2u} on novel sequences &mdash; novel-sequence values are indicative only and tend to read low.
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
 // Results Rendering
 // ═══════════════════════════════════════════════════════════
 function renderResults() {
@@ -2919,12 +3002,14 @@ function renderResults() {
         <div style="width:1px;background:var(--border);align-self:stretch"></div>
         <div class="impact-stat"><div class="val">${perfSecVal}</div><div class="lbl">${perfSecLabel}</div></div>
         <div style="width:1px;background:var(--border);align-self:stretch"></div>
-        <div class="impact-stat"><div class="val">${(factors.combined * 100).toFixed(0)}%</div><div class="lbl">${isDiseaseMode ? 'fold stability' : 'efficiency'}</div></div>
+        <div class="impact-stat" title="How close your reaction temperature is to the enzyme's predicted optimum (thermal-fit only — not a degradation measure)."><div class="val">${(factors.combined * 100).toFixed(0)}%</div><div class="lbl">${isDiseaseMode ? 'fold stability' : 'temp match'}</div></div>
         <div style="width:1px;background:var(--border);align-self:stretch"></div>
         <div class="impact-stat"><div class="val">${best?.mutations.length || 0}</div><div class="lbl">mutations</div></div>
       </div>
       <p style="font-size:12.5px;color:var(--text-secondary);margin-top:12px;line-height:1.4">${perfDesc}</p>
     </div>
+
+    ${!isDiseaseMode ? renderDegradationPanel(R._degradation, env) : ''}
 
     <!-- Environmental / Stability Factors Card -->
     <div class="card">
@@ -3690,7 +3775,7 @@ function show3DViewer(candidateOrMutations) {
   setTimeout(() => {
     // Build the resolve request with ALL available protein metadata
     const resolveBody = {
-      pdb_id:      preset ? (preset.pdbId || null) : null,
+      pdb_id:      preset ? (preset.pdbId || null) : (currentBrowsePdbId || null),
       uniprot_id:  preset ? (preset.uniprotId || null) : null,
       gene:        preset ? (preset.gene || null) : null,
       name:        preset ? preset.name : null,
@@ -3743,6 +3828,12 @@ function show3DViewer(candidateOrMutations) {
             badge.style.border     = '1px solid rgba(59,111,245,0.25)';
             const plddtStr = plddt ? ` · avg pLDDT ${plddt}` : '';
             badge.textContent = `AlphaFold DB (predicted${plddtStr})`;
+          } else if (srcType === 'esmfold') {
+            badge.style.background = 'rgba(139,92,246,0.12)';
+            badge.style.color      = '#A78BFA';
+            badge.style.border     = '1px solid rgba(139,92,246,0.25)';
+            const plddtStr = plddt ? ` · avg pLDDT ${plddt}` : '';
+            badge.textContent = `ESMFold (de-novo predicted${plddtStr})`;
           } else if (srcType === 'rcsb') {
             badge.style.background = 'rgba(16,185,129,0.12)';
             badge.style.color      = '#10B981';
@@ -3763,6 +3854,7 @@ function show3DViewer(candidateOrMutations) {
         const legendTitle = document.getElementById('legendTitle');
         if (legendTitle) {
           if (srcType === 'alphafold') legendTitle.textContent = 'AlphaFold Confidence';
+          else if (srcType === 'esmfold') legendTitle.textContent = 'ESMFold Confidence';
           else if (srcType === 'rcsb') legendTitle.textContent = `RCSB ${pdbIdStr} Structure`;
           else legendTitle.textContent = 'Structure Confidence';
         }
@@ -3787,7 +3879,8 @@ function show3DViewer(candidateOrMutations) {
         ]);
         const plddtNum = plddt ? parseFloat(plddt) : null;
         const nameKey  = (enzymeName || '').replace(/\s+/g,'');
-        const isDisordered = srcType === 'alphafold' && (
+        const isPredicted = srcType === 'alphafold' || srcType === 'esmfold';
+        const isDisordered = isPredicted && (
           (plddtNum !== null && plddtNum < 65) ||
           _IDR_PROTEINS.has(enzymeName) ||
           _IDR_PROTEINS.has(nameKey)
@@ -3825,7 +3918,9 @@ function show3DViewer(candidateOrMutations) {
         if (noteEl && srcType) {
           const baseDesc = isExp
             ? `RCSB PDB ${pdbIdStr}${res ? ' (' + parseFloat(res).toFixed(1) + 'Å ' + method.toLowerCase() + ')' : ''}`
-            : `AlphaFold DB predicted structure${uniStr ? ' (UniProt ' + uniStr + ')' : ''}`;
+            : (srcType === 'esmfold'
+                ? `ESMFold de-novo predicted structure${plddt ? ' (avg pLDDT ' + plddt + ')' : ''}`
+                : `AlphaFold DB predicted structure${uniStr ? ' (UniProt ' + uniStr + ')' : ''}`);
           noteEl.innerHTML = `Base structure: <strong>${baseDesc}</strong>. Mutated sidechain atoms rebuilt using NERF geometry (Dunbrack 2010 modal rotamers). Backbone unchanged from source structure &mdash; only sidechain atoms differ. Auto-zoomed to mutation sites; click <em>Reset</em> for full view.`;
         }
 
@@ -3857,7 +3952,7 @@ function show3DViewer(candidateOrMutations) {
           // Show mutation metadata if applicable
           const mutMeta = window._3dMutations ? window._3dMutations.find(x => x.pos === atom.resi) : null;
           let html = `<b>${atom.resn} ${atom.resi}</b>`;
-          if (window._3dSourceType === 'alphafold') {
+          if (window._3dSourceType === 'alphafold' || window._3dSourceType === 'esmfold') {
             html += ` &nbsp; pLDDT <span style="color:${col};font-weight:700">${b.toFixed(1)}</span>`;
           }
           if (mutMeta) {
