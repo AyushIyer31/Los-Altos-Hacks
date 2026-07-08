@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User Flow — Two-Stage Enzyme Engineering Pipeline</title>
+<style>
+  :root{
+    --ink:#15233b; --muted:#5f7088; --line:#e2e8f0; --bg:#f4f7fb; --card:#fff;
+    --user:#2563eb; --user-bg:#eff6ff; --sys:#7c3aed; --sys-bg:#f5f3ff;
+    --out:#0d9488; --out-bg:#ecfdf5; --warn:#b45309; --warn-bg:#fffbeb;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;
+       background:var(--bg);color:var(--ink);line-height:1.55;padding:32px 16px}
+  .wrap{max-width:840px;margin:0 auto}
+  h1{font-size:1.7rem;margin-bottom:6px;letter-spacing:-.3px}
+  .sub{color:var(--muted);font-size:1.02rem;margin-bottom:18px}
+  .legend{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 8px}
+  .lg{display:flex;align-items:center;gap:7px;font-size:.85rem;background:#fff;border:1px solid var(--line);
+      border-radius:999px;padding:5px 12px}
+  .dot{width:11px;height:11px;border-radius:50%}
+  .du{background:var(--user)}.ds{background:var(--sys)}.do{background:var(--out)}
+  .start,.endcap{background:var(--ink);color:#fff;border-radius:12px;padding:14px 20px;text-align:center;
+        font-weight:600;margin:14px 0}
+  .endcap{background:linear-gradient(120deg,#0d9488,#2563eb)}
+  .step{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:0;margin:0;overflow:hidden}
+  .step-h{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line);background:#fbfcfe}
+  .num{flex:none;width:34px;height:34px;border-radius:50%;background:var(--user);color:#fff;display:flex;
+       align-items:center;justify-content:center;font-weight:700}
+  .step.s2 .num{background:var(--sys)}
+  .step-h h2{font-size:1.18rem}
+  .step-h .tag{margin-left:auto;font-size:.72rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+       color:var(--muted)}
+  .lanes{display:grid;grid-template-columns:1fr;gap:0}
+  .lane{display:grid;grid-template-columns:130px 1fr;gap:14px;padding:13px 20px;border-bottom:1px solid #f0f3f7;align-items:start}
+  .lane:last-child{border-bottom:none}
+  .lane .who{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:4px 8px;border-radius:6px;text-align:center}
+  .who.u{background:var(--user-bg);color:var(--user)}
+  .who.s{background:var(--sys-bg);color:var(--sys)}
+  .who.o{background:var(--out-bg);color:var(--out)}
+  .lane .txt{font-size:.95rem}
+  .lane .txt b{color:var(--ink)}
+  .arrow{text-align:center;color:#cbd5e1;font-size:1.5rem;line-height:1;margin:4px 0}
+  .branch{background:var(--warn-bg);border:1px dashed #fcd34d;border-radius:12px;padding:12px 18px;margin:10px 0;font-size:.92rem}
+  .branch b{color:var(--warn)}
+  .note{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 16px;margin:16px 0;font-size:.9rem}
+  .ex{font-family:ui-monospace,Menlo,monospace;font-size:.85rem;background:#0b1220;color:#dbe4f0;border-radius:8px;
+      padding:10px 14px;margin-top:6px;white-space:pre-wrap}
+  .foot{color:var(--muted);font-size:.82rem;margin-top:24px;border-top:1px solid var(--line);padding-top:12px}
+  @media(max-width:560px){.lane{grid-template-columns:1fr}.lane .who{justify-self:start}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>🧬 How a scientist uses the pipeline</h1>
+  <p class="sub">The two-stage flow from the user's point of view — what you put in, what you get back, and what you decide at each step.</p>
+
+  <div class="legend">
+    <span class="lg"><span class="dot du"></span>👤 You (the scientist)</span>
+    <span class="lg"><span class="dot ds"></span>⚙️ The system (models)</span>
+    <span class="lg"><span class="dot do"></span>📋 Output / your decision</span>
+  </div>
+
+  <div class="start">🎯 You want a plastic-degrading enzyme that still works at ~70&nbsp;°C</div>
+
+  <!-- STEP 1 -->
+  <div class="step s1">
+    <div class="step-h"><div class="num">1</div><h2>🔍 Screen your candidates</h2><span class="tag">Stage 1 · Screener</span></div>
+    <div class="lanes">
+      <div class="lane"><div class="who u">👤 You provide</div>
+        <div class="txt">A list of <b>candidate enzyme sequences</b> (e.g. a FASTA file of PETases, cutinases, LCC, or thousands of hits mined from databases). No lab data needed — just the sequences.</div></div>
+      <div class="lane"><div class="who s">⚙️ System does</div>
+        <div class="txt">Reads each sequence, generates its language-model fingerprint, and <b>predicts the melting temperature (T<sub>m</sub>)</b> for every one — in seconds, with no experiments.</div></div>
+      <div class="lane"><div class="who o">📋 You get</div>
+        <div class="txt">A <b>ranked table</b>: each enzyme with its predicted heat tolerance.
+          <div class="ex">LCC                 ~75 °C   ✓ keep
+Thermobifida cut.   ~62 °C
+IsPETase            ~46 °C   ✗ too fragile</div></div></div>
+      <div class="lane"><div class="who o">✅ You decide</div>
+        <div class="txt"><b>Pick the top-ranked enzyme(s)</b> as your starting scaffold. The system is tuned for <b>high precision</b>, so the top of the list is trustworthy — you can confidently invest in it.</div></div>
+    </div>
+  </div>
+
+  <div class="arrow">↓</div>
+  <div class="branch">🔀 <b>Shortcut:</b> already committed to one enzyme (e.g. you know you're using LCC)? <b>Skip Step 1</b> and go straight to Step 2 — screening only matters when you're choosing among several candidates.</div>
+  <div class="arrow">↓</div>
+
+  <!-- STEP 2 -->
+  <div class="step s2">
+    <div class="step-h"><div class="num">2</div><h2>🔧 Optimize the chosen enzyme</h2><span class="tag">Stage 2 · Mutation</span></div>
+    <div class="lanes">
+      <div class="lane"><div class="who u">👤 You provide</div>
+        <div class="txt">The <b>one enzyme you picked</b> (its sequence). Optionally, point to regions to focus on (e.g. surface residues, away from the active site).</div></div>
+      <div class="lane"><div class="who s">⚙️ System does</div>
+        <div class="txt"><b>Enumerates candidate mutations</b> (e.g. every single amino-acid change — thousands of them) and <b>predicts each one's effect on stability (ΔΔG)</b>.</div></div>
+      <div class="lane"><div class="who o">📋 You get</div>
+        <div class="txt">A <b>ranked list of mutations</b>, the stabilizing ones on top.
+          <div class="ex">F243I        +2 °C   ✓
+S238C/283C   +5 °C   ✓  (disulfide)
+G210P        +2 °C   ✓
+A88V         −4 °C   ✗  discard</div></div></div>
+      <div class="lane"><div class="who o">✅ You decide</div>
+        <div class="txt"><b>Select the top stabilizing mutations</b> and combine the best few into a candidate design.</div></div>
+    </div>
+  </div>
+
+  <div class="arrow">↓</div>
+
+  <!-- STEP 3 -->
+  <div class="step s1">
+    <div class="step-h"><div class="num">3</div><h2>➕ Estimate the final design</h2><span class="tag">Combine</span></div>
+    <div class="lanes">
+      <div class="lane"><div class="who s">⚙️ System does</div>
+        <div class="txt">Adds the screener's starting point to the mutation boosts:
+          <div class="ex">starting T&#8347; (Step 1)   ~75 °C
++ chosen mutations         ~+9 °C
+= engineered enzyme        ~84 °C</div></div></div>
+      <div class="lane"><div class="who o">📋 You get</div>
+        <div class="txt">An <b>absolute predicted stability</b> for your designed enzyme — a real number you can check against your 70&nbsp;°C target.</div></div>
+      <div class="lane"><div class="who o">✅ You decide</div>
+        <div class="txt"><b>Keep the designs that clear your target</b> (here, comfortably past 70&nbsp;°C); drop the ones that don't.</div></div>
+    </div>
+  </div>
+
+  <div class="arrow">↓</div>
+
+  <!-- STEP 4 -->
+  <div class="step s2">
+    <div class="step-h"><div class="num">4</div><h2>🧪 Confirm in the lab</h2><span class="tag">Validate</span></div>
+    <div class="lanes">
+      <div class="lane"><div class="who u">👤 You do</div>
+        <div class="txt">Send only the <b>top 1–2 designs</b> to the wet lab to build and test. The models did the expensive narrowing-down; the bench just confirms the winners.</div></div>
+      <div class="lane"><div class="who o">📋 Outcome</div>
+        <div class="txt">Experimental confirmation of the engineered, heat-tolerant enzyme — reached with a fraction of the lab effort.</div></div>
+    </div>
+  </div>
+
+  <div class="endcap">✅ A heat-tolerant, plastic-degrading enzyme candidate — found by AI, confirmed at the bench</div>
+
+  <div class="note">
+    <b>Why this saves you time and money:</b> the slow, costly step is the wet lab. Both models work
+    from <b>sequence alone</b> (no experiments), so you screen thousands of options and design mutations
+    <i>in silico</i>, and only the few most-promising candidates ever reach the bench. The models are tuned
+    for <b>high precision</b> — a short, trustworthy shortlist — so you rarely waste lab time on a dud.
+  </div>
+
+  <p class="foot">
+    Stage&nbsp;1 = whole-protein screening model (sequence → T<sub>m</sub>); Stage&nbsp;2 = mutation model
+    (sequence + mutation → ΔΔG). Predicted temperatures are estimates for <b>ranking and prioritization</b>;
+    final candidates are always confirmed experimentally.
+  </p>
+
+</div>
+</body>
+</html>

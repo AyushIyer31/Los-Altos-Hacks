@@ -1,0 +1,7 @@
+# Multi-task stability model — training dependencies.
+# Install: pip install -r requirements.txt
+# (On Nautilus the Job installs fair-esm/pandas/numpy on top of the pytorch image.)
+torch>=2.0
+fair-esm>=2.0.0
+pandas>=1.5
+numpy>=1.23

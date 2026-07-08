@@ -58,3 +58,16 @@ prothermdb_*.txt
 
 # Claude
 .claude/
+
+# Large data files (>100MB — exceed GitHub limit; keep locally / use external storage)
+datasets/downloads/brenda_2026_1.json
+datasets/downloads/fireprotdb_dump.zip
+datasets/downloads/domainome_table2.txt
+datasets/downloads/domainome_stability.csv
+datasets/downloads/brenda_mmseqs/
+datasets/stability_megascale/*.zip
+datasets/stability_megascale/Tsuboyama2023*.csv
+datasets/staging/staging_all.csv
+datasets/staging/staging_clean.csv
+datasets/staging/mmseqs/
+stability_dataset_multitask.csv

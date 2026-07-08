@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Two-Model Approach — Engineering Heat-Tough Plastic-Eating Enzymes</title>
+<style>
+  :root{
+    --bg:#0f172a; --card:#1e293b; --ink:#e2e8f0; --muted:#94a3b8;
+    --screen:#38bdf8; --screen-bg:#0c4a6e;
+    --mut:#fb923c; --mut-bg:#7c2d12;
+    --good:#4ade80; --good-bg:#14532d;
+    --line:#334155;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:linear-gradient(160deg,#0f172a,#111827);color:var(--ink);
+    line-height:1.55;padding:32px 16px;
+  }
+  .wrap{max-width:880px;margin:0 auto}
+  h1{font-size:1.7rem;margin-bottom:6px;letter-spacing:-.3px}
+  .sub{color:var(--muted);font-size:1.02rem;margin-bottom:8px}
+  .goal{
+    background:var(--good-bg);border:1px solid var(--good);border-radius:12px;
+    padding:14px 18px;margin:22px 0 10px;font-size:1.02rem;
+  }
+  .goal b{color:var(--good)}
+  .stage{
+    background:var(--card);border-radius:16px;padding:22px 24px;margin:18px 0;
+    border:1px solid var(--line);position:relative;
+  }
+  .stage.screen{border-left:5px solid var(--screen)}
+  .stage.mut{border-left:5px solid var(--mut)}
+  .stage.combine{border-left:5px solid var(--good)}
+  .tag{
+    display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.6px;
+    text-transform:uppercase;padding:3px 10px;border-radius:999px;margin-bottom:10px;
+  }
+  .tag.screen{background:var(--screen-bg);color:var(--screen)}
+  .tag.mut{background:var(--mut-bg);color:var(--mut)}
+  .tag.combine{background:var(--good-bg);color:var(--good)}
+  .stage h2{font-size:1.22rem;margin-bottom:4px}
+  .stage .q{color:var(--muted);font-style:italic;margin-bottom:14px;font-size:.97rem}
+  .arrow{text-align:center;color:var(--line);font-size:1.6rem;margin:-6px 0}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:.95rem}
+  th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-weight:600;font-size:.82rem;text-transform:uppercase;letter-spacing:.4px}
+  td.t{font-variant-numeric:tabular-nums;font-weight:700}
+  .pick{background:rgba(74,222,128,.08)}
+  .pick td:first-child{color:var(--good);font-weight:700}
+  .bad{color:#f87171}.ok{color:#fbbf24}.win{color:var(--good)}
+  .tweaks{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+  .tweak{display:flex;align-items:center;gap:12px;background:#0f1d33;border-radius:10px;padding:10px 14px;font-size:.95rem}
+  .tweak .d{margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums}
+  .calc{
+    background:#0b1220;border:1px dashed var(--good);border-radius:12px;
+    padding:16px 20px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:.95rem;margin-top:8px;white-space:pre;overflow-x:auto;color:var(--ink)
+  }
+  .calc .res{color:var(--good);font-weight:700}
+  .badge{font-size:.8rem;color:var(--muted);margin-top:10px;display:flex;gap:8px;align-items:center}
+  .badge b{color:var(--screen)}.badge.m b{color:var(--mut)}
+  .legend{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:24px 0}
+  .lc{background:var(--card);border-radius:14px;padding:18px;border:1px solid var(--line)}
+  .lc.s{border-top:4px solid var(--screen)}.lc.m{border-top:4px solid var(--mut)}
+  .lc h3{font-size:1.05rem;margin-bottom:4px}
+  .lc .role{font-size:.85rem;color:var(--muted);margin-bottom:8px}
+  .lc p{font-size:.9rem;color:var(--ink)}
+  .oneline{
+    background:linear-gradient(120deg,#0c4a6e,#7c2d12);border-radius:14px;
+    padding:20px 24px;margin-top:18px;font-size:1.05rem;text-align:center;font-weight:600
+  }
+  .foot{color:var(--muted);font-size:.82rem;margin-top:22px;border-top:1px solid var(--line);padding-top:14px}
+  @media(max-width:560px){.legend{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>🧫 Engineering heat-tough plastic-eating enzymes</h1>
+  <p class="sub">A two-model AI pipeline — explained with real PET-degrading enzymes</p>
+
+  <div class="goal">
+    🎯 <b>The goal:</b> find an enzyme that still works at <b>~70&nbsp;°C</b> — the temperature
+    where PET plastic softens and breaks down fastest. Most natural PET enzymes fall apart
+    well below that, so they're useless in a real recycling plant.
+  </div>
+
+  <p class="sub" style="margin:18px 0 0">
+    You start with candidate enzymes that can chew PET, but you <b>don't know which can take the heat:</b>
+    IsPETase &nbsp;·&nbsp; Thermobifida cutinase &nbsp;·&nbsp; LCC.
+  </p>
+
+  <!-- STAGE 1 -->
+  <div class="stage screen">
+    <span class="tag screen">Stage 1 · Screen</span>
+    <h2>🔍 Which enzyme should we even start with?</h2>
+    <p class="q">Whole-protein model — reads a sequence, predicts its melting temperature.</p>
+    <table>
+      <tr><th>Enzyme</th><th>Predicted melt temp</th><th>Verdict</th></tr>
+      <tr><td>IsPETase</td><td class="t">~46 °C</td><td class="bad">too fragile ✕</td></tr>
+      <tr><td>Thermobifida cutinase</td><td class="t">~62 °C</td><td class="ok">okay</td></tr>
+      <tr class="pick"><td>LCC</td><td class="t">~75 °C</td><td class="win">sturdiest ✓ — pick this</td></tr>
+    </table>
+    <div class="badge"><b>✓ Trust check:</b>&nbsp;this model passed the independent <b>BRENDA exam</b> — it predicted stability correctly on 1,500+ enzymes it had never seen.</div>
+  </div>
+
+  <div class="arrow">↓</div>
+
+  <!-- STAGE 2 -->
+  <div class="stage mut">
+    <span class="tag mut">Stage 2 · Optimize</span>
+    <h2>🔧 How do we make LCC even tougher?</h2>
+    <p class="q">Mutation model — tests tiny tweaks, predicts whether each helps or hurts.</p>
+    <div class="tweaks">
+      <div class="tweak">🟢 Change position 243 (F → I) <span class="d win">+2 °C</span></div>
+      <div class="tweak">🟢 Add a disulfide bond (238 / 283) <span class="d win">+5 °C</span></div>
+      <div class="tweak">🟢 Change position 210 (stabilizing) <span class="d win">+2 °C</span></div>
+      <div class="tweak" style="opacity:.5">🔴 Change position 88 (destabilizing) <span class="d bad">−4 °C → discard</span></div>
+    </div>
+    <div class="badge m"><b>✓ Trust check:</b>&nbsp;this model was validated on <b>S669</b>, the standard mutation benchmark.</div>
+  </div>
+
+  <div class="arrow">↓</div>
+
+  <!-- STAGE 3 -->
+  <div class="stage combine">
+    <span class="tag combine">Stage 3 · Combine</span>
+    <h2>➕ What's the final heat tolerance of our design?</h2>
+    <p class="q">The two models multiply in value: one gives the <b>starting level</b>, the other the <b>boost</b>.</p>
+<div class="calc">  LCC starting point   (screening model) :   ~75 °C
++ chosen mutations     (mutation model)  :   ~+9 °C
+─────────────────────────────────────────────────
+<span class="res">= engineered LCC, estimated            :   ~84 °C  ✓ works hot</span></div>
+    <p class="sub" style="font-size:.9rem;margin-top:12px">
+      Not hypothetical: the real engineered LCC (“LCC-ICCG”) raised its melting point by ~9 °C
+      and now runs in actual PET-recycling plants at <b>72 °C</b>.
+    </p>
+  </div>
+
+  <div class="arrow">↓</div>
+
+  <!-- STAGE 4 -->
+  <div class="stage">
+    <span class="tag" style="background:#334155;color:#cbd5e1">Stage 4 · Confirm</span>
+    <h2>✅ Rank the designs — lab-test only the winners</h2>
+    <p class="sub" style="font-size:.95rem">
+      The models did the expensive narrowing-down (thousands of options → a few).
+      Send only the <b>top 1–2 candidates</b> to the lab to confirm. AI prioritizes; the bench validates.
+    </p>
+  </div>
+
+  <!-- LEGEND -->
+  <div class="legend">
+    <div class="lc s">
+      <h3>🔭 Screening model</h3>
+      <div class="role">“the scout”</div>
+      <p>Looks at <b>one whole enzyme</b> → guesses its heat tolerance. Answers: <i>“which enzyme is worth our time?”</i></p>
+    </div>
+    <div class="lc m">
+      <h3>🛠️ Mutation model</h3>
+      <div class="role">“the engineer”</div>
+      <p>Looks at <b>one enzyme + one change</b> → does it help? Answers: <i>“how do we upgrade the one we picked?”</i></p>
+    </div>
+  </div>
+
+  <div class="oneline">
+    The scout finds the toughest material → the engineer reinforces it.<br>
+    Neither alone gets you there. Together, they do.
+  </div>
+
+  <p class="foot">
+    ⚠️ Numbers shown are illustrative for explanation. Predicted temperatures are estimates used to
+    <b>rank and prioritize</b> candidates — final winners are always confirmed experimentally.
+  </p>
+
+</div>
+</body>
+</html>

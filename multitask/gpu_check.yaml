@@ -1,0 +1,33 @@
+# Throwaway pod: confirms an A100 is actually schedulable RIGHT NOW.
+# It grabs one A100, prints nvidia-smi, and exits. Costs ~1 minute of GPU.
+#
+#   kubectl apply -f gpu_check.yaml
+#   kubectl get pod gpu-check -n gilpin-lab -w     # Running = an A100 is free; Pending = none free
+#   kubectl logs gpu-check -n gilpin-lab           # shows the A100
+#   kubectl delete pod gpu-check -n gilpin-lab     # clean up
+apiVersion: v1
+kind: Pod
+metadata:
+  name: gpu-check
+  namespace: gilpin-lab
+spec:
+  restartPolicy: Never
+  # Use ANY available GPU — this job needs only ~8GB and A100s are saturated.
+  # (An A100 can still be picked if one frees up; we just no longer require it.)
+  tolerations:
+    - key: nautilus.io/hardware
+      operator: Equal
+      value: large-gpu
+  containers:
+    - name: check
+      image: nvidia/cuda:12.2.0-base-ubuntu22.04
+      command: ["nvidia-smi"]
+      resources:
+        requests:
+          nvidia.com/gpu: "1"
+          cpu: "1"
+          memory: 2Gi
+        limits:
+          nvidia.com/gpu: "1"
+          cpu: "1"
+          memory: 2Gi

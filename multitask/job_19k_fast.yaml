@@ -1,0 +1,34 @@
+# Fast S669 eval of the 19K model off the already-saved features_19k.npz.
+# CPU-only (no embedding, no GPU), unbuffered output, fast models only.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: petlab-19k-fast
+  namespace: gilpin-lab
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 259200
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: t19kf
+          image: pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
+          workingDir: /workspace/multitask
+          env:
+            - {name: PYTHONUNBUFFERED, value: "1"}
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -e
+              pip install --no-cache-dir numpy scikit-learn joblib xgboost lightgbm
+              python -u eval_19k_fast.py
+          resources:
+            requests: {cpu: "8", memory: 32Gi}
+            limits:   {cpu: "8", memory: 32Gi}
+          volumeMounts:
+            - {name: project, mountPath: /workspace}
+      volumes:
+        - name: project
+          persistentVolumeClaim:
+            claimName: petlab-multitask-pvc

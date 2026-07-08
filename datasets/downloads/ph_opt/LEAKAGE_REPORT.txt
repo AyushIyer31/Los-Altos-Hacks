@@ -1,0 +1,25 @@
+pH-OPTIMUM SCREENER — LEAKAGE-AUDITED SPLIT (report)
+=====================================================
+Standard: mmseqs2 easy-search, >=30% identity, >=50% query coverage (project convention)
+
+TRAIN source: UniProt pH-optimum (BRENDA-free)
+TEST  source: BRENDA pH-optimum
+
+Funnel:
+  TRAIN  UniProt parsed pHopt ......... 5,030
+         - exact overlap (1M/temp) ....  removed
+         - BRENDA overlap (acc+seq) ...  removed   -> exact-clean 3,111
+         - HOMOLOGY to 1M+temp (65%) ..  -2,035    -> 1,076
+         - implausible labels .........  -> 1076
+  TEST   BRENDA seq+value ............. 7,027
+         - exact overlap (1M/temp/train) removed   -> exact-clean 6,372
+         - HOMOLOGY to 1M+temp+train(82%) -5,241   -> 1,131
+         - implausible labels .........  -> 1109
+
+Cross-checks:
+  exact-seq leaks caught earlier: test∩1M=581, test∩temp-test=12, train∩test=14
+  HOMOLOGY leaks (the big hidden ones): train 2,035 (65%), test 5,241 (82%)
+  residual train<->test homology after cleaning: 0  (verified disjoint)
+
+FINAL: TRAIN=1076  TEST=1109  (both >=30%/50% clean vs 1M training,
+       temperature training, temperature test, and each other)

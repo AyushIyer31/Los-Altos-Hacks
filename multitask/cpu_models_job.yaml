@@ -1,0 +1,42 @@
+# CPU job: train RandomForest + ExtraTrees + MLP. NO GPU.
+# Runs in parallel with the GPU job. It WAITS for features.npz (which the GPU job
+# builds) before training, so apply it at the same time — it polls, then trains.
+#   kubectl apply -f cpu_models_job.yaml
+#   kubectl logs -f job/petlab-cpu-models -n gilpin-lab
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: petlab-cpu-models
+  namespace: gilpin-lab
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 259200
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: train
+          image: python:3.11-slim
+          workingDir: /workspace/multitask
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -e
+              pip install --no-cache-dir numpy scikit-learn joblib
+              # wait for the GPU job to produce the shared feature matrix
+              echo "waiting for features.npz ..."
+              until [ -f features.npz ]; do sleep 20; done
+              echo "features.npz found — training CPU models"
+              python train_cpu_models.py
+          # forests on 500K+ rows are memory-hungry; default namespace cap is 1Gi
+          # per container, so request RAM explicitly.
+          # limits == requests (ratio 1.0) to satisfy the namespace 1.2x cap.
+          resources:
+            requests: {cpu: "16", memory: 64Gi}
+            limits:   {cpu: "16", memory: 64Gi}
+          volumeMounts:
+            - {name: project, mountPath: /workspace}
+      volumes:
+        - name: project
+          persistentVolumeClaim:
+            claimName: petlab-multitask-pvc

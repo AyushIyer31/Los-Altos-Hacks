@@ -45,7 +45,19 @@ def main():
         else:
             print(f"  Tsuboyama2023: 0 (run convert_tsuboyama.py first)")
 
-    print(f"\nWrote {len(all_records) + n_tsu} rows -> {OUT}")
+    raw_total = len(all_records) + n_tsu
+    print(f"\nWrote {raw_total} rows -> {OUT}")
+
+    # Drop fully-identical duplicate rows (keep first). Does NOT collapse
+    # same-mutation rows that differ by temperature/pH — those are distinct
+    # measurements the model uses as features.
+    import pandas as pd
+    df = pd.read_csv(OUT)
+    n_dup = df.duplicated(keep="first").sum()
+    if n_dup:
+        df = df.drop_duplicates(keep="first")
+        df.to_csv(OUT, index=False)
+    print(f"Removed {n_dup} exact-duplicate rows -> {len(df)} rows final")
 
 
 if __name__ == "__main__":

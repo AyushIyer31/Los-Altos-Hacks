@@ -1,0 +1,44 @@
+# GPU job (re-run): features.npz already exists on the PVC, so SKIP build_features
+# and only train the boosting models. Used after fixing the LightGBM OpenCL crash.
+#   kubectl apply -f gpu_train_only_job.yaml
+#   kubectl logs -f job/petlab-gpu-train -n gilpin-lab
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: petlab-gpu-train
+  namespace: gilpin-lab
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 259200
+  template:
+    spec:
+      restartPolicy: Never
+      tolerations:
+        - key: nautilus.io/hardware
+          operator: Equal
+          value: large-gpu
+      containers:
+        - name: train
+          image: pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
+          workingDir: /workspace/multitask
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -e
+              pip install --no-cache-dir pandas numpy scikit-learn joblib \
+                xgboost lightgbm catboost
+              nvidia-smi
+              # features.npz already on the PVC — go straight to training
+              python train_gpu_models.py
+          resources:
+            requests: {nvidia.com/gpu: "1", cpu: "8", memory: 64Gi}
+            limits:   {nvidia.com/gpu: "1", cpu: "8", memory: 64Gi}
+          volumeMounts:
+            - {name: project, mountPath: /workspace}
+            - {name: dshm, mountPath: /dev/shm}
+      volumes:
+        - name: project
+          persistentVolumeClaim:
+            claimName: petlab-multitask-pvc
+        - name: dshm
+          emptyDir: {medium: Memory, sizeLimit: 8Gi}

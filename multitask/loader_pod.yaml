@@ -1,0 +1,32 @@
+# Tiny no-GPU pod that mounts the PVC so you can copy files onto it with kubectl cp.
+# Used to UPLOAD code+data before training, and to DOWNLOAD the trained model after.
+#
+#   kubectl apply -f loader_pod.yaml
+#   kubectl cp <local> gilpin-lab/loader:/workspace/<dest>   # upload
+#   kubectl cp gilpin-lab/loader:/workspace/<src> <local>    # download
+#   kubectl delete pod loader -n gilpin-lab
+apiVersion: v1
+kind: Pod
+metadata:
+  name: loader
+  namespace: gilpin-lab
+spec:
+  restartPolicy: Never
+  containers:
+    - name: loader
+      image: python:3.11-slim
+      command: ["sleep", "100000"]
+      resources:
+        requests:
+          cpu: "1"
+          memory: 2Gi
+        limits:
+          cpu: "1"
+          memory: 2Gi
+      volumeMounts:
+        - name: project
+          mountPath: /workspace
+  volumes:
+    - name: project
+      persistentVolumeClaim:
+        claimName: petlab-multitask-pvc
