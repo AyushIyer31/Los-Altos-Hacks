@@ -1253,7 +1253,13 @@ def load_thermomutdb():
         ddg = entry.get('ddg', None)
         if ddg is not None:
             try:
-                ddg = float(ddg)
+                # ThermoMutDB uses the OPPOSITE ΔΔG sign convention from this
+                # pipeline (negative = stabilizing). Verified by 2,378 mutations
+                # shared with FireProtDB/ProDDG: raw signs disagreed 98% of the
+                # time (corr -0.87). Negate to match (same as ProDDG above).
+                # NOTE: ThermoMutDB ΔTm is NOT inverted (corr +0.93 with
+                # FireProtDB ΔTm), so dtm below is left as-is.
+                ddg = -float(ddg)
                 records.append({**base, 'ddg': ddg})
             except (ValueError, TypeError):
                 pass

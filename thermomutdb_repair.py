@@ -1,0 +1,78 @@
+"""Repair ThermoMutDB rows that have no sequence.
+
+ThermoMutDB stores UniProt accessions but not sequences. We batch-fetch the
+canonical UniProt sequences (cached to uniprot_seqs.json so this runs once),
+then the staging loader fills wt_sequence/mut_sequence when the recorded
+position+WT residue agree with the UniProt sequence.
+
+Rows whose position/WT residue do NOT match the UniProt canonical sequence
+(e.g. PDB-based numbering, isoforms) are left without a sequence and reported,
+rather than guessed — defensible over fabricated data.
+"""
+import json
+import re
+import time
+import urllib.parse
+import urllib.request
+
+CACHE = "uniprot_seqs.json"
+CHUNK = 4
+
+
+def collect_accessions():
+    d = json.load(open("thermomutdb.json"))
+    unis = set()
+    for r in d:
+        if str(r.get("mutation_type", "")).lower() != "single":
+            continue
+        u = r.get("uniprot")
+        if u and re.fullmatch(r"[A-Z0-9]{6,10}", str(u).strip()):
+            unis.add(str(u).strip())
+    return sorted(unis)
+
+
+def fetch_fasta_batch(accs):
+    q = " OR ".join(f"accession:{a}" for a in accs)
+    url = ("https://rest.uniprot.org/uniprotkb/stream?format=fasta&query="
+           + urllib.parse.quote(q))
+    req = urllib.request.Request(url, headers={"User-Agent": "pet-lab-staging/1.0"})
+    with urllib.request.urlopen(req, timeout=60) as resp:
+        return resp.read().decode()
+
+
+def parse_fasta(text):
+    out, acc, seq = {}, None, []
+    for line in text.splitlines():
+        if line.startswith(">"):
+            if acc:
+                out[acc] = "".join(seq)
+            m = re.match(r">\w+\|([A-Z0-9]+)\|", line)
+            acc, seq = (m.group(1) if m else None), []
+        else:
+            seq.append(line.strip())
+    if acc:
+        out[acc] = "".join(seq)
+    return out
+
+
+def main():
+    try:
+        cache = json.load(open(CACHE))
+    except (FileNotFoundError, json.JSONDecodeError):
+        cache = {}
+    accs = [a for a in collect_accessions() if a not in cache]
+    print(f"Total accessions: {len(collect_accessions())}  |  to fetch: {len(accs)}")
+    for i in range(0, len(accs), CHUNK):
+        chunk = accs[i:i + CHUNK]
+        try:
+            cache.update(parse_fasta(fetch_fasta_batch(chunk)))
+        except Exception as e:
+            print(f"  chunk {i//CHUNK} failed: {e}")
+        json.dump(cache, open(CACHE, "w"))
+        print(f"  fetched {min(i+CHUNK, len(accs))}/{len(accs)}  (cache={len(cache)})")
+        time.sleep(0.5)
+    print(f"Done. {len(cache)} sequences cached -> {CACHE}")
+
+
+if __name__ == "__main__":
+    main()

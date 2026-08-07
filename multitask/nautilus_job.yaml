@@ -1,0 +1,68 @@
+# Nautilus (NRP) batch Job: train the multi-task stability model on one A100.
+#
+# PREREQS (do these once, before applying this file):
+#   1. Create a PersistentVolumeClaim for code + data + embedding cache:
+#        kubectl apply -f nautilus_pvc.yaml
+#   2. Copy the project onto the PVC (via a temporary pod + `kubectl cp`):
+#        - multitask/                          (these scripts)
+#        - stability_dataset_multitask.csv     (the dataset, ~370 MB)
+#        - s669_full.tsv                       (held-out test set)
+#
+# SUBMIT:        kubectl apply -f nautilus_job.yaml
+# WATCH:         kubectl logs -f job/petlab-multitask-train
+# CLEAN UP:      kubectl delete job petlab-multitask-train
+#
+# Adjust: <PVC_NAME>, the A100 nodeSelector label, and CPU/RAM to your namespace
+# quota. One A100 (40 GB) is sufficient; this requests it explicitly.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: petlab-multitask-train
+  namespace: gilpin-lab
+spec:
+  backoffLimit: 1            # don't silently retry a crashed run
+  ttlSecondsAfterFinished: 259200   # auto-clean 3 days after completion
+  template:
+    spec:
+      restartPolicy: Never
+      # Use ANY available GPU — this job needs only ~8GB and A100s are saturated.
+      # (An A100 can still be picked if one frees up; we just no longer require it.)
+      tolerations:
+        - key: nautilus.io/hardware
+          operator: Equal
+          value: large-gpu
+      containers:
+        - name: train
+          image: pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
+          workingDir: /workspace/multitask
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -e
+              pip install --no-cache-dir fair-esm pandas numpy
+              echo "=== GPU ==="; nvidia-smi
+              python train_multitask.py \
+                --epochs 60 --batch 1024 --lr 1e-3 --hidden 512 \
+                --out /workspace/multitask/runs
+          resources:
+            requests:
+              nvidia.com/gpu: "1"
+              cpu: "8"
+              memory: 32Gi
+            limits:
+              nvidia.com/gpu: "1"
+              cpu: "12"
+              memory: 48Gi
+          volumeMounts:
+            - name: project
+              mountPath: /workspace
+            - name: dshm                # bigger /dev/shm for DataLoader workers
+              mountPath: /dev/shm
+      volumes:
+        - name: project
+          persistentVolumeClaim:
+            claimName: petlab-multitask-pvc   # created by nautilus_pvc.yaml
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 8Gi

@@ -55,11 +55,10 @@ button {
 /* ── Scroll Reveal System ── */
 .reveal {
   opacity: 0; transform: translateY(40px);
-  transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1s cubic-bezier(0.16, 1, 0.3, 1), filter 1s cubic-bezier(0.16, 1, 0.3, 1);
-  filter: blur(4px);
-  will-change: opacity, transform, filter;
+  transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
 }
-.reveal.visible { opacity: 1; transform: translateY(0); filter: blur(0); }
+.reveal.visible { opacity: 1; transform: translateY(0); }
 .reveal-delay-1 { transition-delay: 0.12s; }
 .reveal-delay-2 { transition-delay: 0.24s; }
 .reveal-delay-3 { transition-delay: 0.36s; }
@@ -67,22 +66,19 @@ button {
 .reveal-delay-5 { transition-delay: 0.60s; }
 .reveal-left {
   opacity: 0; transform: translateX(-50px) rotate(-1deg);
-  transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1s cubic-bezier(0.16, 1, 0.3, 1), filter 1s cubic-bezier(0.16, 1, 0.3, 1);
-  filter: blur(3px);
+  transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.reveal-left.visible { opacity: 1; transform: translateX(0) rotate(0); filter: blur(0); }
+.reveal-left.visible { opacity: 1; transform: translateX(0) rotate(0); }
 .reveal-right {
   opacity: 0; transform: translateX(50px) rotate(1deg);
-  transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1s cubic-bezier(0.16, 1, 0.3, 1), filter 1s cubic-bezier(0.16, 1, 0.3, 1);
-  filter: blur(3px);
+  transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.reveal-right.visible { opacity: 1; transform: translateX(0) rotate(0); filter: blur(0); }
+.reveal-right.visible { opacity: 1; transform: translateX(0) rotate(0); }
 .reveal-scale {
   opacity: 0; transform: scale(0.9);
-  transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), filter 1s cubic-bezier(0.16, 1, 0.3, 1);
-  filter: blur(6px);
+  transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.reveal-scale.visible { opacity: 1; transform: scale(1); filter: blur(0); }
+.reveal-scale.visible { opacity: 1; transform: scale(1); }
 
 /* ── Text Mask Reveal (words slide up from behind a clip) ── */
 .text-reveal {
@@ -418,7 +414,7 @@ nav button.active {
   width: 580px; height: 580px;
   background: radial-gradient(circle, rgba(59,111,245,0.32) 0%, rgba(59,111,245,0.10) 50%, transparent 70%);
   top: 50%; right: 15%; transform: translateY(-50%);
-  z-index: 1; filter: blur(55px);
+  z-index: 1;
   animation: orbPulse1 9s ease-in-out infinite;
 }
 /* Green accent — upper right of protein */
@@ -426,7 +422,7 @@ nav button.active {
   width: 400px; height: 400px;
   background: radial-gradient(circle, rgba(16,185,129,0.28) 0%, rgba(16,185,129,0.08) 50%, transparent 70%);
   top: 8%; right: 10%;
-  z-index: 1; filter: blur(50px);
+  z-index: 1;
   animation: orbPulse2 12s ease-in-out infinite;
 }
 /* Green-blue blend — lower right */
@@ -434,7 +430,7 @@ nav button.active {
   width: 460px; height: 460px;
   background: radial-gradient(circle, rgba(59,111,245,0.20) 0%, rgba(16,185,129,0.08) 50%, transparent 70%);
   bottom: 5%; right: 8%;
-  z-index: 1; filter: blur(65px);
+  z-index: 1;
   animation: orbPulse3 15s ease-in-out infinite;
 }
 @keyframes orbPulse1 {
@@ -725,6 +721,14 @@ input[type="number"] { color-scheme: dark; }
 }
 .team-avatar.ai { background: linear-gradient(135deg, var(--primary), var(--accent)); }
 .team-avatar.ab { background: linear-gradient(135deg, var(--accent), var(--primary)); }
+.team-avatar.ph { background: linear-gradient(135deg, #8B5CF6, #3B82F6); }
+.team-avatar.ag { background: linear-gradient(135deg, #EC4899, #8B5CF6); }
+.team-photo:not([src]), .team-photo[src=""] {
+  display: none;
+}
+.team-card:has(> img[src=""]), .team-card:has(> img:not([src])) .team-avatar {
+  display: flex;
+}
 .team-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
 .team-role {
   display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 1px;
@@ -1390,7 +1394,7 @@ footer {
       SEQUENCE
       <span id="seqLength" style="font-size:10px;font-weight:600;color:var(--success);background:rgba(16,185,129,0.1);padding:2px 6px;border-radius:4px;display:none"></span>
     </div>
-    <textarea class="seq-input" id="seqInput" placeholder="Select a preset above or paste a sequence..." oninput="updateSeqLength()"></textarea>
+    <textarea class="seq-input" id="seqInput" placeholder="Select a preset above or paste a sequence..." oninput="updateSeqLength();currentBrowsePdbId=null;"></textarea>
 
     <div id="petConditions">
     <div class="section-label" style="margin-top:24px">REACTION CONDITIONS</div>
@@ -1549,40 +1553,150 @@ footer {
 <div id="page-about" class="page">
   <div class="container">
     <div class="about-header">
-      <h2>Meet the Team</h2>
+      <h2>Our Team</h2>
       <p>High school researchers building an AI-powered platform to engineer PET-degrading enzymes for industrial plastic recycling.</p>
     </div>
 
-    <div class="team-grid">
+    <!-- FOUNDERS SECTION -->
+    <div style="margin-bottom: 60px;">
+      <h3 style="font-size: 22px; font-weight: 700; margin-bottom: 30px; text-align: center; color: var(--text-primary);">Founders</h3>
+      <div class="team-grid">
+        <div class="team-card">
+          <img src="images/ayush.png" alt="Ayush Iyer" class="team-photo">
+          <h3>Ayush Iyer</h3>
+          <div class="team-role">FOUNDER</div>
+          <p class="team-bio">High school researcher and developer focused on applying artificial intelligence to solve real-world challenges in biotechnology. As the founder of PET Lab, Ayush built a protein engineering platform using protein language models and machine learning to engineer thermostable PETase enzymes for industrial plastic recycling. His work focuses on bridging computational modeling with environmental applications, reducing the time required for enzyme optimization from years to seconds. Beyond PET Lab, Ayush has led multiple technology projects, including a firefighter tracking system and a youth-focused sports platform, reflecting his passion for building scalable, impact-driven solutions.</p>
+        </div>
+        <div class="team-card">
+          <img src="images/abhinav.jpeg" alt="Abhinav Iyer" class="team-photo">
+          <h3>Abhinav Iyer</h3>
+          <div class="team-role">FOUNDER</div>
+          <p class="team-bio">Computational biology researcher interested in applying advanced modeling techniques to biological systems. As the co-founder of PET Lab, Abhinav contributes a strong foundation in data analysis, scientific modeling, and biological systems understanding to guide enzyme design and validation for PET degradation. He has conducted research in computational chemistry and genomics, including molecular dynamics simulations of protein structures. His work integrates principles from biology, chemistry, and computation, with the goal of developing innovative solutions to environmental challenges through protein engineering.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- MENTORS SECTION -->
+    <div style="margin-bottom: 60px;">
+      <h3 style="font-size: 22px; font-weight: 700; margin-bottom: 30px; text-align: center; color: var(--text-primary);">Mentors</h3>
+      <div class="team-grid">
+        <div class="team-card">
+          <img src="images/IMG_7015.png" alt="Ram Bala" class="team-photo">
+          <h3>Ram Bala</h3>
+          <div class="team-role">MENTOR</div>
+          <p class="team-bio">Ram Bala is an Associate Professor of AI &amp; Analytics at the Leavey School of Business, Santa Clara University. He holds a Ph.D. in Operations Research from UCLA Anderson and a bachelor&apos;s degree in Mechanical Engineering from IIT Bombay. A globally recognized expert in pricing, marketplace design, and supply chain strategy, his work applies optimization, game theory, and machine learning to dynamic markets. He is also the founder of Samvid.ai, where he focuses on advancing AI-driven innovation and autonomous decision-making in organizations.</p>
+        </div>
+        <div class="team-card">
+          <img src="images/leilani.jpg" alt="Leilani Gilpin" class="team-photo">
+          <h3>Leilani Gilpin</h3>
+          <div class="team-role">MENTOR & PROFESSOR</div>
+          <p class="team-bio">Assistant Professor of Computer Science and Engineering at the University of California, Santa Cruz, where she leads the AI Explainability and Accountability (AIEA) Lab. Her research focuses on artificial intelligence, autonomous systems, explainable AI, and methods that enable intelligent machines to understand and explain their decisions. Earned her Ph.D. in Electrical Engineering and Computer Science from MIT, an M.S. in Computational and Mathematical Engineering from Stanford University, and bachelor&apos;s degrees in Computer Science and Mathematics from UC San Diego. Previously a research scientist at Sony AI.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEAD RESEARCHER SECTION -->
+    <div style="margin-bottom: 60px;">
+      <h3 style="font-size: 22px; font-weight: 700; margin-bottom: 30px; text-align: center; color: var(--text-primary);">Lead Researcher</h3>
+      <div class="team-grid">
+        <div class="team-card">
+          <img src="images/PHOTO-2026-08-07-13-07-57.jpg" alt="Rata Radfar" class="team-photo" style="object-fit: contain; object-position: center; background-color: #e8e8e8;">
+          <h3>Rata Radfar</h3>
+          <div class="team-role">LEAD RESEARCHER</div>
+          <p class="team-bio">Aspiring biomedical engineer with deep interest in intelligent systems. Currently an intern at Iran's largest medical engineering company, working on 2 out of 3 main projects to develop next-generation ultrasound technology for early Polycystic Kidney Disease (PKD) detection and advanced echocardiography algorithms for automated anomaly detection and real-time hemodynamic monitoring. Actively working on 3 academic papers on AI agent orchestration. Recently secured mayoral approval to implement Project Symbio Membrane, a decentralized, solar-powered filtration system designed to provide safe drinking water to off-grid communities by tackling heavy metals, salt, and microplastics. Long-term goal: improving technology to solve major biomedical and biochemical challenges.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESEARCHERS SECTION -->
+    <div style="margin-bottom: 60px;">
+      <h3 style="font-size: 22px; font-weight: 700; margin-bottom: 30px; text-align: center; color: var(--text-primary);">Researchers</h3>
+      <div class="team-grid">
+        <div class="team-card">
+          <img src="images/preetam.png" alt="Preetam Hegde" class="team-photo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+          <div class="team-avatar ph" style="display:none">PH</div>
+          <h3>Preetam Hegde</h3>
+          <div class="team-role">RESEARCHER</div>
+          <p class="team-bio">Based in the Bay Area with experience in AI research, engineering, robotics, and software development. Research background includes ML and wearable sensing, with presentations at conferences and projects ranging from drone systems to LLM benchmarks. Serves as captain of an FTC team and mentors younger FIRST students, helping grow STEM opportunities in the community and internationally. Passionate about designing, building, and programming systems that create positive impact. In free time, enjoys exploring new technologies, playing video games, working on engineering projects, 3D design, and hanging out with friends.</p>
+        </div>
       <div class="team-card">
-        <img src="images/ayush.png" alt="Ayush Iyer" class="team-photo">
-        <h3>Ayush Iyer</h3>
-        <div class="team-role">CO-FOUNDER</div>
-        <p class="team-bio">High school researcher and developer focused on applying artificial intelligence to solve real-world challenges in biotechnology. As the founder of PET Lab, Ayush built a protein engineering platform using protein language models and machine learning to engineer thermostable PETase enzymes for industrial plastic recycling. His work focuses on bridging computational modeling with environmental applications, reducing the time required for enzyme optimization from years to seconds. Beyond PET Lab, Ayush has led multiple technology projects, including a firefighter tracking system and a youth-focused sports platform, reflecting his passion for building scalable, impact-driven solutions.</p>
+        <img src="images/sanjeet.jpg" alt="Sanjeet Jayaseelan" class="team-photo">
+        <h3>Sanjeet Jayaseelan</h3>
+        <div class="team-role">RESEARCHER</div>
+        <p class="team-bio">Student researcher and journalist interested in computational biology, healthcare, and large language model research. Student research intern with the University of Pennsylvania, working on medical research reports and synthesizing clinical information across healthcare topics. Also contributes to research at the VA Palo Alto Health Care System, supporting work on virtual reality, simulation-based interventions, and brain activity after post-traumatic stress. Exploring how data, biology, and AI can support meaningful research.</p>
       </div>
       <div class="team-card">
-        <img src="images/abhinav.jpeg" alt="Abhinav Iyer" class="team-photo">
-        <h3>Abhinav Iyer</h3>
-        <div class="team-role">CO-FOUNDER</div>
-        <p class="team-bio">Computational biology researcher interested in applying advanced modeling techniques to biological systems. As the co-founder of PET Lab, Abhinav contributes a strong foundation in data analysis, scientific modeling, and biological systems understanding to guide enzyme design and validation for PET degradation. He has conducted research in computational chemistry and genomics, including molecular dynamics simulations of protein structures. His work integrates principles from biology, chemistry, and computation, with the goal of developing innovative solutions to environmental challenges through protein engineering.</p>
+        <img src="images/vasudha.jpg" alt="Vasudha Goswami" class="team-photo">
+        <h3>Vasudha Goswami</h3>
+        <div class="team-role">RESEARCHER</div>
+        <p class="team-bio">Biotechnology graduate from GLA University Mathura, India, with strong interests in molecular biology, microbiology, bioinformatics, and healthcare research. Gained hands-on experience through internships at the Stanley Browne Research Laboratory and NITI Aayog, working on clinical sample processing, DNA and RNA extraction, antimicrobial resistance, and biosensors. Passionate about scientific innovation and how biotechnology can solve real-world healthcare challenges. Committed to building a career in research, biotechnology, scientific writing, or healthcare innovation.</p>
       </div>
       <div class="team-card">
-        <img src="images/IMG_7015.png" alt="Ram Bala" class="team-photo">
-        <h3>Ram Bala</h3>
-        <div class="team-role">MENTOR</div>
-        <p class="team-bio">Ram Bala is an Associate Professor of AI &amp; Analytics at the Leavey School of Business, Santa Clara University. He holds a Ph.D. in Operations Research from UCLA Anderson and a bachelor&apos;s degree in Mechanical Engineering from IIT Bombay. A globally recognized expert in pricing, marketplace design, and supply chain strategy, his work applies optimization, game theory, and machine learning to dynamic markets. He is also the founder of Samvid.ai, where he focuses on advancing AI-driven innovation and autonomous decision-making in organizations.</p>
+        <img src="images/tisha.jpg" alt="Tisha Chatterjee" class="team-photo">
+        <h3>Tisha Chatterjee</h3>
+        <div class="team-role">RESEARCHER</div>
+        <p class="team-bio">Biomedical Engineering undergraduate with research interests in artificial intelligence for healthcare, computational biology, neurotechnology, and brain-computer interfaces. Founder of Handheld for PCOS and active contributor to MIT Critical Data, Stanford School of Medicine-backed UCSF projects, and IEEE AP-MTTS Summer Research Program at IIT Kharagpur. Work focuses on developing AI-driven healthcare solutions including medical imaging, bioinformatics, and embedded biomedical systems, bridging engineering, medicine, and data science.</p>
+      </div>
+      <div class="team-card">
+        <img src="images/tapasvi.png" alt="Tapasvi Reddy Marreddi" class="team-photo">
+        <h3>Tapasvi Reddy Marreddi</h3>
+        <div class="team-role">RESEARCHER</div>
+        <p class="team-bio">Student researcher with strong interests in artificial intelligence, machine learning, autonomous systems, computer vision, and intelligent software. Research interests include intelligent agents, optimization, collaborative autonomous systems, and applying AI to scientific and engineering problems. Experience in software engineering and web development, building responsive applications and AI-powered tools. California SkillsUSA Gold Medalist in Web Design &amp; Development and national Top 10 finalist. Passionate about teamwork, perseverance, and developing technology with meaningful real-world impact.</p>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar ag">AG</div>
+        <h3>Aryan Goel</h3>
+        <div class="team-role">RESEARCHER</div>
+        <p class="team-bio">Student researcher interested in the implications of AI in the biology space. Fascinated by low-level computing, distributed systems, and compilers. Previously conducted research on photonics technology as a promising alternative to electron-based technology. Excited to combine interests in AI and biology at PET Lab to contribute meaningful research at the intersection of these fields.</p>
+      </div>
+      <div class="team-card">
+        <img src="images/siqi.jpg" alt="Siqi Tan" class="team-photo">
+        <h3>Siqi Tan</h3>
+        <div class="team-role">RESEARCHER</div>
+        <p class="team-bio">High school student from Greater Toronto Area, Canada, with passion for biology and technology. Began conducting research at age 12 in cancer biology, topological data analysis, synthetic biology, biomaterials, and biomedical engineering. Recognized nationally and internationally with Canada-Wide Science Fair medal and Team Canada representative at 2026 Regeneron ISEF. Active STEM leader, volunteer, student-athlete, and nonprofit organizer passionate about making research accessible and developing innovations that improve lives.</p>
+      </div>
+      <div class="team-card">
+        <img src="images/katelyn.png" alt="Katelyn Thilak" class="team-photo">
+        <h3>Katelyn Thilak</h3>
+        <div class="team-role">RESEARCHER</div>
+        <p class="team-bio">High school student with strong interests in biotechnology, synthetic biology, artificial intelligence, and computational biology. Current research focuses on designing synthetic genetic circuits and viral vector-based gene therapies for chronic diseases. Work explores programmable genetic systems that detect disease-specific signals and trigger therapeutic responses only when needed, with applications in cancer treatment and precision medicine. Developed skills in literature review, experimental design, and scientific communication.</p>
+      </div>
+      <div class="team-card">
+        <img src="images/luke.jpeg" alt="Luke Siravakian" class="team-photo">
+        <h3>Luke Siravakian</h3>
+        <div class="team-role">RESEARCHER</div>
+        <p class="team-bio">Founder of Nishan, a student research institute focused on expanding access to scientific mentorship, collaboration, and publication opportunities. Work centers on building systems that connect students with research communities and translate early scientific ideas into collaborative projects. Contributed to global health initiatives as Quantitative Research and Strategy Analyst with cardiovascular technology nonprofit. Participating in clinical psychology research with Harvard Medical School-affiliated researchers. President of Cornell Biotech XYZ.</p>
+      </div>
+      <div class="team-card">
+        <img src="images/sargun.jpeg" alt="Sargun Singh" class="team-photo">
+        <h3>Sargun Singh</h3>
+        <div class="team-role">RESEARCHER</div>
+        <p class="team-bio">Fourth-year bioengineering student at Santa Clara University with research and work experience in AI-driven medical imaging and device development. Published work on retinal disease classification using Vision Transformer models presented at SPIE Photonics West 2026. Currently interns at Bezalel Innovations supporting medical device design and validation. Excited to apply machine learning background to protein engineering and condition-aware enzyme development.</p>
+      </div>
+      <div class="team-card">
+        <img src="images/aryan_kohli.jpeg" alt="Aryan Kohli" class="team-photo">
+        <h3>Aryan Kohli</h3>
+        <div class="team-role">RESEARCHER</div>
+        <p class="team-bio">High school student drawn to the usages of biology and computation, and how small changes at the molecular level shape real-world function. Interests in protein engineering and bioengineering, connecting computational tools to hands-on science. Experience in wet-lab research and collaborative research teams with skills ranging from lab techniques to CAD design and data analysis. Mentors younger students in STEM and contributes to robotics team development.</p>
+      </div>
+      <div class="team-card">
+        <img src="images/anika.jpg" alt="Anika Singh" class="team-photo">
+        <h3>Anika Singh</h3>
+        <div class="team-role">RESEARCHER</div>
+        <p class="team-bio">Rising senior IB student at Glenforest Secondary School in Toronto, Canada, passionate about AI, computational biology, and solving meaningful problems with technology. Researcher with MIT CSAIL in computational biology lab, developing embedding-based knowledge systems for biomedical ontologies. STEM leader organizing HerHacks, a beginner-friendly hackathon making technology accessible for girls. Outside technology, enjoys competitive badminton, baking, nature walks, and reading, always excited to explore ideas at science-technology-creativity intersection.</p>
+      </div>
+      <div class="team-card">
+        <img src="images/samay_komarlu.png" alt="Samay Komarlu" class="team-photo">
+        <h3>Samay Komarlu</h3>
+        <div class="team-role">RESEARCHER</div>
+        <p class="team-bio">High school student at Dougherty Valley High School (DVHS) with focused interest in computational biology, bioinformatics, and protein engineering/chemistry. Self-taught in Python, applying it to model biological systems and explore programming topics to extend research capabilities. Active member of DVHS Model United Nations club and Science Olympiad team, exploring ways to demonstrate interest in chemistry-influenced fields while building research and argumentative skills. Boy Scout of Troop 621 working toward Eagle Scout rank. Outside academics, enjoys playing video games, hanging with friends, and watching NileRed videos.</p>
+      </div>
       </div>
     </div>
 
     <div class="about-mission">
       <h3>Our Mission</h3>
       <p>PET Lab is an AI-powered enzyme engineering platform focused on the global plastic waste crisis. We design thermostable PETase variants for industrial-scale recycling &mdash; optimizing catalytic activity, thermal stability, and PET binding at the temperatures real recycling plants operate at. By fusing protein language models with gradient-boosted mutation scoring, we compress years of wet-lab iteration into seconds of compute.</p>
-      <div class="about-highlights">
-        <div class="about-highlight"><div class="val">80%</div><div class="lbl">ML Accuracy</div></div>
-        <div class="about-highlight"><div class="val">9,000+</div><div class="lbl">Training Mutations</div></div>
-        <div class="about-highlight"><div class="val">6,000+</div><div class="lbl">Variants Screened</div></div>
-        <div class="about-highlight"><div class="val">107</div><div class="lbl">Enzyme Structures</div></div>
-      </div>
     </div>
 
   </div>
@@ -1604,6 +1718,17 @@ footer {
 const API = window.location.hostname === 'localhost'
   ? 'http://localhost:8000'
   : 'https://pet-lab-api-9518756006.us-central1.run.app';
+
+// Simple hash function for sequence caching
+function md5(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash).toString(16);
+}
 
 const PRESETS = [
   { name: 'IsPETase', organism: 'I. sakaiensis', pdbId: '5XJH', uniprotId: 'A0A0K8P6T7', gene: 'PETase',
@@ -1690,6 +1815,7 @@ let selectedFamily = 'All';
 let selectedDiseaseFamily = 'All';
 let selectedPreset = null;
 let currentSequence = null;
+let currentBrowsePdbId = null;  // PDB ID from Browse Proteins selection
 let currentResult = null;
 let chartInstance = null;
 
@@ -2365,6 +2491,7 @@ function selectDiseasePreset(name) {
   const p = DISEASE_PRESETS.find(x => x.name === name);
   if (!p) return;
   selectedPreset = name;
+  currentBrowsePdbId = null;
   document.getElementById('seqInput').value = p.sequence;
   updateSeqLength();
   renderDiseasePresets();
@@ -2446,14 +2573,32 @@ async function loadPDB() {
   document.getElementById('pdbLoading').querySelector('span').textContent = 'Fetching PET-degrading enzymes live from RCSB Protein Data Bank...';
   document.getElementById('pdbGrid').innerHTML = '';
   try {
-    const r = await fetch(API + '/pdb/search');
+    console.log('[PDB] Fetching from:', API + '/pdb/search');
+    const r = await fetch(API + '/pdb/search', {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' },
+      mode: 'cors',
+      cache: 'no-cache'
+    });
+    console.log('[PDB] Response status:', r.status, 'Content-Type:', r.headers.get('content-type'));
     if (!r.ok) throw new Error('Backend returned ' + r.status);
-    pdbData = await r.json();
+
+    // Read response text first to debug
+    const text = await r.text();
+    console.log('[PDB] Response text length:', text.length, 'First 100 chars:', text.substring(0, 100));
+
+    if (!text || text.length === 0) {
+      throw new Error('Empty response from server');
+    }
+
+    pdbData = JSON.parse(text);
+    console.log('[PDB] Loaded', pdbData.length, 'proteins');
     document.getElementById('pdbCount').textContent = pdbData.length + ' live structures';
     buildFamilyChips();
     renderPDB();
   } catch (e) {
-    document.getElementById('pdbGrid').innerHTML = '<div class="loading-center" style="grid-column:1/-1"><p>Could not reach RCSB via backend. Ensure the API server is running at ' + API + '.</p></div>';
+    console.error('[PDB] Error:', e);
+    document.getElementById('pdbGrid').innerHTML = '<div class="loading-center" style="grid-column:1/-1"><p>❌ Could not load database.<br/><strong>Error:</strong> ' + e.message + '<br/><small>Make sure backend is running at ' + API + '</small></p></div>';
   }
   document.getElementById('pdbLoading').style.display = 'none';
 }
@@ -2556,20 +2701,93 @@ function showPDBDetail(d) {
       <div class="model-stat"><div class="val">${d.sequence.length}</div><div class="lbl">Amino Acids</div></div>
       ${d.resolution ? `<div class="model-stat"><div class="val">${d.resolution.toFixed(2)} \u00C5</div><div class="lbl">Resolution</div></div>` : ''}
     </div>
+    <div class="section-label">3D STRUCTURE</div>
+    <div id="viewer3d" style="width:100%;height:460px;background:#0f1023;position:relative;margin-bottom:20px;border:1px solid var(--border);border-radius:12px;overflow:hidden"></div>
     <div class="section-label">PROTEIN SEQUENCE</div>
     <div class="seq-display">${d.sequence}</div>
-    <button class="btn-primary" onclick="closeModal();selectSequenceForOptimize('${d.sequence}')">Optimize This Enzyme</button>
+    <button class="btn-primary" onclick="closeModal();selectSequenceForOptimize('${d.sequence}','${d.pdb_id}')">Optimize This Enzyme</button>
   `;
   document.getElementById('modal').classList.add('show');
+
+  // Wait for modal animation and layout, then initialize viewer
+  setTimeout(() => {
+    initiate3DViewer(d.pdb_id, d.sequence);
+  }, 400); // Modal animation is 300ms, add buffer
 }
 
-function selectSequenceForOptimize(seq) {
+
+function initiate3DViewer(pdbId, inputSequence = '') {
+  const element = document.getElementById('viewer3d');
+  if (!element) return;
+
+  try {
+    // Force proper dimensions
+    element.style.width = '100%';
+    element.style.height = '460px';
+    element.style.display = 'block';
+
+    // Verify container has valid dimensions
+    const rect = element.getBoundingClientRect();
+    console.log(`[3D Viewer] Init - Container: ${rect.width}x${rect.height}px, PDB: ${pdbId}`);
+
+    if (rect.width < 100 || rect.height < 100) {
+      console.warn('[3D Viewer] Container too small, retrying in 200ms...');
+      setTimeout(() => initiate3DViewer(pdbId, inputSequence), 200);
+      return;
+    }
+
+    // Remove old viewer if exists
+    if (element._viewer) {
+      try { element._viewer.clear(); } catch(e) {}
+      element._viewer = null;
+    }
+
+    // Clear element content
+    element.innerHTML = '';
+
+    // Create viewer
+    const viewer = $3Dmol.createViewer(element, {
+      backgroundColor: 'rgba(8, 8, 15, 0.95)',
+      antialias: true
+    });
+
+    console.log(`[3D Viewer] Downloading PDB: ${pdbId}`);
+
+    // Download and display
+    $3Dmol.download('pdb:' + pdbId, viewer, {}, function() {
+      console.log(`[3D Viewer] PDB loaded, styling...`);
+
+      // Apply spectrum coloring
+      viewer.setStyle({}, { cartoon: { color: 'spectrum', thickness: 0.85, opacity: 0.95 } });
+
+      // Critical: ensure proper sizing and centering
+      viewer.resize();
+      console.log(`[3D Viewer] Resized viewer`);
+
+      viewer.zoomTo();
+      console.log(`[3D Viewer] Zoomed to fit`);
+
+      viewer.render();
+      console.log(`[3D Viewer] Rendered - centering complete`);
+    });
+
+    element._viewer = viewer;
+    element._pdbId = pdbId;
+    element._inputSequence = inputSequence;
+  } catch (e) {
+    console.error('[3D Viewer] Error:', e);
+  }
+}
+
+
+function selectSequenceForOptimize(seq, pdbId) {
   // Strip non-standard residues before loading into the optimizer
   const validAA = new Set('ACDEFGHIKLMNPQRSTVWY');
   const cleaned = seq.toUpperCase().split('').filter(c => validAA.has(c)).join('');
   document.getElementById('seqInput').value = cleaned;
   updateSeqLength();
   selectedPreset = null;
+  currentBrowsePdbId = pdbId || null;
   renderPresets();
   showPage('optimize');
 }
@@ -2591,6 +2809,7 @@ function selectPreset(name) {
   const p = PRESETS.find(x => x.name === name);
   if (!p) return;
   selectedPreset = name;
+  currentBrowsePdbId = null;
   document.getElementById('seqInput').value = p.sequence;
   updateSeqLength();
   renderPresets();
@@ -2740,6 +2959,7 @@ async function runOptimization() {
 
   try {
     optimizing = true;
+    console.log('[Optimize] Sending request to:', API + '/optimize');
     const r = await fetch(API + '/optimize', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -2753,9 +2973,12 @@ async function runOptimization() {
         ca_conc_mm: parseFloat(document.getElementById('caNum').value) || 0.0,
         contamination_scenario: document.getElementById('contamScenario').value,
       }),
+      mode: 'cors'
     });
+    console.log('[Optimize] Response status:', r.status);
     if (!r.ok) throw new Error('Server error: ' + r.status);
     currentResult = await r.json();
+    console.log('[Optimize] Success - got', currentResult.candidates?.length, 'candidates');
 
     // Attach environmental simulation parameters to the result
     currentResult._env = {
@@ -2766,11 +2989,36 @@ async function runOptimization() {
       contamination_scenario: document.getElementById('contamScenario').value,
     };
 
+    // Real PET-degradation prediction (Erickson 2022-trained model) for the
+    // best candidate — replaces the thermal-Gaussian "efficiency".
+    currentResult._degradation = null;
+    try {
+      const best = currentResult.candidates && currentResult.candidates[0];
+      if (best && best.sequence) {
+        const sr = await fetch(API + '/simulate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sequence: best.sequence,
+            temperature: currentResult._env.temperature,
+            ph: currentResult._env.ph,
+            substrate: 'amorphous_film',
+            include_profile: true,
+          }),
+        });
+        if (sr.ok) currentResult._degradation = await sr.json();
+      }
+    } catch (e) { /* degradation panel is optional; fall back silently */ }
+
     renderResults();
     showPage('results');
   } catch (e) {
-    errEl.textContent = 'Could not reach ML server. Is the backend running?';
+    console.error('[Optimize] Error:', e);
+    errEl.textContent = `❌ Backend error: ${e.message}. Ensure backend is running at ${API}`;
     errEl.style.display = 'flex';
+    errEl.style.background = 'rgba(214,64,69,0.06)';
+    errEl.style.borderColor = 'rgba(214,64,69,0.2)';
+    errEl.style.color = 'var(--error)';
   } finally {
     optimizing = false;
     btn.disabled = false;
@@ -2848,6 +3096,64 @@ function computeEnvironmentalFactors(env, candidate) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// Real PET-degradation panel (Erickson 2022-trained model, /simulate)
+// ═══════════════════════════════════════════════════════════
+function renderDegradationPanel(deg, env) {
+  if (!deg || !deg.profile || !deg.profile.length) {
+    return `<div class="card" style="margin-bottom:16px">
+      <div class="card-header">Predicted PET Degradation</div>
+      <p style="font-size:12.5px;color:var(--text-tertiary);line-height:1.5">
+        Real degradation prediction unavailable (model/endpoint offline). The
+        "temp match" figure above is a thermal-fit estimate only, not a measured
+        degradation rate.</p>
+    </div>`;
+  }
+  const prof = deg.profile;
+  const pct = p => (p.percent_depolymerized != null ? p.percent_depolymerized : 0);
+  const maxP = Math.max(...prof.map(pct), 1e-6);
+  const peak = prof.reduce((a, b) => pct(b) > pct(a) ? b : a, prof[0]);
+  const mi = deg.model_info || {};
+  const r2k = mi.r2_known_enzymes != null ? (mi.r2_known_enzymes).toFixed(2) : '—';
+  const r2u = mi.r2_unseen_enzymes != null ? (mi.r2_unseen_enzymes).toFixed(2) : '—';
+  const fmtPct = v => v >= 1 ? v.toFixed(1) : v.toPrecision(2);
+
+  const bars = prof.map(p => {
+    const h = Math.max(2, (pct(p) / maxP) * 100);
+    const isSel = Math.abs(p.temp_C - env.temperature) < 5;
+    const isPeak = p.temp_C === peak.temp_C;
+    const col = isSel ? 'var(--accent)' : isPeak ? 'var(--success)' : 'var(--border)';
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+      <div style="font-size:9px;color:var(--text-tertiary)">${fmtPct(pct(p))}%</div>
+      <div style="width:60%;height:90px;display:flex;align-items:flex-end">
+        <div style="width:100%;height:${h}%;background:${col};border-radius:3px 3px 0 0"></div>
+      </div>
+      <div style="font-size:10px;color:${isSel ? 'var(--accent)' : 'var(--text-tertiary)'};font-weight:${isSel ? 700 : 400}">${p.temp_C}&deg;</div>
+    </div>`;
+  }).join('');
+
+  return `<div class="card" style="margin-bottom:16px">
+    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
+      <span>Predicted PET Degradation &mdash; Real Model</span>
+      <span style="font-size:10px;color:var(--text-tertiary);font-weight:400">Erickson 2022 &middot; ${mi.n_rows || ''} measurements</span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:4px">
+      <div style="font-size:30px;font-weight:800;color:var(--accent)">${fmtPct(deg.percent_depolymerized)}%</div>
+      <div style="font-size:12px;color:var(--text-secondary)">of PET depolymerized at ${env.temperature}&deg;C, pH ${env.ph} &mdash; ${deg.products_mg_per_L.toFixed(1)} mg/L products</div>
+    </div>
+    <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:14px">
+      Fraction of PET broken into monomers (TPA+MHET+BHET) in 96 h at 2.9% loading.
+      Predicted optimum: <strong style="color:var(--success)">${peak.temp_C}&deg;C</strong> (${fmtPct(pct(peak))}%).
+    </div>
+    <div style="display:flex;gap:6px;align-items:flex-end;padding:8px 0;border-top:1px solid var(--border)">${bars}</div>
+    <div style="font-size:10px;color:var(--text-tertiary);margin-top:10px;line-height:1.5">
+      % PET depolymerized vs temperature (amorphous PET film, low-dose 96 h screen).
+      Scale is small by design: the best enzyme here (LCC-ICCG) reaches only ~2%, and most register 0%.
+      Model R&sup2; = ${r2k} on known enzymes / ${r2u} on novel sequences &mdash; novel-sequence values are indicative only and tend to read low.
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
 // Results Rendering
 // ═══════════════════════════════════════════════════════════
 function renderResults() {
@@ -2919,12 +3225,14 @@ function renderResults() {
         <div style="width:1px;background:var(--border);align-self:stretch"></div>
         <div class="impact-stat"><div class="val">${perfSecVal}</div><div class="lbl">${perfSecLabel}</div></div>
         <div style="width:1px;background:var(--border);align-self:stretch"></div>
-        <div class="impact-stat"><div class="val">${(factors.combined * 100).toFixed(0)}%</div><div class="lbl">${isDiseaseMode ? 'fold stability' : 'efficiency'}</div></div>
+        <div class="impact-stat" title="How close your reaction temperature is to the enzyme's predicted optimum (thermal-fit only — not a degradation measure)."><div class="val">${(factors.combined * 100).toFixed(0)}%</div><div class="lbl">${isDiseaseMode ? 'fold stability' : 'temp match'}</div></div>
         <div style="width:1px;background:var(--border);align-self:stretch"></div>
         <div class="impact-stat"><div class="val">${best?.mutations.length || 0}</div><div class="lbl">mutations</div></div>
       </div>
       <p style="font-size:12.5px;color:var(--text-secondary);margin-top:12px;line-height:1.4">${perfDesc}</p>
     </div>
+
+    ${!isDiseaseMode ? renderDegradationPanel(R._degradation, env) : ''}
 
     <!-- Environmental / Stability Factors Card -->
     <div class="card">
@@ -3530,9 +3838,9 @@ function show3DViewer(candidateOrMutations) {
     </div>
 
     <!-- 3D Viewer -->
-    <div style="position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--border)">
-      <div id="viewer3d" style="width:100%;height:460px;background:#0f1023;position:relative;">
-        <div id="viewer3dLoading" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:rgba(255,255,255,0.7);font-size:13px;gap:8px;">
+    <div style="position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--border);width:100%">
+      <div id="viewer3d" style="width:100%;height:460px;background:#0f1023;position:relative;display:block;overflow:hidden">
+        <div id="viewer3dLoading" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:rgba(255,255,255,0.7);font-size:13px;gap:8px;z-index:1">
           <div style="width:28px;height:28px;border:3px solid rgba(255,255,255,0.15);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite"></div>
           Resolving best available structure from all databases...
         </div>
@@ -3564,17 +3872,16 @@ function show3DViewer(candidateOrMutations) {
       </div>
 
       <!-- pLDDT confidence legend -->
-      <div id="viewer3dLegend" style="display:none;position:absolute;top:12px;left:12px;background:rgba(10,10,20,0.88);backdrop-filter:blur(10px);border-radius:8px;padding:10px 14px;font-size:11px;color:rgba(255,255,255,0.9);line-height:1.8;pointer-events:none;min-width:170px">
+      <div id="viewer3dLegend" style="display:none;position:absolute;bottom:12px;right:12px;background:rgba(10,10,20,0.88);backdrop-filter:blur(10px);border-radius:8px;padding:10px 14px;font-size:11px;color:rgba(255,255,255,0.9);line-height:1.8;pointer-events:none;min-width:170px">
         <div id="legendTitle" style="font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:rgba(255,255,255,0.45);margin-bottom:5px">Model Confidence</div>
         <div id="legendPlddt" style="display:block">
-          <div style="display:flex;align-items:center;gap:7px"><div style="width:12px;height:12px;border-radius:3px;background:#0053D6;flex-shrink:0"></div><span>Very high &nbsp;<span style="color:rgba(255,255,255,0.45)">(pLDDT &gt; 90)</span></span></div>
-          <div style="display:flex;align-items:center;gap:7px"><div style="width:12px;height:12px;border-radius:3px;background:#65CBF3;flex-shrink:0"></div><span>Confident &nbsp;<span style="color:rgba(255,255,255,0.45)">(70-90)</span></span></div>
-          <div style="display:flex;align-items:center;gap:7px"><div style="width:12px;height:12px;border-radius:3px;background:#FFDB13;flex-shrink:0"></div><span>Low &nbsp;<span style="color:rgba(255,255,255,0.45)">(50-70)</span></span></div>
-          <div style="display:flex;align-items:center;gap:7px"><div style="width:12px;height:12px;border-radius:3px;background:#FF7D45;flex-shrink:0"></div><span>Very low &nbsp;<span style="color:rgba(255,255,255,0.45)">(&lt; 50)</span></span></div>
-          <div style="margin-top:5px;padding-top:5px;border-top:1px solid rgba(255,255,255,0.1)">
-            <div style="display:flex;align-items:center;gap:7px"><div style="width:12px;height:12px;border-radius:50%;background:#10B981;flex-shrink:0"></div><span>Mutation (beneficial)</span></div>
-            <div style="display:flex;align-items:center;gap:7px"><div style="width:12px;height:12px;border-radius:50%;background:#F59E0B;flex-shrink:0"></div><span>Mutation (uncertain)</span></div>
-            <div style="display:flex;align-items:center;gap:7px"><div style="width:12px;height:12px;border-radius:50%;background:#EF4444;flex-shrink:0"></div><span>Mutation (predicted harmful)</span></div>
+          <div style="margin-bottom:8px;font-size:10px;color:rgba(255,255,255,0.6);line-height:1.4"><strong>Mutation Confidence (ΔΔG):</strong></div>
+          <div style="display:flex;align-items:center;gap:7px"><div style="width:12px;height:12px;border-radius:50%;background:#10B981;flex-shrink:0"></div><span>Stabilizing &nbsp;<span style="color:rgba(255,255,255,0.45)">(ΔΔG &lt; -0.5)</span></span></div>
+          <div style="display:flex;align-items:center;gap:7px"><div style="width:12px;height:12px;border-radius:50%;background:#F59E0B;flex-shrink:0"></div><span>Neutral &nbsp;<span style="color:rgba(255,255,255,0.45)">(-0.5 to 0.5)</span></span></div>
+          <div style="display:flex;align-items:center;gap:7px"><div style="width:12px;height:12px;border-radius:50%;background:#EF4444;flex-shrink:0"></div><span>Destabilizing &nbsp;<span style="color:rgba(255,255,255,0.45)">(ΔΔG &gt; 0.5)</span></span></div>
+          <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.1)">
+            <div style="font-size:10px;color:rgba(255,255,255,0.6)"><strong>Structure Source:</strong></div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:4px">Wildtype structure from database with mutation sidechains applied</div>
           </div>
         </div>
         <div id="legendSpectrum" style="display:none">
@@ -3689,8 +3996,9 @@ function show3DViewer(candidateOrMutations) {
   // Fetch and render structure
   setTimeout(() => {
     // Build the resolve request with ALL available protein metadata
+    // Load wild-type structure and score mutations with ΔΔG
     const resolveBody = {
-      pdb_id:      preset ? (preset.pdbId || null) : null,
+      pdb_id:      preset ? (preset.pdbId || null) : (currentBrowsePdbId || null),
       uniprot_id:  preset ? (preset.uniprotId || null) : null,
       gene:        preset ? (preset.gene || null) : null,
       name:        preset ? preset.name : null,
@@ -3715,7 +4023,27 @@ function show3DViewer(candidateOrMutations) {
       window._3dResolution       = r.headers.get('X-Resolution')       || null;
       window._3dPlddtAvg         = r.headers.get('X-PLDDT-Avg')        || null;
       window._3dMethod           = r.headers.get('X-Method')           || '';
-      return r.text();
+
+      // Store PDB data and score mutations
+      const pdbData = r.text();
+
+      // Score mutations if we have any
+      if (mutList.length > 0) {
+        console.log('[3D Viewer] Scoring mutations with ΔΔG...');
+        fetch(API + '/mutations/score', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pdb_data: pdbData,
+            mutations: mutList
+          })
+        }).then(r => r.json()).then(scores => {
+          window._3dMutationScores = scores;
+          console.log('[3D Viewer] Mutation scores:', scores);
+        }).catch(err => console.warn('[3D Viewer] Could not score mutations:', err));
+      }
+
+      return pdbData;
     });
 
     structurePromise
@@ -3737,12 +4065,24 @@ function show3DViewer(candidateOrMutations) {
 
         const badge = document.getElementById('structureSourceBadge');
         if (badge) {
-          if (srcType === 'alphafold') {
+          if (srcType === 'alphafold_server') {
+            badge.style.background = 'rgba(59,111,245,0.12)';
+            badge.style.color      = '#5B8CFF';
+            badge.style.border     = '1px solid rgba(59,111,245,0.25)';
+            const plddtStr = plddt ? ` · avg pLDDT ${plddt}` : '';
+            badge.textContent = `AlphaFold Server (predicted${plddtStr})`;
+          } else if (srcType === 'alphafold') {
             badge.style.background = 'rgba(59,111,245,0.12)';
             badge.style.color      = '#5B8CFF';
             badge.style.border     = '1px solid rgba(59,111,245,0.25)';
             const plddtStr = plddt ? ` · avg pLDDT ${plddt}` : '';
             badge.textContent = `AlphaFold DB (predicted${plddtStr})`;
+          } else if (srcType === 'esmfold') {
+            badge.style.background = 'rgba(139,92,246,0.12)';
+            badge.style.color      = '#A78BFA';
+            badge.style.border     = '1px solid rgba(139,92,246,0.25)';
+            const plddtStr = plddt ? ` · avg pLDDT ${plddt}` : '';
+            badge.textContent = `ESMFold (de-novo predicted${plddtStr})`;
           } else if (srcType === 'rcsb') {
             badge.style.background = 'rgba(16,185,129,0.12)';
             badge.style.color      = '#10B981';
@@ -3763,6 +4103,7 @@ function show3DViewer(candidateOrMutations) {
         const legendTitle = document.getElementById('legendTitle');
         if (legendTitle) {
           if (srcType === 'alphafold') legendTitle.textContent = 'AlphaFold Confidence';
+          else if (srcType === 'esmfold') legendTitle.textContent = 'ESMFold Confidence';
           else if (srcType === 'rcsb') legendTitle.textContent = `RCSB ${pdbIdStr} Structure`;
           else legendTitle.textContent = 'Structure Confidence';
         }
@@ -3787,7 +4128,8 @@ function show3DViewer(candidateOrMutations) {
         ]);
         const plddtNum = plddt ? parseFloat(plddt) : null;
         const nameKey  = (enzymeName || '').replace(/\s+/g,'');
-        const isDisordered = srcType === 'alphafold' && (
+        const isPredicted = srcType === 'alphafold' || srcType === 'esmfold';
+        const isDisordered = isPredicted && (
           (plddtNum !== null && plddtNum < 65) ||
           _IDR_PROTEINS.has(enzymeName) ||
           _IDR_PROTEINS.has(nameKey)
@@ -3825,7 +4167,9 @@ function show3DViewer(candidateOrMutations) {
         if (noteEl && srcType) {
           const baseDesc = isExp
             ? `RCSB PDB ${pdbIdStr}${res ? ' (' + parseFloat(res).toFixed(1) + 'Å ' + method.toLowerCase() + ')' : ''}`
-            : `AlphaFold DB predicted structure${uniStr ? ' (UniProt ' + uniStr + ')' : ''}`;
+            : (srcType === 'esmfold'
+                ? `ESMFold de-novo predicted structure${plddt ? ' (avg pLDDT ' + plddt + ')' : ''}`
+                : `AlphaFold DB predicted structure${uniStr ? ' (UniProt ' + uniStr + ')' : ''}`);
           noteEl.innerHTML = `Base structure: <strong>${baseDesc}</strong>. Mutated sidechain atoms rebuilt using NERF geometry (Dunbrack 2010 modal rotamers). Backbone unchanged from source structure &mdash; only sidechain atoms differ. Auto-zoomed to mutation sites; click <em>Reset</em> for full view.`;
         }
 
@@ -3857,14 +4201,14 @@ function show3DViewer(candidateOrMutations) {
           // Show mutation metadata if applicable
           const mutMeta = window._3dMutations ? window._3dMutations.find(x => x.pos === atom.resi) : null;
           let html = `<b>${atom.resn} ${atom.resi}</b>`;
-          if (window._3dSourceType === 'alphafold') {
+          if (window._3dSourceType === 'alphafold' || window._3dSourceType === 'esmfold') {
             html += ` &nbsp; pLDDT <span style="color:${col};font-weight:700">${b.toFixed(1)}</span>`;
           }
           if (mutMeta) {
             const mm = (window._3dMutMeta || {})[mutMeta.label] || {};
             html += ` &nbsp; <span style="color:#F59E0B">&#x2605; ${mutMeta.label}</span>`;
             if (mm.predicted_ddg != null) html += ` &nbsp; DDG ${mm.predicted_ddg > 0 ? '+' : ''}${mm.predicted_ddg.toFixed(2)}`;
-            if (mm.confidence != null)    html += ` &nbsp; ${(mm.confidence * 100).toFixed(0)}% conf`;
+            if (mm.probability_beneficial != null) html += ` &nbsp; ${(mm.probability_beneficial * 100).toFixed(0)}% beneficial`;
           }
           tip.innerHTML = html;
           tip.style.display = 'block';
@@ -3978,18 +4322,36 @@ function applyViewerStyle(style, tourResi) {
   const inTour  = tourResi !== null && tourResi !== undefined;
 
   function _mutColor(label, isActive) {
-    if (isActive) return '#10B981';
-    const meta = mutMeta[label];
-    if (!meta) return '#E74C3C';
-    if (meta.predicted_beneficial && meta.confidence >= 0.75) return '#10B981';
-    if (meta.predicted_beneficial && meta.confidence >= 0.5)  return '#F59E0B';
-    if (!meta.predicted_beneficial)                           return '#EF4444';
-    return '#E74C3C';
+    // Color by ΔΔG score: green=stabilizing, orange=neutral, red=destabilizing
+    const scores = window._3dMutationScores || {};
+    const mutScores = scores.mutations || [];
+    const mutScore = mutScores.find(m => m.mutation === label);
+
+    if (mutScore) {
+      const ddg = mutScore.ddg;
+      if (ddg < -0.5) return isActive ? '#34D399' : '#10B981';      // Green: stabilizing
+      if (ddg > 0.5) return isActive ? '#F87171' : '#EF4444';        // Red: destabilizing
+      return isActive ? '#FBBF24' : '#F59E0B';                       // Orange: neutral
+    }
+
+    // Fallback to red if no score available
+    return isActive ? '#FF3333' : '#FF0000';
   }
+
   function _mutColor2(label, isActive) {
-    if (isActive) return '#34D399';
-    const c = _mutColor(label, false);
-    return c === '#10B981' ? '#34D399' : c === '#F59E0B' ? '#FCD34D' : '#FF6B6B';
+    // Stick representation with same color scheme
+    const scores = window._3dMutationScores || {};
+    const mutScores = scores.mutations || [];
+    const mutScore = mutScores.find(m => m.mutation === label);
+
+    if (mutScore) {
+      const ddg = mutScore.ddg;
+      if (ddg < -0.5) return isActive ? '#6EE7B7' : '#34D399';      // Green: stabilizing
+      if (ddg > 0.5) return isActive ? '#FECACA' : '#F87171';        // Red: destabilizing
+      return isActive ? '#FCD34D' : '#FBBF24';                       // Orange: neutral
+    }
+
+    return isActive ? '#FF6666' : '#FF3333';
   }
 
   muts.forEach(m => {
@@ -4008,22 +4370,41 @@ function applyViewerStyle(style, tourResi) {
                   color: color, opacity: isActive ? 0.65 : 0.45 });
   });
 
-  // ── Labels (with DDG + confidence when available) ──
+  // ── Labels (with DDG + beneficial probability when available) ──
   function _mutLabel(m) {
     const meta = mutMeta[m.label];
     if (!meta) return m.label;
     const ddgStr  = meta.predicted_ddg  != null ? ` ${meta.predicted_ddg > 0 ? '+' : ''}${meta.predicted_ddg.toFixed(1)}` : '';
-    const confStr = meta.confidence     != null ? ` ${(meta.confidence * 100).toFixed(0)}%` : '';
-    return m.label + ddgStr + confStr;
+    const probStr = meta.probability_beneficial != null ? ` ${(meta.probability_beneficial * 100).toFixed(0)}%` : '';
+    return m.label + ddgStr + probStr;
   }
 
   if (window._3dShowLabels && !inTour) {
     muts.forEach(m => {
-      const meta   = mutMeta[m.label];
-      const isBene = meta && meta.predicted_beneficial;
+      // Color label by ΔΔG score
+      const scores = window._3dMutationScores || {};
+      const mutScores = scores.mutations || [];
+      const mutScore = mutScores.find(ms => ms.mutation === m.label);
+
+      let bg;
       const bgAlpha = 0.88;
-      const bg = isBene ? `rgba(16,185,129,${bgAlpha})` :
-                 (meta && !meta.predicted_beneficial) ? `rgba(239,68,68,${bgAlpha})` : `rgba(200,50,50,${bgAlpha})`;
+      if (mutScore) {
+        const ddg = mutScore.ddg;
+        if (ddg < -0.5) {
+          bg = `rgba(16,185,129,${bgAlpha})`; // Green: stabilizing
+        } else if (ddg > 0.5) {
+          bg = `rgba(239,68,68,${bgAlpha})`; // Red: destabilizing
+        } else {
+          bg = `rgba(245,158,11,${bgAlpha})`; // Orange: neutral
+        }
+      } else {
+        // Fallback to ML prediction
+        const meta   = mutMeta[m.label];
+        const isBene = meta && meta.predicted_beneficial;
+        bg = isBene ? `rgba(16,185,129,${bgAlpha})` :
+             (meta && !meta.predicted_beneficial) ? `rgba(239,68,68,${bgAlpha})` : `rgba(200,50,50,${bgAlpha})`;
+      }
+
       v.addLabel(_mutLabel(m), {
         position:          { resi: m.pos },
         backgroundColor:   bg,
@@ -4853,11 +5234,10 @@ showPage = function(name) {
           heroParticles.style.transform = `translateY(${-y * 0.08}px)`;
           heroParticles.style.opacity = 1 - progress * 0.5;
         }
-        // Hero text: parallax with slight blur
+        // Hero text: parallax
         if (heroContent) {
           heroContent.style.transform = `translateY(${y * 0.12}px)`;
           heroContent.style.opacity = 1 - progress * 0.9;
-          heroContent.style.filter = `blur(${progress * 3}px)`;
         }
         // Scroll hint fades early
         if (heroHint) {
@@ -4974,13 +5354,13 @@ showPage = function(name) {
       const y = window.scrollY;
       if (y > 50) {
         header.style.background = 'rgba(8,8,15,0.85)';
-        header.style.backdropFilter = 'blur(20px) saturate(1.2)';
-        header.style.webkitBackdropFilter = 'blur(20px) saturate(1.2)';
+        header.style.backdropFilter = 'saturate(1.2)';
+        header.style.webkitBackdropFilter = 'saturate(1.2)';
         header.style.borderBottom = '1px solid rgba(59,111,245,0.08)';
       } else {
         header.style.background = 'rgba(8,8,15,0.5)';
-        header.style.backdropFilter = 'blur(8px)';
-        header.style.webkitBackdropFilter = 'blur(8px)';
+        header.style.backdropFilter = '';
+        header.style.webkitBackdropFilter = '';
         header.style.borderBottom = '1px solid transparent';
       }
       ticking = false;
@@ -5294,39 +5674,6 @@ showPage = function(name) {
     });
   }, { threshold: 0.06, rootMargin: '0px 0px -20px 0px' });
   sections.forEach(function(s) { if (s.classList.contains('tilt-ready')) obs.observe(s); });
-})();
-
-// 11. Scroll velocity — motion blur on fast scroll
-(function scrollVelocityBlur() {
-  let lastY = window.scrollY, lastT = performance.now(), velocity = 0, blurRAF = 0;
-  const target = document.querySelector('#page-home');
-  if (!target) return;
-
-  window.addEventListener('scroll', function() {
-    const now = performance.now();
-    const dy = window.scrollY - lastY;
-    const dt = Math.max(now - lastT, 1);
-    velocity = Math.abs(dy / dt);
-    lastY = window.scrollY;
-    lastT = now;
-
-    cancelAnimationFrame(blurRAF);
-    blurRAF = requestAnimationFrame(function() {
-      const blur = Math.min(velocity * 18, 6);
-      target.style.filter = blur > 0.3 ? `blur(${blur.toFixed(1)}px)` : '';
-    });
-  }, { passive: true });
-
-  // Decay blur when scroll stops
-  (function decayLoop() {
-    velocity *= 0.85;
-    if (velocity < 0.01) { target.style.filter = ''; }
-    else {
-      const blur = Math.min(velocity * 18, 6);
-      target.style.filter = `blur(${blur.toFixed(1)}px)`;
-    }
-    requestAnimationFrame(decayLoop);
-  })();
 })();
 
 // 12. Slide-up reveal on action cards

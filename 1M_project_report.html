@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Condition-Aware Stability Modeling for Thermostable PET-Degrading Enzymes — Project Report</title>
+<style>
+  :root{
+    --ink:#1a2233; --muted:#5b6b82; --line:#dfe4ec; --bg:#ffffff; --soft:#f5f7fa;
+    --accent:#2563eb; --accent2:#0d9488; --mut:#c2410c; --good:#15803d; --warn:#b45309;
+  }
+  *{box-sizing:border-box}
+  body{
+    font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);background:var(--soft);line-height:1.6;margin:0;font-size:15.5px;
+  }
+  .page{max-width:900px;margin:0 auto;background:var(--bg);padding:48px 56px;
+        box-shadow:0 1px 30px rgba(20,30,60,.07)}
+  h1{font-size:1.85rem;line-height:1.25;margin:0 0 6px}
+  .authors{color:var(--muted);font-size:.95rem;margin-bottom:24px}
+  h2{font-size:1.3rem;margin:38px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--accent);color:#13203a}
+  h3{font-size:1.06rem;margin:22px 0 6px;color:#1f2d49}
+  h4{font-size:.96rem;margin:16px 0 4px;color:var(--accent2);text-transform:uppercase;letter-spacing:.5px}
+  p{margin:8px 0}
+  a{color:var(--accent);text-decoration:none}
+  code{background:var(--soft);border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:.86em;color:#334}
+  .abstract{background:var(--soft);border-left:4px solid var(--accent);padding:16px 20px;border-radius:0 8px 8px 0;margin:18px 0}
+  .toc{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 22px;margin:18px 0;font-size:.94rem}
+  .toc ol{margin:6px 0;padding-left:20px}.toc li{margin:3px 0}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:.9rem}
+  caption{caption-side:top;text-align:left;color:var(--muted);font-size:.85rem;margin-bottom:6px;font-style:italic}
+  th,td{padding:7px 10px;border:1px solid var(--line);text-align:left}
+  th{background:var(--soft);font-weight:600;font-size:.82rem}
+  td.n{font-variant-numeric:tabular-nums;text-align:right}
+  tr.hl td{background:#eff6ff;font-weight:600}
+  tr.best td{background:#ecfdf5}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:14px 0}
+  .card{border:1px solid var(--line);border-radius:10px;padding:16px 18px;background:#fff}
+  .card.s{border-top:4px solid var(--accent)}
+  .card.m{border-top:4px solid var(--mut)}
+  .key{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px 16px;margin:14px 0}
+  .key b{color:var(--good)}
+  .warnbox{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 16px;margin:14px 0}
+  .warnbox b{color:var(--warn)}
+  .pill{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
+        padding:2px 9px;border-radius:999px;margin-right:6px}
+  .pill.s{background:#dbeafe;color:#1d4ed8}.pill.m{background:#ffedd5;color:#c2410c}
+  .flow{display:flex;align-items:stretch;gap:10px;margin:16px 0;flex-wrap:wrap}
+  .flow .step{flex:1;min-width:150px;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:.88rem}
+  .flow .step b{display:block;margin-bottom:4px;color:var(--accent)}
+  .muted{color:var(--muted);font-size:.9rem}
+  ul.tight{margin:6px 0;padding-left:22px}ul.tight li{margin:3px 0}
+  .foot{margin-top:36px;border-top:1px solid var(--line);padding-top:14px;color:var(--muted);font-size:.82rem}
+  @media print{body{background:#fff;font-size:11pt}.page{box-shadow:none;max-width:none;padding:0}h2{break-after:avoid}table,.card,.key,.warnbox{break-inside:avoid}}
+  @media(max-width:640px){.page{padding:24px 18px}.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>A Two-Model, Condition-Aware Machine-Learning Pipeline for Engineering Thermostable PET-Degrading Enzymes</h1>
+  <div class="authors">PET-Lab Project Report &nbsp;·&nbsp; Stability-Prediction Track &nbsp;·&nbsp; June 2026</div>
+
+  <div class="abstract">
+    <b>Abstract.</b> Plastics such as PET degrade fastest near 70&nbsp;°C, yet most plastic-degrading
+    enzymes denature well below that temperature. We present an integrated machine-learning pipeline
+    that pairs <b>two complementary models</b>: (1) a <b>whole-protein screening model</b> that predicts
+    an enzyme's melting temperature (T<sub>m</sub>) directly from sequence, used to <i>select</i> the most
+    heat-tolerant starting enzymes; and (2) a <b>mutation model</b> that predicts the stability change
+    (ΔΔG) of a point mutation, used to <i>optimize</i> the chosen enzyme. Both are built on ESM-2 protein
+    language-model embeddings and a zoo of gradient-boosted / ensemble regressors, trained on a
+    1,001,888-row, leakage-audited stability dataset assembled from seven public sources. We evaluate
+    each model on an <b>independent, homology-clean benchmark</b>: S669 for the mutation model
+    (ensemble Pearson 0.39, 95% CI 0.32–0.46) and a newly-constructed BRENDA temperature-stability test
+    set for the screening model (AUC 0.73, 95% CI 0.71–0.76). The aim is to <b>cut expensive wet-lab
+    effort</b> by filtering and ranking candidates in
+    silico; because only a short shortlist reaches the bench, we prioritize <b>precision</b> and operate at
+    high-precision thresholds. The contribution is one of <b>integration, application, and data rigor</b>
+    rather than a new algorithm.
+  </div>
+
+  <div class="toc">
+    <b>Contents</b>
+    <ol>
+      <li>Introduction &amp; motivation</li>
+      <li>The two-model approach</li>
+      <li>Pipeline stages (data prep · feature engineering · training · validation)</li>
+      <li>Datasets — training and test</li>
+      <li>Results</li>
+      <li>Limitations</li>
+      <li>Conclusion — why the integration is novel</li>
+    </ol>
+  </div>
+
+  <!-- 1 -->
+  <h2>1 · Introduction &amp; Motivation</h2>
+  <p>
+    Enzymatic recycling of PET (polyethylene terephthalate) is most efficient at elevated temperatures
+    (~70&nbsp;°C), where the polymer becomes flexible and accessible. The bottleneck is biological:
+    naturally-occurring PET hydrolases (e.g. IsPETase) lose their fold and activity far below this
+    temperature. Engineering enzymes that remain <i>stable and active under harsh temperature and pH</i>
+    is therefore the central problem.
+  </p>
+  <p>
+    Two distinct questions arise. First, <b>which enzyme should we start from?</b> — a ranking problem
+    over thousands of candidate sequences, the vast majority of which have <i>no measured stability</i>.
+    Second, <b>how do we improve the chosen enzyme?</b> — a design problem over the space of point
+    mutations. These are different questions requiring different models. Our pipeline answers both and
+    chains them together, and — critically — validates each half on data the models never saw.
+  </p>
+  <div class="key">
+    <b>Goal: reduce expensive wet-lab effort.</b> Characterizing an enzyme's stability experimentally
+    costs days of work and significant money per candidate, so testing every option is infeasible. The
+    pipeline's job is to <b>filter and rank</b> the candidate space in silico and forward only the most
+    promising designs to the bench. For this purpose <b>precision matters more than recall</b>: it is far
+    better to hand the lab a <i>short, trustworthy</i> shortlist (few false positives) than a long list
+    padded with candidates that fail — missing some good enzymes (lower recall) is an acceptable price for
+    not wasting bench time on bad ones. We therefore operate the models at <b>high-precision thresholds</b>,
+    and report the full precision–recall trade-off so the operating point can be chosen deliberately.
+  </div>
+
+  <!-- 2 -->
+  <h2>2 · The Two-Model Approach</h2>
+  <div class="grid2">
+    <div class="card s">
+      <span class="pill s">Stage 1 · Screen</span>
+      <h3>Whole-protein T<sub>m</sub> model — “the scout”</h3>
+      <p class="muted">Input: one sequence. Output: predicted melting temperature (absolute, °C).</p>
+      <p>Answers <i>“which enzyme is worth our time?”</i> Predicts heat tolerance for enzymes that were
+      never measured in a lab, so a large candidate pool can be ranked in silico and narrowed to the
+      sturdiest scaffolds.</p>
+    </div>
+    <div class="card m">
+      <span class="pill m">Stage 2 · Optimize</span>
+      <h3>Mutation ΔΔG model — “the engineer”</h3>
+      <p class="muted">Input: one sequence + one mutation. Output: stability change (relative, ΔΔG).</p>
+      <p>Answers <i>“how do we upgrade the one we picked?”</i> Scores candidate point mutations so the
+      stabilizing ones can be combined into an improved design.</p>
+    </div>
+  </div>
+  <p>
+    The two are complementary because one is <b>absolute</b> and the other is <b>relative</b>. Chained:
+    the screening model gives the starting enzyme's T<sub>m</sub>; the mutation model gives the boost from
+    chosen mutations; together they estimate the engineered enzyme's final stability
+    (<code>T<sub>m</sub>(design) ≈ T<sub>m</sub>(WT) + ΔT<sub>m</sub>(mutations)</code>) — an absolute number
+    you cannot obtain from the mutation model alone. Only the top designs proceed to wet-lab confirmation.
+  </p>
+  <div class="flow">
+    <div class="step"><b>① Candidates</b>Many enzyme sequences, most with no measured stability.</div>
+    <div class="step" style="border-top:3px solid var(--accent)"><b>② Screen · Stage 1</b>T<sub>m</sub> model ranks them → pick the sturdiest scaffold.</div>
+    <div class="step" style="border-top:3px solid var(--mut)"><b>③ Optimize · Stage 2</b>ΔΔG model scores mutations → keep the stabilizing ones.</div>
+    <div class="step" style="border-top:3px solid var(--good)"><b>④ Combine</b>T<sub>m</sub>(WT)+ΔT<sub>m</sub> → estimated stability of the engineered design.</div>
+    <div class="step"><b>⑤ Confirm</b>Lab-test only the top-ranked designs.</div>
+  </div>
+
+  <!-- 3 -->
+  <h2>3 · Pipeline Stages</h2>
+  <p>Both models share the same four-stage skeleton — <b>data preparation → feature engineering →
+     training → validation</b> — but differ in input granularity (whole protein vs. mutation pair).</p>
+
+  <h3>3.1 Data preparation</h3>
+  <ul class="tight">
+    <li><b>Shared staging.</b> Seven public sources are merged into one richly-annotated table
+      (<code>build_staging_table.py</code>) with full provenance per row (sequence, mutation, T, pH,
+      measurement type, source, PMID). A <b>strict leakage audit</b> removes exact duplicates and any row
+      overlapping the S669 test set — including <b>sequence-homology overlap</b> detected with mmseqs2
+      (≥30% identity, ≥50% coverage), which exact-key matching misses.</li>
+    <li><b>Stage 2 (mutation):</b> keep only ΔΔG rows that have <i>both</i> a wild-type and a mutant
+      sequence (508,693 rows).</li>
+    <li><b>Stage 1 (screening):</b> keep T<sub>m</sub> rows (single sequence → temperature); 23,349 unique
+      sequences from Meltome + FireProtDB.</li>
+  </ul>
+
+  <h3>3.2 Feature engineering</h3>
+  <p>Both use <b>ESM-2</b> (<code>esm2_t30_150M</code>, 640-dim, mean-pooled per residue) — a protein
+     language model that encodes evolutionary and structural context from sequence alone (no 3-D structure
+     required).</p>
+  <div class="grid2">
+    <div class="card m">
+      <h4>Stage 2 — mutation (276-dim)</h4>
+      <ul class="tight">
+        <li>Embeddings of <code>[wt, mut, mut−wt]</code> → PCA to 256 dims (keeps 500K+ rows tractable).</li>
+        <li><b>Engineered block (not PCA'd):</b> ESM-2 ΔLL (log-likelihood ratio of the substitution, the
+          mutation-local signal); 12-d biochemical Δ (charge, volume, hydrophobicity, H-bonds, polarity,
+          aromaticity, Pro/Gly); assay conditions (T, pH).</li>
+      </ul>
+    </div>
+    <div class="card s">
+      <h4>Stage 1 — screening (641-dim)</h4>
+      <ul class="tight">
+        <li>Whole-protein ESM-2 embedding (640-d) + log(sequence length).</li>
+        <li>No PCA (the T<sub>m</sub> set is small enough to use full embeddings).</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>3.3 Training</h3>
+  <p>Both stages train a <b>model zoo</b> of gradient-boosted and ensemble regressors
+     (XGBoost, LightGBM, CatBoost, Random&nbsp;Forest, Extra&nbsp;Trees, MLP) and average them into an
+     ensemble. Embeddings are computed once on GPU (cached) on the Nautilus / NRP Kubernetes cluster;
+     the regressors train on CPU. Splits are <b>protein-grouped</b> so no wild-type sequence appears on
+     both sides of the train/validation boundary.</p>
+
+  <h3>3.4 Validation</h3>
+  <p>Each model is validated twice: an internal <b>grouped held-out set</b>, and an <b>external,
+     homology-audited benchmark the model never saw</b> — <b>S669</b> for the mutation model and the
+     <b>BRENDA temperature-stability set</b> for the screening model (Section 4.2).</p>
+
+  <!-- 4 -->
+  <h2>4 · Datasets</h2>
+
+  <h3>4.1 Training data</h3>
+  <p>The training table contains <b>1,001,888 rows</b> assembled from seven public stability resources and
+     de-duplicated/leakage-audited. Because the sources measure different physical quantities, each row
+     carries a <b>measurement type</b>, and each model trains only on the relevant type.</p>
+  <div class="grid2">
+    <table>
+      <caption>Rows by source dataset</caption>
+      <tr><th>Source</th><th>Rows</th></tr>
+      <tr><td>Domainome (aPCA abundance)</td><td class="n">457,943</td></tr>
+      <tr><td>Tsuboyama 2023 (mega-scale)</td><td class="n">357,155</td></tr>
+      <tr><td>Tsuboyama 2023 (doubles)</td><td class="n">138,275</td></tr>
+      <tr><td>Meltome Atlas (T<sub>m</sub>)</td><td class="n">27,884</td></tr>
+      <tr><td>ThermoMutDB</td><td class="n">11,520</td></tr>
+      <tr><td>FireProtDB</td><td class="n">6,549</td></tr>
+      <tr><td>ProDDG / S2648</td><td class="n">2,562</td></tr>
+    </table>
+    <table>
+      <caption>Rows by measurement type</caption>
+      <tr><th>Type</th><th>Rows</th><th>Used by</th></tr>
+      <tr><td>ΔΔG (mutation)</td><td class="n">508,693</td><td>Stage 2</td></tr>
+      <tr><td>abundance (proxy)</td><td class="n">457,943</td><td>—</td></tr>
+      <tr><td>T<sub>m</sub> (whole protein)</td><td class="n">29,654</td><td>Stage 1</td></tr>
+      <tr><td>ΔT<sub>m</sub></td><td class="n">5,598</td><td>—</td></tr>
+    </table>
+  </div>
+  <p class="muted"><b>Key training stat:</b> the leakage audit removed ~132,000 rows overlapping S669,
+     of which <b>131,479 were homology-only</b> — invisible to exact UniProt/PDB keys and catchable only
+     by mmseqs2. This is the single most important step for an honest generalization estimate.</p>
+
+  <h3>4.2 Test data (independent benchmarks)</h3>
+
+  <h4>S669 — mutation model</h4>
+  <p>669 single-point mutations with experimental ΔΔG; the field-standard benchmark for stability-change
+     prediction. Audited (exact + homology) against the training set so no train mutation or close homolog
+     leaks in.</p>
+
+  <h4>BRENDA temperature-stability set — screening model (new in this work)</h4>
+  <p>We constructed a fresh whole-protein benchmark from the <b>BRENDA 2026.1</b> bulk release
+     (CC&nbsp;BY&nbsp;4.0; 8,129 EC entries, 111,901 protein records). Three steps:</p>
+  <ol class="tight">
+    <li><b>Extract</b> (<code>convert_brenda.py</code>): keep proteins with a pH- and/or temperature-stability
+      annotation. BRENDA stores no sequences inline — only UniProt accessions — so sequences are resolved
+      from UniProt. → <b>3,060 enzymes</b> (2,886 temperature, 1,176 pH, 1,002 both; 2,917 accessions,
+      1,229 organisms, 868 EC numbers; <b>46% hydrolases</b>, the family of PET-degrading enzymes).</li>
+    <li><b>Parse</b> (<code>parse_brenda_temp_stability.py</code>): convert the free-text
+      temperature-stability annotations (e.g. <i>“70&nbsp;[10&nbsp;min, stable]”, “T<sub>m</sub>&nbsp;76.8&nbsp;°C”</i>)
+      into a numeric ceiling and a label (<b>positive</b> ≥60&nbsp;°C / <b>negative</b> ≤45&nbsp;°C /
+      ambiguous). A heuristic separates true T<sub>m</sub>, “stable-up-to”, and inactivation evidence, and
+      discards cold-storage, sub-ambient, immobilized, and implausible values. Parsed 84.8% (2,446).</li>
+    <li><b>Leakage audit</b> (<code>brenda_leakage_audit.py</code>): remove any protein overlapping the
+      training set by accession, exact sequence, or mmseqs2 homology (≥30% id, ≥50% cov). Removed
+      <b>412 (16.8%)</b> — of which <b>406 were homology-only</b>, again invisible to exact keys.</li>
+  </ol>
+  <div class="key">
+    <b>Final clean BRENDA test set: 2,034 enzymes</b> (979 positive / 584 negative / 471 ambiguous) →
+    <b>1,563 confident binary cases</b>, provably free of exact and homology overlap with training.
+  </div>
+
+  <!-- 5 -->
+  <h2>5 · Results</h2>
+
+  <p class="muted">Results follow the pipeline order: the screening model (Stage&nbsp;1, run first) then the
+     mutation model (Stage&nbsp;2).</p>
+
+  <h3>5.1 Stage 1 — Screening model on BRENDA</h3>
+  <p class="muted">Internal held-out validation: T<sub>m</sub> predicted within <b>RMSE ≈ 6.5&nbsp;°C</b>
+     (val Pearson ≈ 0.80 across models) — the model learned “sequence → heat tolerance”.</p>
+  <div class="key">
+    <b>Independent BRENDA test (1,563 unseen enzymes): AUC = 0.732 (95% CI 0.708–0.755)</b>
+    &nbsp;|&nbsp; regression Pearson 0.54 (95% CI 0.50–0.57; 0.60 on the true-T<sub>m</sub> subset).
+    The tight interval (n=1,563) places the model clearly above chance on proteins — and protein
+    families — it never trained on.
+  </div>
+  <table>
+    <caption>BRENDA stable/unstable classification — threshold sweep (979 positive / 584 negative; AUC = 0.732)</caption>
+    <tr><th>Threshold</th><th>Precision</th><th>Recall</th><th>F1</th><th>Accuracy</th><th>Note</th></tr>
+    <tr class="best"><td>46 °C</td><td class="n">0.65</td><td class="n">0.98</td><td class="n">0.78</td><td class="n">0.66</td><td>best F1 / high recall</td></tr>
+    <tr class="hl"><td>50 °C</td><td class="n">0.71</td><td class="n">0.77</td><td class="n">0.74</td><td class="n">0.66</td><td>balanced (P≈R)</td></tr>
+    <tr><td>52 °C</td><td class="n">0.77</td><td class="n">0.63</td><td class="n">0.69</td><td class="n">0.65</td><td></td></tr>
+    <tr><td>60 °C</td><td class="n">0.93</td><td class="n">0.39</td><td class="n">0.55</td><td class="n">0.60</td><td>trustworthy shortlist</td></tr>
+    <tr><td>66 °C</td><td class="n">0.98</td><td class="n">0.32</td><td class="n">0.49</td><td class="n">0.58</td><td>cleanest shortlist</td></tr>
+  </table>
+  <p class="muted">For the screening use case (shortlisting a few candidates for the lab), the
+     <b>high-threshold / high-precision</b> end is preferred: at 66&nbsp;°C the model is right ~98% of the
+     time when it calls an enzyme heat-stable, accepting lower recall by design.</p>
+  <table>
+    <caption>Per-model classification at the default 60&nbsp;°C threshold (precision = of enzymes flagged stable, fraction truly stable)</caption>
+    <tr><th>Model</th><th>Precision</th><th>Recall</th><th>F1</th></tr>
+    <tr class="best"><td>extra_trees</td><td class="n">0.963</td><td class="n">0.369</td><td class="n">0.533</td></tr>
+    <tr><td>random_forest</td><td class="n">0.948</td><td class="n">0.355</td><td class="n">0.517</td></tr>
+    <tr><td>lightgbm</td><td class="n">0.933</td><td class="n">0.395</td><td class="n">0.555</td></tr>
+    <tr><td>catboost</td><td class="n">0.927</td><td class="n">0.400</td><td class="n">0.559</td></tr>
+    <tr><td>xgboost</td><td class="n">0.917</td><td class="n">0.394</td><td class="n">0.551</td></tr>
+    <tr class="hl"><td>Ensemble</td><td class="n">0.945</td><td class="n">0.388</td><td class="n">0.550</td></tr>
+  </table>
+  <p class="muted"><b>Precision is uniformly high (0.92–0.96)</b> across every model — the screener's
+     shortlist is ~93–96% trustworthy, which is exactly the property the wet-lab use case needs.</p>
+
+  <h3>5.2 Stage 2 — Mutation model on S669</h3>
+  <p class="muted">Bootstrap 95% CIs (2,000 resamples of the saved predictions): ensemble
+     <b>Pearson 0.39 (0.32–0.46)</b>, stabilizing-<b>AUC 0.67 (0.62–0.72)</b>. Wider than BRENDA
+     because S669 is smaller (n=669), but the lower bounds stay clearly above zero/chance.</p>
+  <table>
+    <caption>S669 regression — predicted vs. experimental ΔΔG (669 mutations)</caption>
+    <tr><th>Model</th><th>Pearson</th><th>Spearman</th><th>RMSE (kcal/mol)</th></tr>
+    <tr class="best"><td>extra_trees (best single)</td><td class="n">0.436</td><td class="n">0.461</td><td class="n">1.481</td></tr>
+    <tr><td>xgboost</td><td class="n">0.382</td><td class="n">0.413</td><td class="n">1.514</td></tr>
+    <tr><td>random_forest</td><td class="n">0.369</td><td class="n">0.396</td><td class="n">1.523</td></tr>
+    <tr><td>lightgbm</td><td class="n">0.330</td><td class="n">0.364</td><td class="n">1.549</td></tr>
+    <tr><td>catboost</td><td class="n">0.324</td><td class="n">0.362</td><td class="n">1.557</td></tr>
+    <tr><td>mlp</td><td class="n">0.298</td><td class="n">0.338</td><td class="n">1.612</td></tr>
+    <tr class="hl"><td>Ensemble</td><td class="n">0.390</td><td class="n">0.414</td><td class="n">1.509</td></tr>
+  </table>
+  <table>
+    <caption>S669 as a stabilizing-mutation classifier (positive = ΔΔG&lt;0; 168/501 split; AUC = 0.669) — threshold sweep</caption>
+    <tr><th>Threshold (ΔΔG)</th><th>Precision</th><th>Recall</th><th>F1</th><th>Accuracy</th><th>Note</th></tr>
+    <tr><td>0.0 (strict)</td><td class="n">0.81</td><td class="n">0.10</td><td class="n">0.18</td><td class="n">0.77</td><td>clean picks</td></tr>
+    <tr><td>+0.25</td><td class="n">0.51</td><td class="n">0.26</td><td class="n">0.35</td><td class="n">0.75</td><td></td></tr>
+    <tr class="hl"><td>+0.5</td><td class="n">0.38</td><td class="n">0.46</td><td class="n">0.42</td><td class="n">0.67</td><td>balanced (P≈R)</td></tr>
+    <tr class="best"><td>+1.0</td><td class="n">0.31</td><td class="n">0.80</td><td class="n">0.45</td><td class="n">0.51</td><td>best F1 / high recall</td></tr>
+  </table>
+  <table>
+    <caption>Per-model classification at the default ΔΔG&lt;0 threshold (precision = of mutations flagged stabilizing, fraction truly stabilizing)</caption>
+    <tr><th>Model</th><th>Precision</th><th>Recall</th></tr>
+    <tr class="best"><td>random_forest</td><td class="n">0.900</td><td class="n">0.107</td></tr>
+    <tr><td>extra_trees</td><td class="n">0.786</td><td class="n">0.065</td></tr>
+    <tr><td>xgboost</td><td class="n">0.735</td><td class="n">0.149</td></tr>
+    <tr><td>lightgbm</td><td class="n">0.625</td><td class="n">0.119</td></tr>
+    <tr><td>catboost</td><td class="n">0.429</td><td class="n">0.107</td></tr>
+    <tr><td>mlp</td><td class="n">0.415</td><td class="n">0.202</td></tr>
+    <tr class="hl"><td>Ensemble</td><td class="n">0.810</td><td class="n">0.101</td></tr>
+  </table>
+  <p class="muted">Precision is more variable here (0.42–0.90); the ensemble reaches <b>0.81</b>. As with
+     the screener, high precision is paired with low recall — the model is cautious, so its few calls are
+     usually right but it misses most stabilizers (raise the threshold for recall, per the sweep above).</p>
+
+  <h3>5.3 Precision–recall trade-off (both models)</h3>
+  <div class="card" style="text-align:center">
+    <svg viewBox="0 0 420 250" width="100%" style="max-width:480px" font-family="inherit">
+      <!-- axes -->
+      <line x1="60" y1="220" x2="380" y2="220" stroke="#94a3b8" stroke-width="1"/>
+      <line x1="60" y1="20"  x2="60"  y2="220" stroke="#94a3b8" stroke-width="1"/>
+      <!-- gridlines + ticks -->
+      <g stroke="#eef1f6" stroke-width="1">
+        <line x1="210" y1="20" x2="210" y2="220"/><line x1="360" y1="20" x2="360" y2="220"/>
+        <line x1="60" y1="120" x2="380" y2="120"/><line x1="60" y1="20" x2="380" y2="20"/>
+      </g>
+      <g fill="#5b6b82" font-size="9">
+        <text x="57" y="232" text-anchor="middle">0</text>
+        <text x="210" y="232" text-anchor="middle">0.5</text>
+        <text x="360" y="232" text-anchor="middle">1.0</text>
+        <text x="52" y="223" text-anchor="end">0</text>
+        <text x="52" y="123" text-anchor="end">0.5</text>
+        <text x="52" y="23" text-anchor="end">1.0</text>
+        <text x="220" y="247" text-anchor="middle" font-size="10">Recall</text>
+        <text x="18" y="120" text-anchor="middle" font-size="10" transform="rotate(-90,18,120)">Precision</text>
+      </g>
+      <!-- Stage 1 (BRENDA / Tm) curve -->
+      <polyline fill="none" stroke="#2563eb" stroke-width="2.2"
+        points="156,24 162,26 177,34 189,40 207,48 225,56 249,66 291,78 330,84 354,90"/>
+      <g fill="#2563eb">
+        <circle cx="249" cy="66" r="3"/><circle cx="291" cy="78" r="3"/><circle cx="354" cy="90" r="3"/>
+      </g>
+      <!-- Stage 2 (S669 / ddG) curve -->
+      <polyline fill="none" stroke="#c2410c" stroke-width="2.2"
+        points="90,58 138,118 198,145 258,154 300,158"/>
+      <g fill="#c2410c">
+        <circle cx="90" cy="58" r="3"/><circle cx="198" cy="145" r="3"/><circle cx="300" cy="158" r="3"/>
+      </g>
+      <!-- legend -->
+      <g font-size="10">
+        <rect x="250" y="28" width="12" height="3" fill="#2563eb"/>
+        <text x="266" y="32" fill="#1f2d49">Stage 1 · T&#8347; (BRENDA, AUC 0.73)</text>
+        <rect x="250" y="44" width="12" height="3" fill="#c2410c"/>
+        <text x="266" y="48" fill="#1f2d49">Stage 2 · ΔΔG (S669, AUC 0.67)</text>
+      </g>
+    </svg>
+    <p class="muted" style="margin-top:6px">
+      <b>Figure 1.</b> Precision vs. recall as the decision threshold is swept. The screening model
+      (blue) bows toward the top-right — it sustains high precision across a useful recall range. The
+      mutation model (orange) collapses toward the baseline — precision is high only at very low recall,
+      the expected behavior for an embedding-based ΔΔG baseline on the hard S669 set.
+    </p>
+  </div>
+
+  <!-- 6 -->
+  <h2>6 · Limitations</h2>
+  <div class="warnbox">
+    <ul class="tight" style="margin:0">
+      <li><b>Modest absolute accuracy.</b> S669 Pearson (0.44 best) is below specialized structure-aware
+        ΔΔG methods (~0.5–0.6); the BRENDA AUC (0.73) is a useful-but-not-strong screener. Both are
+        <b>tree-on-embedding baselines</b>, not fine-tuned language models.</li>
+      <li><b>Class imbalance.</b> Both benchmarks are imbalanced, so F1 must be read alongside AUC; “best-F1”
+        thresholds lean toward recall.</li>
+      <li><b>Label noise in BRENDA.</b> The numeric ceiling is parsed from free text and mixes true T<sub>m</sub>
+        with “stable-up-to” values; a <code>basis</code> flag allows filtering to the cleaner subset.</li>
+      <li><b>pH not yet modeled.</b> The screening model currently predicts temperature stability; pH-stability
+        annotations are extracted but not yet numeric.</li>
+    </ul>
+  </div>
+
+  <!-- 7 -->
+  <h2>7 · Conclusion — Why the Integration Is Novel</h2>
+  <p>
+    The individual components here are established: language-model embeddings, ΔΔG prediction, and
+    sequence-to-T<sub>m</sub> prediction all exist in the literature. <b>The novelty is in the integration,
+    the application, and the data rigor</b> — i.e. it is a systems contribution:
+  </p>
+  <ul class="tight">
+    <li><b>Two complementary models in one loop.</b> An <i>absolute</i> screening model and a <i>relative</i>
+      mutation model are combined into a single <b>screen-then-optimize</b> pipeline that produces an
+      estimated absolute stability for a <i>designed</i> enzyme — neither model achieves this alone.</li>
+    <li><b>Application focus.</b> The pipeline targets <b>thermostable PET-degrading enzymes</b> specifically,
+      where the training data is enriched (46% hydrolases) and the goal (function at ~70&nbsp;°C) is concrete.</li>
+    <li><b>A new, reusable benchmark.</b> We repurpose BRENDA's free-text stability annotations into a
+      numeric, labeled, <b>homology-clean</b> independent test set — a use of BRENDA not previously
+      available for whole-protein stability evaluation.</li>
+    <li><b>Leakage discipline.</b> Both benchmarks are audited for <i>sequence-homology</i> leakage with
+      mmseqs2, not just exact-key overlap. In this project that step alone removed 130k+ training rows and
+      ~17% of the BRENDA test set — overlap that would otherwise silently inflate every reported score.</li>
+  </ul>
+  <p>
+    In short: rather than a new algorithm, the project delivers a <b>carefully-integrated, condition-aware,
+    leakage-audited pipeline</b> that turns two known prediction tasks into a usable enzyme-engineering
+    workflow, with honest, independent validation on both halves.
+  </p>
+
+  <div class="foot">
+    <b>Reproducibility.</b> Training data: <code>stability_dataset_multitask.csv</code>; staging:
+    <code>build_staging_table.py</code> · <code>run_mmseqs_audit.py</code>. BRENDA benchmark:
+    <code>convert_brenda.py</code> · <code>parse_brenda_temp_stability.py</code> · <code>brenda_leakage_audit.py</code>.
+    Models: Stage&nbsp;2 <code>build_features.py</code> + <code>train_gpu/cpu_models.py</code> (eval
+    <code>ensemble_eval.py</code>, <code>s669_sweep.py</code>); Stage&nbsp;1 <code>build_features_tm.py</code>
+    + <code>train_tm_models.py</code> (eval <code>predict_and_sweep.py</code>). Embeddings: ESM-2
+    <code>esm2_t30_150M</code>. Compute: Nautilus/NRP Kubernetes (GPU embed, CPU train).
+  </div>
+
+</div>
+</body>
+</html>

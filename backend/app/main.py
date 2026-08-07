@@ -64,10 +64,15 @@ from .models.schemas import (
     MutationCandidate,
     PDBSearchResult,
     StructureResolveRequest,
+    DegradationRequest,
+    DegradationResponse,
 )
 from .services import pdb_fetcher, latent_optimizer
+from .services import degradation_model
 from .services import explainability, literature_validation, trained_classifier
 from .services import structure_resolver as _sr
+from .services import alphafold_service
+from .services import multitask_scorer
 
 app = FastAPI(
     title="PETase ML Optimizer",
@@ -251,12 +256,18 @@ async def scan_mutations(req: SequenceInput):
 
 @app.post("/optimize")
 async def optimize_petase(req: OptimizationRequest):
-    """Run full latent space optimization to generate improved PETase candidates."""
+    """Run full latent space optimization to generate improved PETase candidates.
+
+    Parallel AlphaFold structure predictions start during optimization.
+    Structures are cached for instant retrieval when user views candidates.
+    """
     sequence = req.sequence or ISPETASE_SEQUENCE
     if len(sequence) < 10:
         raise HTTPException(status_code=400, detail="Sequence must be at least 10 residues")
 
     try:
+        # Run optimization
+        print("[Optimize] Running latent space optimization...")
         result = latent_optimizer.optimize(
             sequence=sequence,
             num_candidates=req.num_candidates,
@@ -267,14 +278,131 @@ async def optimize_petase(req: OptimizationRequest):
             ca_conc_mm=req.ca_conc_mm,
             contamination_scenario=req.contamination_scenario,
         )
+
+        candidates = result["candidates"]
+
+        # Start parallel AlphaFold predictions for all candidate sequences
+        # These run in the background and cache results for instant retrieval
+        print(f"[Optimize] Submitting {len(candidates)} structures to AlphaFold Server...")
+        candidate_sequences = [c["sequence"] for c in candidates]
+        candidate_names = [f"Candidate_{i+1}" for i in range(len(candidates))]
+
+        # Start predictions in background (don't wait for completion)
+        threading.Thread(
+            target=alphafold_service.predict_structures_batch,
+            args=(candidate_sequences, candidate_names),
+            daemon=True
+        ).start()
+
+        print(f"[Optimize] AlphaFold jobs queued. User will see results as they're cached.")
+
         return OptimizationResponse(
             original_sequence=result["original_sequence"],
-            candidates=[MutationCandidate(**c) for c in result["candidates"]],
+            candidates=[MutationCandidate(**c) for c in candidates],
             latent_space_summary=result["latent_space_summary"],
             classifier_info=result.get("classifier_info", {}),
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/simulate", response_model=DegradationResponse)
+async def simulate_degradation(req: DegradationRequest):
+    """Predict real PET-degradation efficiency (uM aromatic products released)
+    for a sequence at a given temperature, pH, and substrate.
+
+    Backed by a regressor trained on Erickson et al. 2022 experimental data
+    (3,616 measurements, 65 enzymes) — replaces the frontend's thermal-Gaussian
+    'efficiency'. Returns a point prediction and a degradation-vs-temperature
+    profile so high-temperature behaviour is grounded in real data.
+    """
+    if len(req.sequence) < 10:
+        raise HTTPException(status_code=400, detail="Sequence must be at least 10 residues")
+    try:
+        products = degradation_model.predict_degradation(
+            req.sequence, req.temperature, req.ph, req.substrate, req.crystallinity_pct
+        )
+        profile = (
+            degradation_model.temperature_profile(
+                req.sequence, req.ph, req.substrate, req.crystallinity_pct
+            ) if req.include_profile else []
+        )
+        return DegradationResponse(
+            products_mg_per_L=round(products, 3),
+            percent_depolymerized=degradation_model.percent_depolymerization(products),
+            temperature=req.temperature,
+            ph=req.ph,
+            substrate=req.substrate,
+            profile=profile,
+            model_info=degradation_model.model_info(),
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/mutations/score")
+async def score_mutations(req: dict):
+    """Score mutations using multitask ΔTm model (S669 precision: 0.81, BRENDA: 0.945).
+
+    Input:
+        {
+            "pdb_data": "PDB structure as string",
+            "mutations": ["S122G", "D186H"]
+        }
+
+    Returns:
+        {
+            "mutations": [
+                {"mutation": "S122G", "ddg": -1.2, "dtm_prediction": 12.0, "effect": "stabilizing", "confidence": 0.81},
+                ...
+            ],
+            "total_ddg": -2.5,
+            "overall_effect": "stabilizing",
+            "model_info": {"name": "multitask-catboost-v1", "s669_precision": 0.81, ...}
+        }
+    """
+    try:
+        pdb_data = req.get("pdb_data", "")
+        mutations = req.get("mutations", [])
+
+        if not pdb_data or not mutations:
+            raise HTTPException(status_code=400, detail="Missing pdb_data or mutations")
+
+        # Use new multitask model (0.81 precision on S669, 0.945 on BRENDA)
+        result = multitask_scorer.score_mutations(pdb_data, mutations)
+        return result
+    except Exception as e:
+        print(f"[Mutation Scoring] Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/structure/alphafold/{sequence_hash}")
+async def get_alphafold_structure(sequence_hash: str):
+    """Get cached AlphaFold structure prediction by sequence hash."""
+    from pathlib import Path
+    cache_dir = Path(__file__).parent / "cached_structures"
+
+    pdb_file = cache_dir / f"{sequence_hash}.pdb"
+    plddt_file = cache_dir / f"{sequence_hash}_plddt.json"
+
+    if pdb_file.exists() and plddt_file.exists():
+        with open(pdb_file) as f:
+            pdb_data = f.read()
+        with open(plddt_file) as f:
+            import json
+            plddt_data = json.load(f)
+
+        return {
+            "pdb_data": pdb_data,
+            "plddt_average": plddt_data.get("average", 60),
+            "plddt_per_residue": plddt_data.get("per_residue", []),
+            "status": "ready"
+        }
+
+    return {
+        "status": "pending",
+        "message": "Structure prediction in progress. Check back in a few minutes."
+    }
 
 
 @app.post("/explain/mutation")
@@ -340,9 +468,25 @@ _STRUCTURE_CACHE_DIR = _pathlib.Path(os.path.dirname(__file__)) / "cached_data" 
 _STRUCTURE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def _structure_cache_path(sequence: str) -> _pathlib.Path:
-    key = hashlib.sha256(sequence.encode()).hexdigest()[:16]
+def _structure_cache_key(pdb_id: str | None, uniprot_id: str | None,
+                         sequence: str) -> str:
+    # Key on the resolution identifiers too — not just the sequence — so that
+    # supplying a PDB ID (authoritative RCSB) never collides with an earlier
+    # sequence-only resolution that fell back to AlphaFold.
+    key_src = f"{(pdb_id or '').upper()}|{(uniprot_id or '').upper()}|{sequence}"
+    return hashlib.sha256(key_src.encode()).hexdigest()[:16]
+
+
+def _structure_cache_path(sequence: str, pdb_id: str | None = None,
+                          uniprot_id: str | None = None) -> _pathlib.Path:
+    key = _structure_cache_key(pdb_id, uniprot_id, sequence)
     return _STRUCTURE_CACHE_DIR / f"{key}.pdb"
+
+
+def _structure_meta_path(sequence: str, pdb_id: str | None = None,
+                         uniprot_id: str | None = None) -> _pathlib.Path:
+    key = _structure_cache_key(pdb_id, uniprot_id, sequence)
+    return _STRUCTURE_CACHE_DIR / f"{key}.meta.json"
 
 
 @app.post("/structure/resolve")
@@ -380,13 +524,19 @@ async def resolve_structure(req: StructureResolveRequest):
                     pass
         mutant_seq = "".join(seq_list)
 
-    # Disk cache keyed on mutant sequence
+    # Disk cache keyed on (pdb_id, uniprot_id, mutant sequence) — replays the
+    # original provenance headers so a cache hit preserves rcsb/alphafold source.
     if mutant_seq:
-        cache_path = _structure_cache_path(mutant_seq)
-        if cache_path.exists():
+        cache_path = _structure_cache_path(mutant_seq, req.pdb_id, req.uniprot_id)
+        meta_path  = _structure_meta_path(mutant_seq, req.pdb_id, req.uniprot_id)
+        if cache_path.exists() and meta_path.exists():
+            import json as _json
             response = PlainTextResponse(cache_path.read_text(), media_type="chemical/x-pdb")
-            response.headers["X-Structure-Source"] = "Cached resolved structure"
-            response.headers["X-Source-Type"]      = "cache"
+            try:
+                for hk, hv in _json.loads(meta_path.read_text()).items():
+                    response.headers[hk] = str(hv)
+            except Exception:
+                response.headers["X-Source-Type"] = "cache"
             return response
 
     # Resolve best available structure
@@ -414,29 +564,37 @@ async def resolve_structure(req: StructureResolveRequest):
         pdb_data = _apply_mutations_full_atom(pdb_data, req.mutations)
         pdb_data = _annotate_pdb(pdb_data, req.mutations, mutant_seq)
 
-    # Cache the final structure
-    if mutant_seq:
-        cache_path = _structure_cache_path(mutant_seq)
-        if not cache_path.exists():
-            cache_path.write_text(pdb_data)
-
     response = PlainTextResponse(pdb_data, media_type="chemical/x-pdb")
 
     # Provenance headers (ASCII-safe — HTTP headers are latin-1)
     def _ascii(s: str) -> str:
         return s.encode("ascii", errors="replace").decode("ascii")
 
-    response.headers["X-Structure-Source"]  = _ascii(resolved["source"])
-    response.headers["X-Source-Type"]       = resolved["source_type"]
-    response.headers["X-Is-Experimental"]   = "true" if resolved["is_experimental"] else "false"
-    response.headers["X-Resolved-PDB-ID"]   = resolved.get("resolved_pdb_id") or ""
-    response.headers["X-Method"]            = _ascii(resolved.get("method") or "UNKNOWN")
+    headers = {
+        "X-Structure-Source": _ascii(resolved["source"]),
+        "X-Source-Type":      resolved["source_type"],
+        "X-Is-Experimental":  "true" if resolved["is_experimental"] else "false",
+        "X-Resolved-PDB-ID":  resolved.get("resolved_pdb_id") or "",
+        "X-Method":           _ascii(resolved.get("method") or "UNKNOWN"),
+    }
     if resolved.get("resolved_uniprot_id"):
-        response.headers["X-Resolved-UniProt"] = resolved["resolved_uniprot_id"]
+        headers["X-Resolved-UniProt"] = resolved["resolved_uniprot_id"]
     if resolved.get("resolution") is not None:
-        response.headers["X-Resolution"] = str(resolved["resolution"])
+        headers["X-Resolution"] = str(resolved["resolution"])
     if resolved.get("plddt_avg") is not None:
-        response.headers["X-PLDDT-Avg"] = str(resolved["plddt_avg"])
+        headers["X-PLDDT-Avg"] = str(resolved["plddt_avg"])
+
+    for hk, hv in headers.items():
+        response.headers[hk] = hv
+
+    # Cache the final structure + its provenance (keyed on pdb_id/uniprot/seq)
+    if mutant_seq:
+        import json as _json
+        cache_path = _structure_cache_path(mutant_seq, req.pdb_id, req.uniprot_id)
+        meta_path  = _structure_meta_path(mutant_seq, req.pdb_id, req.uniprot_id)
+        if not cache_path.exists():
+            cache_path.write_text(pdb_data)
+        meta_path.write_text(_json.dumps(headers))
 
     return response
 

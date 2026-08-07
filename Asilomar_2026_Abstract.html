@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Asilomar Bioelectronics 2026 — Abstract</title>
+<style>
+  @page { size: Letter; margin: 0.9in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Helvetica Neue", "Arial", sans-serif;
+    color: #16191d; font-size: 10.5pt; line-height: 1.5; margin: 0;
+  }
+  .top { text-align: center; border-bottom: 1.5px solid #1b4965; padding-bottom: 8px; margin-bottom: 14px; }
+  .conf { font-size: 9pt; letter-spacing: 0.5px; color: #1b4965; font-weight: 700; text-transform: uppercase; }
+  .conf-sub { font-size: 8.5pt; color: #5a6470; margin-top: 2px; }
+  h1 { font-size: 15.5pt; line-height: 1.25; margin: 14px 0 8px 0; color: #0d2235; text-align: center; }
+  .authors { text-align: center; font-size: 11pt; margin: 0 0 2px 0; }
+  .affil { text-align: center; font-size: 9pt; font-style: italic; color: #555; margin: 0 0 4px 0; }
+  .track { text-align: center; font-size: 8.5pt; color: #1b4965; margin-bottom: 14px; }
+  h2 { font-size: 10.5pt; color: #1b4965; margin: 13px 0 3px 0; text-transform: uppercase; letter-spacing: 0.4px; }
+  p { margin: 0 0 8px 0; text-align: justify; }
+  .kpis { display: flex; gap: 0; margin: 12px 0; border: 1px solid #cdd6dd; border-radius: 4px; overflow: hidden; }
+  .kpi { flex: 1; text-align: center; padding: 8px 4px; border-right: 1px solid #cdd6dd; }
+  .kpi:last-child { border-right: none; }
+  .kpi .v { font-size: 15pt; font-weight: 800; color: #1b4965; }
+  .kpi .l { font-size: 7.5pt; color: #5a6470; text-transform: uppercase; letter-spacing: 0.3px; margin-top: 2px; }
+  figure { margin: 10px 0 4px 0; text-align: center; }
+  figure img { max-width: 78%; border: 1px solid #cdd6dd; }
+  figcaption { font-size: 8pt; color: #5a6470; margin-top: 3px; text-align: left; }
+  .fcb { color: #0d2235; font-weight: 700; }
+  .foot { margin-top: 14px; padding-top: 8px; border-top: 1px solid #cdd6dd; font-size: 8pt; color: #777; }
+  .hl { color: #1b4965; font-weight: 700; }
+  .edit { background: #fff3cd; padding: 0 3px; }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="conf">Asilomar Bioelectronics Symposium 2026</div>
+  <div class="conf-sub">Asilomar Conference Grounds · Pacific Grove, CA · September 1–4, 2026</div>
+</div>
+
+<h1>Machine-Learning–Guided Design of Thermostable PET-Degrading Enzymes via a Stacked Multi-Model ΔΔG Ensemble</h1>
+<p class="authors"><span class="edit">Ayush Iyer</span><sup>1</sup></p>
+<p class="affil"><sup>1</sup><span class="edit">[Institution / Department, City, State]</span></p>
+<p class="track">Abstract for Poster Presentation · Computational Bioengineering / Enzyme Design</p>
+
+<div class="kpis">
+  <div class="kpi"><div class="v">19,071</div><div class="l">Experimental mutations</div></div>
+  <div class="kpi"><div class="v">73.1%</div><div class="l">Held-out accuracy</div></div>
+  <div class="kpi"><div class="v">70.6%</div><div class="l">Sign accuracy (S669)</div></div>
+  <div class="kpi"><div class="v">1.10</div><div class="l">MAE kcal/mol</div></div>
+</div>
+
+<h2>Background &amp; Motivation</h2>
+<p>
+Polyethylene terephthalate (PET) is one of the most abundant plastic pollutants, and
+enzymatic depolymerization by PETases and cutinases offers a sustainable recycling route.
+The central barrier to industrial deployment is enzyme thermostability: wild-type
+<i>Ideonella sakaiensis</i> PETase denatures near 40 °C, far below the ~70 °C window where
+PET becomes most accessible to catalysis. Rational stabilization requires accurately
+predicting how individual point mutations perturb folding free energy (ΔΔG) — a
+long-standing, unsolved challenge at the interface of biophysics, structural biology, and
+machine learning.
+</p>
+
+<h2>Approach</h2>
+<p>
+We developed an end-to-end, machine-learning–guided design platform that predicts
+mutation-induced ΔΔG and melting-temperature shift, ranks candidate variants, and renders
+mutations on experimentally accurate 3-D structures. A <span class="hl">stacked ensemble of
+eight regressors</span> (Gradient Boosting, XGBoost, LightGBM, CatBoost, Histogram Gradient
+Boosting, a neural network, Random Forest, and Extra Trees) was trained on
+<span class="hl">19,071 experimentally measured mutations</span> from FireProtDB, ProDDG,
+and ThermoMutDB — with <span class="hl">no synthetic data</span>. Each mutation is encoded by
+<span class="hl">144 features</span> spanning physicochemical deltas, relative solvent
+accessibility and secondary structure, PSSM evolutionary conservation, ESM-2 and ESM-1v
+protein-language-model representations, metal-coordination geometry, Debye–Hückel/Born
+electrostatic physics, assay temperature and pH, and AlphaFold per-residue confidence.
+Generalization was assessed on the <span class="hl">S669</span> benchmark — 669 mutations from
+proteins entirely absent from training — with all overlapping entries removed for strict
+independence.
+</p>
+
+<h2>Results &amp; Significance</h2>
+<p>
+On 10-fold cross-validation the ensemble reached 79.7% stability-class accuracy
+(Pearson r = 0.76; MAE = 0.92 kcal/mol). On the fully independent S669 benchmark it achieved
+<span class="hl">73.1% accuracy and 70.6% sign accuracy</span> — correctly calling the
+direction of stability change for 7 of every 10 unseen mutations — with MAE = 1.10 kcal/mol
+and Pearson r = 0.39–0.41, competitive with established ΔΔG predictors (literature S669
+correlations typically 0.4–0.55) and exceeding classical force-field tools such as FoldX. A
+companion ΔT<sub>m</sub> regressor attained MAE = 3.66 °C (Pearson r = 0.65). The ~6.6-point
+cross-validation-to-test gap is reported transparently, quantifying the genuine difficulty of
+extrapolating to novel protein families. Integrated into an interactive design tool, the model
+proposes and visualizes stabilizing PETase variants on resolved structures, providing a
+practical, honestly benchmarked route toward engineering thermostable plastic-degrading
+enzymes for sustainable PET recycling.
+</p>
+
+<figure>
+<img src="file:///Users/admin/Documents/PET%20-%20Lab/graph5_predicted_vs_actual.png">
+<figcaption><span class="fcb">Figure 1.</span> Predicted vs. measured ΔΔG on the S669
+independent test set (n = 669 held-out mutations). Dashed line = perfect prediction; color =
+absolute error. Pearson r = 0.39, MAE = 1.10 kcal/mol, 70.6% sign accuracy.</figcaption>
+</figure>
+
+<div class="foot">
+Abstract submission deadline: June 15, 2026 · Notification: July 1, 2026 · Submitted via official Google Form.
+Metrics computed from <i>model_meta.json</i> and live predictions of the deployed v46 ensemble on S669.
+&nbsp;<span class="edit">[Edit author list and institution before submission.]</span>
+</div>
+
+</body>
+</html>

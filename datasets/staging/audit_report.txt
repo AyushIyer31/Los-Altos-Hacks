@@ -1,0 +1,64 @@
+======================================================================
+STAGING TABLE — DUPLICATE & S669 LEAKAGE AUDIT
+======================================================================
+Independent test set (S669): 669 rows  [s669_full.tsv]
+
+RAW candidates pulled per source (locally available sources only):
+  Tsuboyama2023      389068
+  Tsuboyama2023_double   159051
+  ProDDG_S2648         2648
+  FireProtDB           7008
+  ThermoMutDB         13754
+  Domainome          536164
+  Meltome             27951
+  TOTAL FOUND       1135644  (stability-relevant measurement types only)
+
+REMOVED — exact duplicates (same protein+mutation+type+value):
+      2627
+REMOVED — S669 test-set leakage (any key matched):
+    132205
+      homology_S669_>=30pct          131536
+      uniprot+mutation_match            300
+      wt_sequence_hash_match            232
+      pdb+chain+mutation_match           70
+      pdb+mutation_match                 67
+
+Cross-dataset repeated mutations (informational): 26554 mutation strings in >1 dataset
+
+FINAL CLEAN (training-eligible) rows: 1001888
+
+Clean rows kept BY MEASUREMENT TYPE:
+  ddG                508693
+  abundance          457943
+  Tm                  29654
+  dTm                  5598
+
+Clean rows kept BY DATASET:
+  Domainome          457943
+  Tsuboyama2023      357155
+  Tsuboyama2023_double   138275
+  Meltome             27884
+  ThermoMutDB         11520
+  FireProtDB           6549
+  ProDDG_S2648         2562
+
+Final UNIQUE proteins (by seq-hash/uniprot/pdb/name): 24671
+Final UNIQUE mutations (protein+mutation):            984929
+Clean rows WITH both WT+mutant sequence:             965876 (96.4%)
+ThermoMutDB clean rows sequence-repaired:            4782/11520
+
+CAVEATS (defensible disclosure):
+  - Homology leakage audited via mmseqs2 (>=30% id, >=50% qcov vs S669)
+    and EXCLUDED — see homology_leak_hashes.txt. This catches Tsuboyama
+    domain-level homology that exact UniProt/PDB keys cannot.
+  - ThermoMutDB sequences repaired from UniProt where position+WT residue
+    agree; rows with PDB-based numbering that disagree are left without a
+    sequence (NOT fabricated) and excluded from sequence-based training.
+  - Domainome 'abundance' is an aPCA stability PROXY (not ddG) -> its own
+    head; kept separate from thermodynamic measurement types.
+  - Meltome 'Tm' rows are WILD-TYPE proteins (no mutation) -> sequence->Tm
+    head; audited for homology to S669 like all other sources.
+  - Still pending (not in these numbers, same audit on arrival):
+    MGnify (1.8M, pretraining-only; data not yet openly hosted),
+    ProThermDB (pH/T/dH/dCp; form-gated, manual download required).
+======================================================================

@@ -1,0 +1,44 @@
+# Whole-protein sequence->Tm model: embed Tm seqs + BRENDA test (GPU), then train
+# regressors and evaluate on the leakage-audited BRENDA set (CPU, same pod).
+#   kubectl apply -f tm_job.yaml
+#   kubectl logs -f job/petlab-tm -n gilpin-lab
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: petlab-tm
+  namespace: gilpin-lab
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 259200
+  template:
+    spec:
+      restartPolicy: Never
+      tolerations:
+        - key: nautilus.io/hardware
+          operator: Equal
+          value: large-gpu
+      containers:
+        - name: tm
+          image: pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
+          workingDir: /workspace/multitask
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -e
+              pip install --no-cache-dir pandas numpy scikit-learn joblib \
+                fair-esm xgboost lightgbm catboost
+              nvidia-smi
+              python build_features_tm.py
+              python train_tm_models.py
+          resources:
+            requests: {nvidia.com/gpu: "1", cpu: "8", memory: 48Gi}
+            limits:   {nvidia.com/gpu: "1", cpu: "8", memory: 48Gi}
+          volumeMounts:
+            - {name: project, mountPath: /workspace}
+            - {name: dshm, mountPath: /dev/shm}
+      volumes:
+        - name: project
+          persistentVolumeClaim:
+            claimName: petlab-multitask-pvc
+        - name: dshm
+          emptyDir: {medium: Memory, sizeLimit: 8Gi}

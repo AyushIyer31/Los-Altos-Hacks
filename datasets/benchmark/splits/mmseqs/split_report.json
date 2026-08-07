@@ -1,0 +1,47 @@
+{
+  "method": "MMseqs2 easy-cluster --min-seq-id 0.3 -c 0.8 --cov-mode 0",
+  "identity_cutoff": "<30% pairwise identity between partitions",
+  "seed": 42,
+  "n_folds": 5,
+  "combined": {
+    "rows": 41279,
+    "degraders": 16040,
+    "non_degraders": 25239,
+    "pct_degrader": 38.9
+  },
+  "n_clusters": 3616,
+  "independent_plasticenz": {
+    "rows": 709,
+    "degraders": 214,
+    "non_degraders": 495,
+    "pct_degrader": 30.2
+  },
+  "scrubbed_homologs": {
+    "rows": 9471,
+    "degraders": 5212,
+    "non_degraders": 4259,
+    "pct_degrader": 55.0
+  },
+  "train": {
+    "rows": 24983,
+    "degraders": 8679,
+    "non_degraders": 16304,
+    "pct_degrader": 34.7
+  },
+  "test_indist": {
+    "rows": 6116,
+    "degraders": 1935,
+    "non_degraders": 4181,
+    "pct_degrader": 31.6
+  },
+  "cv_fold_sizes": {
+    "0": 6116,
+    "1": 8078,
+    "2": 5059,
+    "3": 5585,
+    "4": 6261
+  },
+  "train_test_ratio": "80/20",
+  "no_cluster_straddles_train_test": true,
+  "no_cluster_straddles_any_fold": true
+}

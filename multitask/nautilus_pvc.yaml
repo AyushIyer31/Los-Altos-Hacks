@@ -1,0 +1,18 @@
+# PersistentVolumeClaim to hold code + dataset + embedding cache + model outputs.
+# Apply ONCE:  kubectl apply -f nautilus_pvc.yaml
+# Then copy the project files onto it before submitting the training Job.
+#
+# 20Gi is comfortable: dataset ~0.4 GB, embedding cache ~0.1 GB, model + logs tiny.
+# Use your namespace's available storageClass (list: `kubectl get storageclass`).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: petlab-multitask-pvc
+  namespace: gilpin-lab
+spec:
+  accessModes:
+    - ReadWriteMany                    # shared: GPU job + CPU job mount it at once
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: rook-cephfs        # VERIFIED working RWX class (100s of bound vols in this ns)

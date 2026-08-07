@@ -1,0 +1,16 @@
+enzyme_family,scaffold,variant,mutations,Tm_C,wt_Tm_C,dTm_C,opt_T_C,pH,note,confidence,source
+IsPETase,IsPETase,WT,,46.8,46.8,0.0,40,,wild-type baseline,high,Frontiers fbioe.2023.1263996
+IsPETase,IsPETase,P181A,P181A,49.25,46.8,2.45,,,decreased catalytic activity,high,Frontiers fbioe.2023.1263996
+IsPETase,IsPETase,S121D/D186H,S121D;D186H,54.85,46.8,8.05,,,increased thermostability + activity,high,Frontiers fbioe.2023.1263996
+IsPETase,IsPETase,ThermoPETase,S121E;D186H;R280A,57.62,46.8,10.82,40,,13.9x activity at 40C,high,Frontiers fbioe.2023.1263996
+IsPETase,IsPETase,I139R,I139R,56.37,46.8,9.57,,,3.6x activity,high,Frontiers fbioe.2023.1263996
+IsPETase,IsPETase,DuraPETase,Q119Y;L117F;T140D;G165A;A180I;S188Q;R280A;A209V;S214H;I168R,77.0,46.8,30.2,,,10-mutation computational redesign,high,Frontiers fbioe.2023.1263996
+IsPETase,IsPETase,HotPETase,21-mutation directed-evolution variant,82.5,46.8,35.7,65,,superior to LCC-ICCG at 65C; dTm vs WT computed,medium,Frontiers fbioe.2023.1263996
+IsPETase,IsPETase,TS-PETase,R280A;S121E;D186H;N233C;S282C,69.4,46.8,22.6,30,,disulfide-stabilized,high,Frontiers fbioe.2023.1263996
+IsPETase,IsPETase,FAST-PETase,S121E;D186H;R224Q;N233K;R280A,,46.8,,50,,38x activity at 50C; Tm not reported here,medium,Frontiers fbioe.2023.1263996
+IsPETase,GrAncestral,GrAnc8,~20 ancestral-reconstruction substitutions,66.8,46.8,20.0,,,approximate Tm,low,Frontiers fbioe.2023.1263996
+RgPETase,RgPETase,WT,,48.5,48.5,0.0,,,similar to IsPETase,high,Frontiers fbioe.2023.1263996
+BbPETase,BbPETase,NIIG,S335N;T338I;M363I;N365G,63.0,54.0,9.0,,,2.8x activity; WT Tm inferred from +9C,medium,Frontiers fbioe.2023.1263996
+LCC,LCC,WT,,84.7,84.7,0.0,,,wild-type leaf-branch compost cutinase,high,Tournier 2020 Nature / ChemSusChem 2026
+LCC,LCC,ICCG,F243I;D238C;S283C;Y127G,94.0,84.7,9.3,72,,second disulfide bond; benchmark industrial variant,high,Tournier 2020 Nature
+LCC,LCC,ICCG-C09,ICCG + additional substitutions,97.5,84.7,12.8,68,,+3.5C over ICCG; Tm derived,medium,Protein-eng LCC ScienceDirect S0920586124001536

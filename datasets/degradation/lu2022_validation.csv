@@ -1,0 +1,7 @@
+enzyme_id,construct,activity_mM_monomer,activity_stdev,n_replicates,substrate,note,source,doi
+Cut190 (WT),WT,0.017795333333333333,0.0011274814115245237,3,amorphous_film,single-condition assay; units mM (not comparable to Erickson uM),"Lu et al. 2022, Nature 604:662",10.1038/s41586-022-04599-z
+Cut190 (engineered),engineered,0.031632,0.00790360544308735,3,amorphous_film,single-condition assay; units mM (not comparable to Erickson uM),"Lu et al. 2022, Nature 604:662",10.1038/s41586-022-04599-z
+LCC (WT),WT,12.326666666666668,5.575628514645979,3,amorphous_film,single-condition assay; units mM (not comparable to Erickson uM),"Lu et al. 2022, Nature 604:662",10.1038/s41586-022-04599-z
+LCC (engineered),engineered,22.05333333333333,2.3711670825425486,3,amorphous_film,single-condition assay; units mM (not comparable to Erickson uM),"Lu et al. 2022, Nature 604:662",10.1038/s41586-022-04599-z
+ICCM (WT),WT,14.75,1.8140286657051479,3,amorphous_film,single-condition assay; units mM (not comparable to Erickson uM),"Lu et al. 2022, Nature 604:662",10.1038/s41586-022-04599-z
+ICCM (engineered),engineered,33.17333333333334,0.7703462424996521,3,amorphous_film,single-condition assay; units mM (not comparable to Erickson uM),"Lu et al. 2022, Nature 604:662",10.1038/s41586-022-04599-z

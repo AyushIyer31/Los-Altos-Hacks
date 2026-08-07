@@ -7,6 +7,26 @@ class SequenceInput(BaseModel):
     name: str = "query_sequence"
 
 
+class DegradationRequest(BaseModel):
+    sequence: str
+    temperature: float = 50.0
+    ph: float = 7.5
+    substrate: str = "amorphous_film"   # amorphous_film | amorphous_powder | crystalline_powder
+    crystallinity_pct: float = 0.0
+    # When true, also return a degradation-vs-temperature curve (30-70 C)
+    include_profile: bool = True
+
+
+class DegradationResponse(BaseModel):
+    products_mg_per_L: float            # predicted aromatic products released (mg/L)
+    percent_depolymerized: float        # approx % of PET depolymerized at 2.9% loading
+    temperature: float
+    ph: float
+    substrate: str
+    profile: list[dict] = []            # [{temp_C, products_mg_per_L, percent_depolymerized}, ...]
+    model_info: dict = {}
+
+
 class OptimizationRequest(BaseModel):
     sequence: str
     num_candidates: int = 10

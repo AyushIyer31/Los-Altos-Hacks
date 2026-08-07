@@ -1,0 +1,49 @@
+# GPU job: build features (once) THEN train the 3 boosting models on one A100.
+# Runs at the same time as cpu_models_job.yaml (they share the PVC).
+#   kubectl apply -f gpu_models_job.yaml
+#   kubectl logs -f job/petlab-gpu-models -n gilpin-lab
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: petlab-gpu-models
+  namespace: gilpin-lab
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 259200
+  template:
+    spec:
+      restartPolicy: Never
+      # Use ANY available GPU — this job needs only ~8GB and A100s are saturated.
+      # (An A100 can still be picked if one frees up; we just no longer require it.)
+      tolerations:
+        - key: nautilus.io/hardware
+          operator: Equal
+          value: large-gpu
+      containers:
+        - name: train
+          image: pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
+          workingDir: /workspace/multitask
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -e
+              pip install --no-cache-dir fair-esm pandas numpy scikit-learn joblib \
+                xgboost lightgbm catboost
+              nvidia-smi
+              # build the shared feature matrix ONCE (writes features.npz to the PVC)
+              python build_features.py --pca 256
+              # then train the GPU boosting models
+              python train_gpu_models.py
+          # limits == requests (ratio 1.0) to satisfy the namespace 1.2x cap.
+          resources:
+            requests: {nvidia.com/gpu: "1", cpu: "8", memory: 64Gi}
+            limits:   {nvidia.com/gpu: "1", cpu: "8", memory: 64Gi}
+          volumeMounts:
+            - {name: project, mountPath: /workspace}
+            - {name: dshm, mountPath: /dev/shm}
+      volumes:
+        - name: project
+          persistentVolumeClaim:
+            claimName: petlab-multitask-pvc
+        - name: dshm
+          emptyDir: {medium: Memory, sizeLimit: 8Gi}
