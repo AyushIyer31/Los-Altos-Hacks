@@ -71,6 +71,8 @@ from .services import pdb_fetcher, latent_optimizer
 from .services import degradation_model
 from .services import explainability, literature_validation, trained_classifier
 from .services import structure_resolver as _sr
+from .services import alphafold_service
+from .services import multitask_scorer
 
 app = FastAPI(
     title="PETase ML Optimizer",
@@ -254,12 +256,18 @@ async def scan_mutations(req: SequenceInput):
 
 @app.post("/optimize")
 async def optimize_petase(req: OptimizationRequest):
-    """Run full latent space optimization to generate improved PETase candidates."""
+    """Run full latent space optimization to generate improved PETase candidates.
+
+    Parallel AlphaFold structure predictions start during optimization.
+    Structures are cached for instant retrieval when user views candidates.
+    """
     sequence = req.sequence or ISPETASE_SEQUENCE
     if len(sequence) < 10:
         raise HTTPException(status_code=400, detail="Sequence must be at least 10 residues")
 
     try:
+        # Run optimization
+        print("[Optimize] Running latent space optimization...")
         result = latent_optimizer.optimize(
             sequence=sequence,
             num_candidates=req.num_candidates,
@@ -270,9 +278,27 @@ async def optimize_petase(req: OptimizationRequest):
             ca_conc_mm=req.ca_conc_mm,
             contamination_scenario=req.contamination_scenario,
         )
+
+        candidates = result["candidates"]
+
+        # Start parallel AlphaFold predictions for all candidate sequences
+        # These run in the background and cache results for instant retrieval
+        print(f"[Optimize] Submitting {len(candidates)} structures to AlphaFold Server...")
+        candidate_sequences = [c["sequence"] for c in candidates]
+        candidate_names = [f"Candidate_{i+1}" for i in range(len(candidates))]
+
+        # Start predictions in background (don't wait for completion)
+        threading.Thread(
+            target=alphafold_service.predict_structures_batch,
+            args=(candidate_sequences, candidate_names),
+            daemon=True
+        ).start()
+
+        print(f"[Optimize] AlphaFold jobs queued. User will see results as they're cached.")
+
         return OptimizationResponse(
             original_sequence=result["original_sequence"],
-            candidates=[MutationCandidate(**c) for c in result["candidates"]],
+            candidates=[MutationCandidate(**c) for c in candidates],
             latent_space_summary=result["latent_space_summary"],
             classifier_info=result.get("classifier_info", {}),
         )
@@ -312,6 +338,71 @@ async def simulate_degradation(req: DegradationRequest):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/mutations/score")
+async def score_mutations(req: dict):
+    """Score mutations using multitask ΔTm model (S669 precision: 0.81, BRENDA: 0.945).
+
+    Input:
+        {
+            "pdb_data": "PDB structure as string",
+            "mutations": ["S122G", "D186H"]
+        }
+
+    Returns:
+        {
+            "mutations": [
+                {"mutation": "S122G", "ddg": -1.2, "dtm_prediction": 12.0, "effect": "stabilizing", "confidence": 0.81},
+                ...
+            ],
+            "total_ddg": -2.5,
+            "overall_effect": "stabilizing",
+            "model_info": {"name": "multitask-catboost-v1", "s669_precision": 0.81, ...}
+        }
+    """
+    try:
+        pdb_data = req.get("pdb_data", "")
+        mutations = req.get("mutations", [])
+
+        if not pdb_data or not mutations:
+            raise HTTPException(status_code=400, detail="Missing pdb_data or mutations")
+
+        # Use new multitask model (0.81 precision on S669, 0.945 on BRENDA)
+        result = multitask_scorer.score_mutations(pdb_data, mutations)
+        return result
+    except Exception as e:
+        print(f"[Mutation Scoring] Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/structure/alphafold/{sequence_hash}")
+async def get_alphafold_structure(sequence_hash: str):
+    """Get cached AlphaFold structure prediction by sequence hash."""
+    from pathlib import Path
+    cache_dir = Path(__file__).parent / "cached_structures"
+
+    pdb_file = cache_dir / f"{sequence_hash}.pdb"
+    plddt_file = cache_dir / f"{sequence_hash}_plddt.json"
+
+    if pdb_file.exists() and plddt_file.exists():
+        with open(pdb_file) as f:
+            pdb_data = f.read()
+        with open(plddt_file) as f:
+            import json
+            plddt_data = json.load(f)
+
+        return {
+            "pdb_data": pdb_data,
+            "plddt_average": plddt_data.get("average", 60),
+            "plddt_per_residue": plddt_data.get("per_residue", []),
+            "status": "ready"
+        }
+
+    return {
+        "status": "pending",
+        "message": "Structure prediction in progress. Check back in a few minutes."
+    }
 
 
 @app.post("/explain/mutation")
