@@ -336,6 +336,21 @@ header.logo-arrived .logo-text { opacity: 1; transform: translateX(0); }
 .logo-text span { font-size: 11px; color: var(--text-tertiary); letter-spacing: 0.3px; }
 .nav-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
 
+/* Contact Us button */
+.contact-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 16px; border-radius: 20px;
+  font-size: 13px; font-weight: 600; white-space: nowrap;
+  color: var(--primary); text-decoration: none;
+  border: 1px solid rgba(59,111,245,0.35);
+  background: rgba(59,111,245,0.08);
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+.contact-btn:hover, .contact-btn:focus-visible {
+  background: var(--primary); border-color: var(--primary); color: #fff;
+}
+.contact-btn svg { flex-shrink: 0; }
+
 /* Rotating molecule animation */
 .molecule-anim {
   width: 44px; height: 44px; position: relative;
@@ -1073,6 +1088,9 @@ footer {
   nav { display: none; }
   .logo-text span { display: none; }
   .nav-right { margin-left: auto; gap: 8px; }
+  /* Collapse Contact Us to icon-only — header space is tight on mobile */
+  .contact-btn { padding: 7px; border-radius: 50%; }
+  .contact-btn span { display: none; }
   .molecule-anim { width: 32px; height: 32px; }
   .molecule-anim canvas { width: 32px; height: 32px; }
   .status-badge { padding: 4px 8px; font-size: 11px; }
@@ -1209,6 +1227,14 @@ footer {
       <button onclick="showPage('about')">About</button>
     </nav>
     <div class="nav-right">
+      <a class="contact-btn" href="mailto:iyer.ayush31@gmail.com" aria-label="Contact us by email">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <path d="m2 7 10 6 10-6"/>
+        </svg>
+        <span>Contact Us</span>
+      </a>
       <div id="statusBadge" class="status-badge checking">
         <div class="status-dot"></div>
         <span>Connecting...</span>
