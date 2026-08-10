@@ -1175,6 +1175,47 @@ footer {
   .viewer-3d { height: 250px !important; }
 }
 </style>
+
+<!-- Editorial Redesign: Colors -->
+<style id="editorial-colors">
+/* New editorial color palette - overrides default dark theme */
+:root {
+  --primary: #173f3a;
+  --primary-light: #285e57;
+  --accent: #496f69;
+  --accent-light: #6f918b;
+  --surface: #f3f2ec;
+  --surface-2: #ebeae3;
+  --surface-3: #ffffff;
+  --card: #faf9f4;
+  --text-primary: #151715;
+  --text-secondary: #555a56;
+  --text-tertiary: #7a807c;
+  --border: rgba(21,23,21,.16);
+  --warning: #9b5b22;
+  --error: #a13d3d;
+  --success: #315f4d;
+}
+
+/* Dark mode colors */
+body[data-theme="dark"] {
+  --surface: #111310;
+  --surface-2: #191b18;
+  --surface-3: #20221f;
+  --card: #181a17;
+  --text-primary: #f0efe8;
+  --text-secondary: #b4b6b0;
+  --text-tertiary: #7f847e;
+  --border: rgba(240,239,232,.16);
+  --primary: #a9c6bf;
+  --primary-light: #d0ded9;
+  --accent: #91ada6;
+  --success: #8bb5a4;
+  --warning: #d6a06b;
+  --error: #d78787;
+}
+</style>
+
 </head>
 <body>
 <div id="scrollProgress"></div>
