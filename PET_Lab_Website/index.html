@@ -1524,6 +1524,92 @@ button:active {
   padding: 40px 24px;
 }
 
+/* Header */
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  sticky: top;
+  z-index: 100;
+  padding: 12px 24px;
+}
+
+header nav {
+  display: flex;
+  gap: 30px;
+  justify-content: center;
+}
+
+header nav button {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px 0;
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+header nav button:hover,
+header nav button.active {
+  color: var(--text-primary);
+}
+
+header nav button.active::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--primary);
+}
+
+/* Page Titles */
+.page h1 {
+  font-size: clamp(36px, 5vw, 52px);
+  margin-bottom: 16px;
+  color: var(--text-primary);
+}
+
+.page h2 {
+  font-size: clamp(28px, 4vw, 40px);
+  margin-bottom: 12px;
+  margin-top: 32px;
+  color: var(--text-primary);
+}
+
+/* Labels */
+.section-label {
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  display: block;
+  margin-bottom: 8px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .footer-container {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
+  .footer-right {
+    justify-content: flex-start;
+  }
+
+  header nav {
+    gap: 15px;
+  }
+
+  header nav button {
+    font-size: 12px;
+  }
+}
+
 /* Dark mode colors */
 body[data-theme="dark"] {
   --surface: #111310;
