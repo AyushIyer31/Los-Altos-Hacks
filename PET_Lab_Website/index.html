@@ -1290,6 +1290,88 @@ h1, h2, h3, h4, h5, h6 {
   text-align: center;
 }
 
+/* Editorial Hero Section */
+.hero-section {
+  background: var(--surface) !important;
+  padding: 120px 24px 80px !important;
+}
+
+.hero-title {
+  font-size: clamp(48px, 6vw, 72px);
+  line-height: 1.1;
+  color: var(--text-primary);
+  max-width: 800px;
+}
+
+.hero-subtitle {
+  font-size: clamp(16px, 2vw, 18px);
+  color: var(--text-secondary);
+  max-width: 700px;
+  line-height: 1.7;
+}
+
+/* Editorial Home Sections */
+.home-section {
+  background: var(--surface) !important;
+  padding: clamp(60px, 8vw, 120px) 24px !important;
+  border-top: 1px solid var(--border);
+}
+
+.home-section h2 {
+  font-size: clamp(36px, 5vw, 56px);
+  line-height: 1.2;
+  color: var(--text-primary);
+  margin-bottom: 24px;
+}
+
+.section-subtitle {
+  font-size: 16px;
+  color: var(--text-secondary);
+  max-width: 600px;
+}
+
+/* Cards */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 24px;
+}
+
+.card:hover {
+  border-color: var(--text-tertiary);
+  transition: border-color 0.3s ease;
+}
+
+/* Buttons */
+.hero-cta {
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 12px 24px;
+  transition: all 0.3s ease;
+}
+
+.hero-cta-primary {
+  background: var(--text-primary);
+  color: var(--surface);
+}
+
+.hero-cta-primary:hover {
+  background: var(--text-secondary);
+}
+
+.hero-cta-secondary {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+.hero-cta-secondary:hover {
+  border-color: var(--text-primary);
+  background: var(--card);
+}
+
 /* Dark mode colors */
 body[data-theme="dark"] {
   --surface: #111310;
