@@ -6066,6 +6066,14 @@ showPage = function(name) {
   document.querySelectorAll('.timeline-step').forEach(function(s) { obs.observe(s); });
 })();
 
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  document.body.setAttribute('data-theme', theme);
+  localStorage.setItem('theme', theme);
+  const themeLabel = document.getElementById('themeLabel');
+  if (themeLabel) themeLabel.textContent = theme === 'dark' ? 'Light mode' : 'Dark mode';
+}
+
 function toggleTheme() {
   applyTheme(document.body.dataset.theme === 'dark' ? 'light' : 'dark');
 }
@@ -6191,6 +6199,7 @@ setTimeout(() => {
 (function() {
   const theme = localStorage.getItem('theme') || 'light';
   document.documentElement.setAttribute('data-theme', theme);
+  document.body.setAttribute('data-theme', theme);  // FIX: CSS checks body[data-theme]
   const themeLabel = document.getElementById('themeLabel');
   if (themeLabel) themeLabel.textContent = theme === 'dark' ? 'Light mode' : 'Dark mode';
 })();
