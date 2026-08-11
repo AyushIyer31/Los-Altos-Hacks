@@ -1,0 +1,56 @@
+[
+  {
+    "mutation": "Y219E",
+    "pos": 219,
+    "wt": "Y",
+    "mut": "E",
+    "ddg": -0.0851,
+    "prob_stab": 0.5213,
+    "pred_dTm": 2.276
+  },
+  {
+    "mutation": "K177I",
+    "pos": 177,
+    "wt": "K",
+    "mut": "I",
+    "ddg": -0.353,
+    "prob_stab": 0.5873,
+    "pred_dTm": 0.711
+  },
+  {
+    "mutation": "V57E",
+    "pos": 57,
+    "wt": "V",
+    "mut": "E",
+    "ddg": -0.0287,
+    "prob_stab": 0.5072,
+    "pred_dTm": 0.638
+  },
+  {
+    "mutation": "I94E",
+    "pos": 94,
+    "wt": "I",
+    "mut": "E",
+    "ddg": -0.0198,
+    "prob_stab": 0.5049,
+    "pred_dTm": 0.474
+  },
+  {
+    "mutation": "E44C",
+    "pos": 44,
+    "wt": "E",
+    "mut": "C",
+    "ddg": -0.1098,
+    "prob_stab": 0.5274,
+    "pred_dTm": 0.468
+  },
+  {
+    "mutation": "A45C",
+    "pos": 45,
+    "wt": "A",
+    "mut": "C",
+    "ddg": -0.1308,
+    "prob_stab": 0.5327,
+    "pred_dTm": 0.393
+  }
+]

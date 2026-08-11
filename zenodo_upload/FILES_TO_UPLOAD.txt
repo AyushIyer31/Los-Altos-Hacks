@@ -1,0 +1,21 @@
+FILES TO DRAG INTO THE ZENODO RECORD
+=====================================
+Already in this folder (small — ready to upload):
+  zenodo_upload/ph_opt_train_BRENDA.csv
+  zenodo_upload/ph_opt_test_UNIPROT.csv
+  zenodo_upload/ph_opt_LEAKAGE_REPORT.txt
+
+Add these two large files from their current locations (do NOT need copying first —
+Zenodo lets you upload from anywhere; listed here so you know the paths):
+  backend/app/trained_models/mutation_regressor.pkl     (2.0 GB)
+  backend/app/trained_models/esm_embeddings_cache.pkl   (286 MB)
+
+Total record size ~2.3 GB  (well under Zenodo's 50 GB per-record limit)
+
+STEPS
+  1. Create a free account at https://zenodo.org
+  2. New upload -> drag the 5 files above in
+  3. Paste title/description/keywords/license from README.md
+     (or import zenodo_metadata.json fields)
+  4. Fill the << FILL >> items (authors, ORCID, affiliations)
+  5. Save -> Publish  (this mints the DOI; publishing is permanent)

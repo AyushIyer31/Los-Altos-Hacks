@@ -1,0 +1,19 @@
+Loading trained model (mutation_regressor.pkl + ESM-2)...
+[trained_classifier] Loading ensemble from /Users/admin/Documents/PET - Lab/backend/app/services/../trained_models/mutation_regressor.pkl...
+[trained_classifier] Model loaded: 144 features
+[trained_classifier] ΔTm regressor loaded
+[trained_classifier] Conservation cache loaded (584 entries)
+[trained_classifier] ESM-2 cache loaded (529 proteins)
+[trained_classifier] ESM-2 PCA loaded (32 components)
+[trained_classifier] Metal coordination cache loaded (536 proteins)
+[trained_classifier] Physics cache loaded (536 proteins)
+[trained_classifier] pLDDT cache loaded (515 proteins)
+[trained_classifier] Model loaded successfully
+Scoring 4864 single mutations at 50.0 C ...
+/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/sklearn/utils/validation.py:2749: UserWarning: X does not have valid feature names, but LGBMRegressor was fitted with feature names
+  warnings.warn(
+Traceback (most recent call last):
+  File "/Users/admin/Documents/PET - Lab/backend/gen_candidates.py", line 41, in <module>
+    ddg, prob = clf.predict_mutations_batch_raw(tuples, sequence=WT, temperature=TEMP, ph=PH)
+    ^^^^^^^^^
+ValueError: too many values to unpack (expected 2)

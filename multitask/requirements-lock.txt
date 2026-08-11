@@ -1,0 +1,26 @@
+# Pinned environment for the two-stage stability models (Stage 1 Tm, Stage 2 ddG).
+#
+# Reproduced on 2026-07-25 from the exact training container
+#   pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
+# using the same (originally unpinned) install line as the training jobs:
+#   pip install fair-esm pandas numpy scikit-learn joblib xgboost lightgbm catboost
+#
+# NOTE: the original training jobs installed these UNPINNED, so patch versions may
+# have drifted (e.g., lightgbm 4.6.x was present on the dev laptop vs 4.7.0 here).
+# Re-run build_features.py -> train -> eval with these pins and confirm the reported
+# metrics reproduce before citing these as the definitive environment.
+
+# Python 3.10.13
+torch==2.1.0            # CUDA 12.1 (from container)
+fair-esm==2.0.0
+scikit-learn==1.7.2
+xgboost==3.2.0
+lightgbm==4.7.0
+catboost==1.2.10
+numpy==1.26.0
+pandas==2.3.3
+joblib==1.5.3
+scipy==1.15.3
+
+# Homology auditing (separate tool, not pip):
+# MMseqs2 release 18-8cc5c
