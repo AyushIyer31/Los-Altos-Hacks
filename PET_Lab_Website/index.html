@@ -753,6 +753,20 @@ input[type="number"] { color-scheme: dark; }
 .about-highlight .val { font-size: 22px; font-weight: 800; }
 .about-highlight .lbl { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
 
+/* ── Achievements Page ── */
+.achievements-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-top: 48px; }
+.achievement-card { background: var(--card); border: 2px solid var(--border); border-radius: 12px; padding: 28px; position: relative; overflow: hidden; transition: all 0.3s ease; display: flex; flex-direction: column; }
+.achievement-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--primary), var(--accent)); opacity: 0.6; }
+.achievement-card:hover { border-color: var(--primary); box-shadow: 0 8px 24px rgba(0,0,0,0.1); transform: translateY(-4px); }
+.achievement-rank { position: absolute; top: 16px; right: 16px; width: 40px; height: 40px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; }
+.achievement-icon { font-size: 40px; margin-bottom: 16px; }
+.achievement-card h3 { font-size: 20px; color: var(--text-primary); margin-bottom: 8px; margin-top: 0; }
+.achievement-value { font-size: 13px; color: var(--primary); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 12px; }
+.achievement-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin: 0; flex-grow: 1; }
+.achievement-card.rank-1 .achievement-rank { background: #FFD700; color: #000; }
+.achievement-card.rank-2 .achievement-rank, .achievement-card.rank-3 .achievement-rank { background: #C0C0C0; }
+.achievement-card.rank-4 .achievement-rank, .achievement-card.rank-5 .achievement-rank { background: #CD7F32; }
+
 /* ── PDB Browser ── */
 .search-bar {
   width: 100%; padding: 12px 16px 12px 40px;
@@ -2011,6 +2025,7 @@ body[data-theme="dark"] .site-footer { background:#090c0a; }
       <button class="active" onclick="showPage('home')">Home</button>
       <button onclick="showPage('browse')">Protein index</button>
       <button onclick="showPage('optimize')">Design</button>
+      <button onclick="showPage('achievements')">Achievements</button>
       <button onclick="showPage('about')">Team</button>
     </nav>
     <div class="nav-right">
@@ -2030,6 +2045,7 @@ body[data-theme="dark"] .site-footer { background:#090c0a; }
   <button class="active" onclick="mobileNav('home',this)">Home</button>
   <button onclick="mobileNav('browse',this)">Protein index</button>
   <button onclick="mobileNav('optimize',this)">Design tool</button>
+  <button onclick="mobileNav('achievements',this)">Achievements</button>
   <button onclick="mobileNav('about',this)">Team</button>
 </div>
 
@@ -2512,6 +2528,106 @@ body[data-theme="dark"] .site-footer { background:#090c0a; }
   </div>
 </div>
 
+<!-- ACHIEVEMENTS PAGE -->
+<div id="page-achievements" class="page">
+  <div class="container">
+    <div class="about-header">
+      <h2>Achievements & Milestones</h2>
+      <p>Tracking PET Lab's growth and impact in protein engineering research</p>
+    </div>
+
+    <div class="achievements-grid">
+      <div class="achievement-card rank-1">
+        <div class="achievement-rank">1</div>
+        <div class="achievement-icon">🏆</div>
+        <h3>Top 5% at UCLA</h3>
+        <p class="achievement-value">Out of 300+ participants</p>
+        <p class="achievement-desc">PET Lab's research was presented at UCLA and ranked within the top 5% among more than 300 participants.</p>
+      </div>
+
+      <div class="achievement-card rank-2">
+        <div class="achievement-rank">2</div>
+        <div class="achievement-icon">🌍</div>
+        <h3>5+ Major Academic Venues</h3>
+        <p class="achievement-value">Universities & conferences</p>
+        <p class="achievement-desc">PET Lab research has been presented across universities and major scientific conferences.</p>
+      </div>
+
+      <div class="achievement-card rank-3">
+        <div class="achievement-rank">3</div>
+        <div class="achievement-icon">🎓</div>
+        <h3>ISMB Presentation</h3>
+        <p class="achievement-value">International conference</p>
+        <p class="achievement-desc">PET Lab presented its work at ISMB, a major international computational biology and bioinformatics conference.</p>
+      </div>
+
+      <div class="achievement-card rank-4">
+        <div class="achievement-rank">4</div>
+        <div class="achievement-icon">📅</div>
+        <h3>Asilomar Bioelectronics 2026</h3>
+        <p class="achievement-value">Conference acceptance</p>
+        <p class="achievement-desc">PET Lab has received acceptance to Asilomar Bioelectronics 2026, expanding its academic presence.</p>
+      </div>
+
+      <div class="achievement-card rank-5">
+        <div class="achievement-rank">5</div>
+        <div class="achievement-icon">🏫</div>
+        <h3>4 Universities Reached</h3>
+        <p class="achievement-value">UCLA, UCSC, Santa Clara, NYU</p>
+        <p class="achievement-desc">Research has been presented or discussed at major institutions across the United States.</p>
+      </div>
+
+      <div class="achievement-card rank-6">
+        <div class="achievement-rank">6</div>
+        <div class="achievement-icon">🤝</div>
+        <h3>Municipal Government Agreement</h3>
+        <p class="achievement-value">Tehran collaboration</p>
+        <p class="achievement-desc">PET Lab has a written and signed agreement with the municipal government of Tehran for collaboration related to a filtration project.</p>
+      </div>
+
+      <div class="achievement-card rank-7">
+        <div class="achievement-rank">7</div>
+        <div class="achievement-icon">👥</div>
+        <h3>15+ Researchers</h3>
+        <p class="achievement-value">Growing research team</p>
+        <p class="achievement-desc">High school and undergraduate researchers across multiple projects working together on enzyme engineering.</p>
+      </div>
+
+      <div class="achievement-card rank-8">
+        <div class="achievement-rank">8</div>
+        <div class="achievement-icon">🌐</div>
+        <h3>4+ Countries Represented</h3>
+        <p class="achievement-value">International presence</p>
+        <p class="achievement-desc">PET Lab operates internationally, with researchers contributing from several countries and regions.</p>
+      </div>
+
+      <div class="achievement-card rank-9">
+        <div class="achievement-rank">9</div>
+        <div class="achievement-icon">🔬</div>
+        <h3>3 Active Research Programs</h3>
+        <p class="achievement-value">Expanded scope</p>
+        <p class="achievement-desc">PET Lab has expanded from a single project into three active research programs operating simultaneously.</p>
+      </div>
+
+      <div class="achievement-card rank-10">
+        <div class="achievement-rank">10</div>
+        <div class="achievement-icon">🔗</div>
+        <h3>University Collaborations</h3>
+        <p class="achievement-value">Research partnerships</p>
+        <p class="achievement-desc">Multiple university research and computing collaborations involving feedback, resources, and continued partnership.</p>
+      </div>
+
+      <div class="achievement-card rank-11">
+        <div class="achievement-rank">11</div>
+        <div class="achievement-icon">🌟</div>
+        <h3>International Student Team</h3>
+        <p class="achievement-value">Cross-institutional</p>
+        <p class="achievement-desc">High school and undergraduate researchers connected across educational levels, institutions, and countries.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="page-results" class="page">
   <div class="container" id="resultsContainer"></div>
 </div>
@@ -2527,6 +2643,7 @@ body[data-theme="dark"] .site-footer { background:#090c0a; }
       <button onclick="showPage('home')">Overview</button>
       <button onclick="showPage('browse')">Protein library</button>
       <button onclick="showPage('optimize')">Design tool</button>
+      <button onclick="showPage('achievements')">Achievements</button>
       <button onclick="showPage('about')">People</button>
     </div>
   </div>
