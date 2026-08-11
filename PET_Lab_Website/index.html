@@ -1295,11 +1295,8 @@ header nav button:hover::after, header nav button.active::after { right:0; }
 .hero-image { position:absolute; inset:0; background:url('images/molecular-hero-hd.png') center/cover no-repeat; filter:saturate(.6) contrast(1.08) brightness(.7); transform:none; animation:heroSettle 2s cubic-bezier(.22,1,.36,1) both; }
 .hero-shade { position:absolute; inset:0; background:rgba(13,27,33,.34); z-index:1; }
 .hero-content { position:relative; z-index:2; max-width:820px; padding:0; text-align:center; margin:0 auto; display:flex; flex-direction:column; align-items:center; }
-.hero-logo-section { position: relative; width: 200px; height: 240px; margin: 0 auto 32px; display: flex; align-items: center; justify-content: center; }
-.hero-brand-mark { width: 100%; height: 100%; object-fit: contain; z-index: 1; }
-.hero-logo-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: white; font-family: 'Plus Jakarta Sans', sans-serif; z-index: 2; }
-.logo-text-main { font-size: 36px; font-weight: 700; letter-spacing: 0.12em; line-height: 1.1; margin: 0; }
-.logo-text-sub { font-size: 28px; font-weight: 600; letter-spacing: 0.18em; line-height: 1; margin: 2px 0 0 0; }
+.hero-logo-section { position: relative; width: 120px; height: 140px; margin: 0 auto 28px; display: flex; align-items: center; justify-content: center; }
+.hero-brand-mark { width: 100%; height: 100%; object-fit: contain; }
 .hero-kicker { color:#fff; font-size:11px; font-weight:600; letter-spacing:.16em; text-transform:uppercase; margin-bottom:16px; }
 .hero-title { font-size:clamp(48px, 6.4vw, 88px); line-height:.92; color:#fff; margin:0 0 24px; max-width:none; text-wrap:balance; }
 .hero-title em { font-weight:400; }
@@ -2063,10 +2060,6 @@ body[data-theme="dark"] .site-footer { background:#090c0a; }
     <div class="hero-content">
       <div class="hero-logo-section reveal reveal-delay-1">
         <img class="hero-brand-mark" src="images/pet-lab-logo.png" alt="PET Lab">
-        <div class="hero-logo-text">
-          <div class="logo-text-main">PET</div>
-          <div class="logo-text-sub">LAB</div>
-        </div>
       </div>
       <p class="hero-kicker reveal reveal-delay-2">PET degradation research</p>
       <h1 class="hero-title reveal reveal-delay-2">Protein engineering<br>for plastic circularity.</h1>
