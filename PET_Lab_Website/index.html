@@ -1292,14 +1292,10 @@ header nav button:hover::after, header nav button.active::after { right:0; }
 
 /* image-led hero */
 .hero-section { min-height:clamp(720px, 92vh, 980px); padding:150px var(--page-pad) 72px; display:grid; place-items:center; isolation:isolate; background:#9fb8c5; overflow:hidden; }
-.hero-image { position:absolute; inset:0; background:url('images/molecular-hero-hd.png') center/cover no-repeat; filter:saturate(.6) contrast(1.08) brightness(.7); transform:none; animation:heroSettle 2s cubic-bezier(.22,1,.36,1) both; }
+.hero-image { position:absolute; inset:0; background:url('images/molecular-hero-hd.png') center/cover no-repeat; background-image:image-set(url('images/molecular-hero-hd@2x.webp') type('image/webp'), url('images/molecular-hero-hd.png') type('image/png')); filter:saturate(.6) contrast(1.08) brightness(.7); transform:none; animation:heroSettle 2s cubic-bezier(.22,1,.36,1) both; }
 .hero-shade { position:absolute; inset:0; background:rgba(13,27,33,.34); z-index:1; }
 .hero-content { position:relative; z-index:2; max-width:820px; padding:0; text-align:center; margin:0 auto; display:flex; flex-direction:column; align-items:center; }
-.hero-logo-wrapper { display: flex; flex-direction: column; align-items: center; margin-bottom: 24px; }
-.hero-brand-mark { width: 100px; height: 150px; object-fit: contain; margin-bottom: 12px; display: block; }
-.hero-brand-text { text-align: center; }
-.hero-brand-pet { font-size: 26px; font-weight: 700; letter-spacing: 0.15em; color: white; line-height: 1; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; }
-.hero-brand-lab { font-size: 22px; font-weight: 600; letter-spacing: 0.15em; color: white; line-height: 1; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; }
+.hero-brand-mark { width:116px; height:178px; object-fit:contain; margin:0 auto 14px; }
 .hero-kicker { color:#fff; font-size:11px; font-weight:600; letter-spacing:.16em; text-transform:uppercase; margin-bottom:16px; }
 .hero-title { font-size:clamp(48px, 6.4vw, 88px); line-height:.92; color:#fff; margin:0 0 24px; max-width:none; text-wrap:balance; }
 .hero-title em { font-weight:400; }
@@ -1927,6 +1923,45 @@ body[data-theme="dark"] #scoringTags span:nth-child(4) { color:#b9a2df !importan
 .team-role { color:var(--primary); font-weight:700; }
 .team-bio { color:var(--text-secondary); font-size:13px; line-height:1.72; }
 .team-grid:has(> .team-card:only-child) { grid-template-columns:minmax(0,520px); justify-content:center; }
+
+/* Achievements adopt the same card idiom as the team grid. */
+.achievements-grid { gap:24px; }
+.achievement-card {
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:26px 24px 28px;
+  transition:border-color .3s ease;
+}
+.achievement-card::before { display:none; }
+.achievement-card:hover {
+  border-color:color-mix(in srgb,var(--primary) 48%,var(--line));
+  box-shadow:none;
+  transform:none;
+}
+.achievement-rank,
+.achievement-card[class*="rank-"] .achievement-rank {
+  width:30px;
+  height:30px;
+  top:20px;
+  right:20px;
+  background:var(--panel);
+  color:var(--primary);
+  border:1px solid var(--line);
+  border-radius:50%;
+  font-size:13px;
+  font-weight:700;
+}
+.achievement-icon { font-size:30px; margin-bottom:18px; }
+.achievement-card h3 {
+  font-family:'Source Serif 4',Georgia,serif;
+  letter-spacing:-.028em;
+  color:var(--fg);
+  font-size:23px;
+  padding-right:34px;
+}
+.achievement-value { color:var(--primary); font-weight:700; }
+.achievement-desc { color:var(--text-secondary); font-size:13px; line-height:1.72; }
 
 .site-footer { background:#17241f; color:#f0f2ee; }
 body[data-theme="dark"] .site-footer { background:#090c0a; }
@@ -3257,11 +3292,11 @@ function showPage(name) {
   document.getElementById('page-' + name).classList.add('active');
   document.body.dataset.page = name;
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-  const idx = { home: 0, browse: 1, optimize: 2, about: 3, results: -1 }[name];
+  const idx = { home: 0, browse: 1, optimize: 2, achievements: 3, about: 4, results: -1 }[name];
   if (idx >= 0) document.querySelectorAll('nav button')[idx].classList.add('active');
   // Sync mobile nav
   document.querySelectorAll('.mobile-nav button').forEach(b => b.classList.remove('active'));
-  const mIdx = { home: 0, browse: 1, optimize: 2, about: 3 }[name];
+  const mIdx = { home: 0, browse: 1, optimize: 2, achievements: 3, about: 4 }[name];
   if (mIdx !== undefined) document.querySelectorAll('.mobile-nav button')[mIdx]?.classList.add('active');
   if (name === 'browse') {
     if (pdbData.length === 0) loadPDB();
