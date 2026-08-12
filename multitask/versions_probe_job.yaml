@@ -1,0 +1,57 @@
+# Probe job: record the GPU name and the EXACT installed library versions on the
+# same image + same (unpinned) install line the training jobs used.
+#
+#   kubectl apply -f versions_probe_job.yaml
+#   kubectl logs -f job/petlab-versions -n gilpin-lab   # copy the two marked blocks
+#   kubectl delete job/petlab-versions -n gilpin-lab
+#
+# CAVEAT: the training jobs installed these libraries UNPINNED, so the versions this
+# probe reports are TODAY's resolved versions and may differ from the originals if the
+# original job logs are gone. Treat as a reproduction environment, not the original.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: petlab-versions
+  namespace: gilpin-lab
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      restartPolicy: Never
+      tolerations:
+        - key: nautilus.io/hardware
+          operator: Equal
+          value: large-gpu
+      containers:
+        - name: probe
+          image: pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              echo "===== GPU ====="
+              nvidia-smi -L
+              nvidia-smi --query-gpu=name,driver_version --format=csv
+              echo "===== INSTALL (capture the 'Successfully installed' line) ====="
+              pip install --no-cache-dir fair-esm pandas numpy scikit-learn joblib \
+                xgboost lightgbm catboost 2>&1 | grep -i "Successfully installed"
+              echo "===== VERSIONS ====="
+              python - <<'PY'
+              import sklearn, xgboost, lightgbm, catboost, numpy, pandas, torch
+              try:
+                  import esm; ev = getattr(esm, "__version__", "n/a")
+              except Exception:
+                  ev = "n/a"
+              print("python      ", __import__("platform").python_version())
+              print("torch       ", torch.__version__, "| cuda", torch.version.cuda)
+              print("scikit-learn", sklearn.__version__)
+              print("xgboost     ", xgboost.__version__)
+              print("lightgbm    ", lightgbm.__version__)
+              print("catboost    ", catboost.__version__)
+              print("fair-esm    ", ev)
+              print("numpy       ", numpy.__version__)
+              print("pandas      ", pandas.__version__)
+              PY
+          resources:
+            requests: {nvidia.com/gpu: "1", cpu: "2", memory: 8Gi}
+            limits:   {nvidia.com/gpu: "1", cpu: "2", memory: 8Gi}

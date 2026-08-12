@@ -1,0 +1,25 @@
+{
+  "stage1_brenda": {
+    "n": 1563,
+    "n_positive": 979,
+    "n_negative": 584,
+    "roc_auc": 0.7322,
+    "average_precision": 0.844,
+    "n_unique_thresholds": 1122,
+    "best_f1_threshold_C": 46.23,
+    "best_f1": 0.7828,
+    "source": "multitask/models_tm/brenda_tm_predictions.csv (local, real per-sample predictions)"
+  },
+  "stage2_s669": {
+    "n": 669,
+    "n_positive": 168,
+    "n_negative": 501,
+    "roc_auc": 0.6687,
+    "average_precision": 0.4535,
+    "ensemble_pearson_r": 0.3902,
+    "n_unique_thresholds": 669,
+    "best_f1_threshold_ddg": 1.163,
+    "best_f1": 0.4606,
+    "source": "multitask/models/*_s669_pred.npy + y_s669.npy, pulled from the Nautilus HPC PVC (namespace gilpin-lab) -- real per-mutation ensemble predictions."
+  }
+}

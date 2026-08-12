@@ -1,0 +1,27 @@
+# Netlify configuration for PET Lab Website
+
+[build]
+  command = "echo 'Static site - no build needed'"
+  publish = "/"
+
+# Redirect all 404s to index.html for SPA routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Set cache headers for optimal performance
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
+[[headers]]
+  for = "/images/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+[[headers]]
+  for = "/*.json"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"

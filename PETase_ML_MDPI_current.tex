@@ -1,0 +1,1240 @@
+% =====================================================================
+%  PETase-ML — Two-stage, leakage-audited protein-stability framework
+%  MDPI-FORMATTED VERSION (extended).
+%
+%  *** IMPORTANT — READ BEFORE SUBMITTING ***
+%  This file reports THE SAME STUDY as main.tex (Springer Nature /
+%  Scientific Reports formatting). They are two journal formattings of one
+%  piece of work, not two papers. Submit ONE of them. Submitting both is
+%  dual submission and is research misconduct.
+%
+%  This file supersedes the earlier "Condition-Aware Machine Learning
+%  Framework ..." MDPI draft, which was based on the older
+%  19,071-mutation model. Per main.tex, those results are superseded and
+%  must not appear.
+%
+%  PROVENANCE OF EVERY NUMBER IN THIS FILE:
+%    - Headline metrics, dataset counts, leakage counts, model tables:
+%      main.tex (authoritative) — verified identical.
+%    - Average precision, best-F1 thresholds, confusion matrices:
+%      paper_figures/perf_summary.json  + the diagnostics figures.
+%      NOTE: Stage 2 average precision is stored as exactly 0.4535 — a tie at
+%      the third decimal. It is reported here as 0.453 to match the value
+%      rendered in precision_recall_curve.pdf, so text and figure agree.
+%    - Extended threshold tables (Appendix C):
+%      paper_figures/stage1_threshold_sweep_full.csv (1,122 rows)
+%      paper_figures/stage2_threshold_sweep_full.csv (669 rows)
+%    - IsPETase case study: paper_figures/ispetase_stage1.json
+%      (verified absent from training data, S669, and BRENDA benchmark).
+%    - Pinned software: multitask/requirements-lock.txt
+%  NOTHING in this file is estimated, rounded from memory, or invented.
+%
+%  SCOPE (editorial, not printed), inherited from main.tex:
+%    - temperature-focused study; pH analysis and EpHod excluded (future
+%      work only)
+%    - general protein-stability framework evaluated for POTENTIAL
+%      PET-degrading-enzyme application (not PETase-specific training data)
+%    - no wet-lab / industrial / environmental performance claims
+%    - the older 19,071-mutation results must not appear
+%
+%  YELLOW [TO ADD: ...] markers are genuine gaps to resolve before
+%  submission. Remove every marker before final submission.
+%
+%  BUILD: requires the MDPI LaTeX template (provides Definitions/mdpi.cls),
+%  available from https://www.mdpi.com/authors/latex . Copy these figures
+%  from paper_figures/ into the project root (or adjust \graphicspath):
+%    roc_curve.pdf  precision_vs_threshold.pdf  precision_recall_curve.pdf
+%    stage1_diagnostics.pdf  stage2_diagnostics.pdf  stage1_tm_scatter.pdf
+%    stage2_model_comparison.pdf  internal_vs_external.pdf
+% =====================================================================
+\documentclass[journal,article,submit,moreauthors]{Definitions/mdpi}
+
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{siunitx}
+\usepackage{xcolor}
+
+\graphicspath{{./}{paper_figures/}}
+
+% ---- highlighted "to add" markers (remove before final submission) ----
+\newcommand{\todo}[1]{\colorbox{yellow}{\textbf{[TO ADD: #1]}}}
+
+% ---- shorthand -------------------------------------------------------
+\newcommand{\ddg}{\ensuremath{\Delta\Delta G}}
+\newcommand{\Tm}{\ensuremath{T_\mathrm{m}}}
+\newcommand{\dtm}{\ensuremath{\Delta T_\mathrm{m}}}
+\newcommand{\kcal}{\,kcal\,mol$^{-1}$}
+
+\firstpage{1}
+\makeatletter
+\setcounter{page}{\@firstpage}
+\makeatother
+\pubvolume{1}
+\issuenum{1}
+\articlenumber{0}
+\pubyear{2026}
+\copyrightyear{2026}
+
+%=================================================================
+\Title{A Two-Stage, Leakage-Audited Machine Learning Framework for
+Temperature- and Stability-Aware Screening of PET-Degrading Enzymes}
+
+% NOTE: author order and affiliations follow main.tex. main.tex itself
+% carries an open question on affiliation 1 (see below) — resolve before
+% submission.
+\Author{Ayush Iyer\textsuperscript{1,}*, James Ponzio\textsuperscript{2}
+and Abhinav Iyer\textsuperscript{3}}
+
+\AuthorNames{Ayush Iyer, James Ponzio and Abhinav Iyer}
+
+% NOTE (from main.tex): confirm whether UC Santa Cruz is Ayush Iyer's
+% institutional affiliation or a compute-resource acknowledgement only.
+% The previous draft listed "Stanford University", which is not supported
+% by any record in this project and has been removed.
+\address{%
+$^{1}$ \quad University of California, Santa Cruz, Santa Cruz, CA, USA\\
+$^{2}$ \quad \todo{James Ponzio --- department, organization, city, state, country}\\
+$^{3}$ \quad \todo{Abhinav Iyer --- department, organization, city, state, country}}
+
+\corres{Correspondence: iyer.ayush31@gmail.com}
+
+\abstract{Plastic pollution is a defining environmental challenge, and enzymatic
+depolymerization of polyethylene terephthalate (PET) offers a biological route to
+recycling; however, candidate enzymes must remain stable under demanding conditions, and
+computational screening is frequently inflated by data leakage. We built a general
+protein-stability framework and evaluated it for potential application to PET-degrading
+enzyme engineering. We assembled 1{,}001{,}888 mutation and stability records from seven
+public sources and routed them by measurement type into a two-stage design: Stage~1
+screens whole-protein thermostability (melting temperature, \Tm) and Stage~2 optimizes
+mutation-level folding stability (\ddg). Training records were audited for both exact and
+sequence-homology leakage against the independent benchmarks; auditing removed
+approximately 132{,}000 records, of which 131{,}479 were detectable only through sequence
+homology and would have survived exact-match filtering entirely. On the independent BRENDA
+benchmark, Stage~1 reached a receiver-operating-characteristic (ROC) AUC of 0.732 (95\% CI
+0.708--0.755) with an average precision of 0.844 against a positive-class baseline of 0.63.
+On the independent S669 benchmark, Stage~2 reached a ROC AUC of 0.669 (95\% CI 0.62--0.72),
+an average precision of 0.453 against a baseline of 0.25, and an ensemble Pearson
+correlation of 0.390 (95\% CI 0.32--0.46). Both stages showed a pronounced
+precision--recall trade-off in which precision rose and recall fell under stricter
+thresholds. Stage~1 internal validation (Pearson $\approx$0.80) substantially exceeded
+independent performance (0.54), illustrating the size of the optimism that internal
+splits alone would have reported. These results describe a moderate, leakage-controlled
+screen-then-optimize framework suited to prioritizing candidates for experimental testing,
+not a validated industrial solution.}
+
+\keyword{protein stability; machine learning; enzyme engineering; thermostability;
+mutation-effect prediction; PET-degrading enzymes; data leakage; protein language models}
+
+\begin{document}
+
+%=================================================================
+\section{Introduction}
+%=================================================================
+
+\subsection{Plastic Accumulation and the Case for Biological Recycling}
+
+Polyethylene terephthalate (PET) is among the most heavily produced synthetic polymers,
+and its accumulation as waste is a major contributor to global plastic pollution: global
+plastics production reached roughly 460 million tonnes in 2019 and continues to rise,
+while only a small fraction is recycled \citep{oecd2022plastics}.
+% CONFIRM: verify the exact OECD figure/year and add any PET-specific value.
+Mechanical recycling, the dominant industrial route, progressively shortens polymer chains
+and degrades material quality, so recycled PET is typically down-cycled rather than
+returned to its original application. Biological recycling, in which enzymes depolymerize
+PET into recoverable monomers that can in principle be repolymerized, is an attractive
+complement to mechanical and chemical recycling \citep{yoshida2016}.
+
+\subsection{PET Hydrolases and the Role of Thermostability}
+
+Enzymatic PET degradation has advanced through the discovery and engineering of PET
+hydrolases such as PETase and related cutinases
+\citep{yoshida2016,tournier2020,lu2022}. The discovery of \textit{Ideonella sakaiensis}
+201-F6 and its secreted PET hydrolase established that PET is biologically accessible
+\citep{yoshida2016}; subsequent protein-engineering campaigns produced variants with
+substantially improved operating characteristics \citep{tournier2020,lu2022}.
+
+Thermostability matters in this setting because reaction rates rise near PET's
+glass-transition temperature, where the polymer becomes more accessible to enzymatic
+attack. It is not, however, the sole determinant of catalytic performance: activity,
+substrate binding, reaction conditions, polymer crystallinity, and pH also matter, and a
+variant stabilized at the expense of turnover may be worse in practice. We therefore treat
+stability as a screening criterion that narrows a candidate set, not as a proxy for overall
+enzyme quality.
+
+\subsection{Two Distinct Prediction Problems}
+
+Computational stability prediction addresses two related but non-interchangeable
+questions. \emph{Whole-protein screening} asks whether a given enzyme is thermostable,
+summarized by its melting temperature (\Tm). \emph{Mutation-level optimization} asks how a
+specific substitution changes folding stability, expressed as the change in unfolding free
+energy (\ddg). The two differ in their unit of analysis (a protein vs.\ a point mutation),
+in the data available to train them, and in the error that matters. Conflating them leads
+to misleading claims about what a model can do---for example, reporting a whole-protein
+classification accuracy and implying it applies to mutation ranking.
+
+This study keeps the two problems explicitly separate, trains a distinct model for each on
+a distinct subset of the data, and evaluates each on its own independent benchmark.
+
+\subsection{Data Leakage in Stability Benchmarking}
+
+A recurring problem in this literature is data leakage. \emph{Exact-match} leakage
+(identical sequences or mutations shared between training and test) is straightforward to
+detect and is routinely filtered. \emph{Sequence-homology} leakage---where a training
+protein is not identical to a test protein but shares a homologous background with
+it---is subtler, is not caught by exact-key filtering, and can inflate benchmark
+performance substantially because protein stability is strongly conserved within families.
+
+We do not claim that all prior models contain leakage; rather, we control for it explicitly
+at both levels, quantify how much each level removes, and report the effect. As shown in
+Section~\ref{sec:res-leakage}, homology-level contamination dominated by roughly two orders
+of magnitude in this dataset, which has direct implications for how stability benchmarks
+should be constructed.
+
+\subsection{Related Work}
+
+Structure-based methods estimate \ddg{} from an explicit three-dimensional model, and
+statistical-potential and machine-learning predictors trained on curated thermodynamic
+datasets have been developed over two decades; the S2648 dataset and the PoPMuSiC
+predictor are representative of this line \citep{dehouck2009s2648}. Such methods require
+structures and are sensitive to their quality.
+
+Sequence-based predictors avoid that requirement. Protein language models trained on large
+unlabeled sequence corpora---of which the ESM-2 family is a widely used example
+\citep{lin2023esm2}---produce residue-level representations that transfer to a range of
+downstream property-prediction tasks, including stability, without explicit structural
+input. Our framework is sequence-based and uses ESM-2 representations as its sole learned
+featurization.
+
+Benchmarking practice has itself become a subject of study. Pancotti~\textit{et al.}
+assembled the S669 dataset specifically to provide a test set with limited overlap against
+common training sets, and compared a broad set of available tools under matched conditions
+\citep{pancotti2022s669}. We adopt S669 as our Stage~2 benchmark for that reason, and we
+restrict quantitative comparison to settings where the benchmark, sign convention, split,
+and metric genuinely match.
+
+For whole-protein thermostability, large-scale experimental resources have changed what is
+trainable: the Meltome Atlas provides proteome-wide thermal stability measurements
+\citep{jarzab2020meltome}, the Tsuboyama~\textit{et al.} mega-scale dataset provides
+folding stability for hundreds of thousands of designed and natural domains
+\citep{tsuboyama2023}, and site-saturation mutagenesis of human domains provides
+abundance-based stability proxies at comparable scale \citep{beltran2025domainome}. BRENDA
+aggregates curated enzyme functional and stability annotations \citep{chang2021brenda} and
+serves here as an independent whole-protein benchmark.
+
+\subsection{Contributions}
+
+Because whole-protein selection and mutation-level optimization are usually treated
+separately, this study evaluates a single, integrated two-stage screen-then-optimize
+framework---a general protein-stability method assessed for potential application to
+PET-degrading enzyme engineering---on leakage-audited, independent BRENDA (temperature) and
+S669 (\ddg) benchmarks, and reports its performance without overstating readiness.
+Specifically, we contribute:
+
+\begin{enumerate}
+\item A harmonized 1{,}001{,}888-record stability table assembled from seven public
+      sources and routed by measurement type, so that each stage trains only on the
+      measurement it predicts (Section~\ref{sec:sources}, Table~\ref{tab:data}).
+\item A two-level leakage audit---exact-key and MMseqs2 sequence-homology---with the
+      contribution of each level quantified separately (Section~\ref{sec:leakage},
+      Table~\ref{tab:leakage}).
+\item Independent evaluation of both stages with bootstrap confidence intervals, reported
+      alongside internal validation so that the generalization gap is visible rather than
+      concealed (Section~\ref{sec:internal-external}, Figure~\ref{fig:intext}).
+\item A full threshold characterization of both stages, showing that high precision is
+      obtainable only at low recall, and stating explicitly that benchmark precision is not
+      an experimental success rate (Sections~\ref{sec:stage1-thresh} and
+      \ref{sec:stage2-class}; Appendix~\ref{app:sweeps}).
+\end{enumerate}
+
+%=================================================================
+\section{Materials and Methods}
+%=================================================================
+
+\subsection{Study Design}
+
+The framework comprises two stages that use different prediction targets and different
+data subsets: Stage~1 (whole-protein \Tm) and Stage~2 (mutation-level \ddg). The full
+1{,}001{,}888-record table did not train both models; records were routed by measurement
+type (Table~\ref{tab:data}, Panel~B). This routing is a deliberate design constraint: a
+\Tm{} record describes a protein, a \ddg{} record describes a substitution, and pooling
+them would train each model on a target it is not being evaluated against.
+
+\subsection{Source Datasets}
+\label{sec:sources}
+
+Records were drawn from seven public sources spanning both measurement types
+(Table~\ref{tab:data}, Panel~A): the Human Domainome abundance dataset
+\citep{beltran2025domainome}; the Tsuboyama~\textit{et al.} mega-scale folding-stability
+dataset and its double-mutant subset \citep{tsuboyama2023}; the Meltome Atlas
+\citep{jarzab2020meltome}; ThermoMutDB \citep{xavier2021thermomutdb}; FireProtDB
+\citep{stourac2021fireprotdb}; and the S2648 stability dataset \citep{dehouck2009s2648}.
+Independent evaluation used the BRENDA enzyme benchmark \citep{chang2021brenda} for
+Stage~1 and the S669 benchmark \citep{pancotti2022s669} for Stage~2; protein sequences
+were resolved through UniProt.
+
+The Tsuboyama and Domainome data were obtained from their Zenodo deposits (records 7992926
+and 13629491, respectively), and the BRENDA temperature-stability labels were parsed from
+the BRENDA 2026.1 release. The source datasets were downloaded and assembled between April
+and June 2026, and each was used under its respective public license (BRENDA under
+CC~BY~4.0).
+% CONFIRM: the exact license of each source, and the ProDDG/S2648 provenance
+% (S2648 = Dehouck et al.).
+
+\subsection{Harmonization and Sequence Resolution}
+
+Records were harmonized to a common schema, typed by measurement, de-duplicated, and
+mapped to canonical UniProt sequences retrieved through the UniProt REST API
+(\texttt{rest.uniprot.org}) in June 2026 (training-set sequences on 18~June~2026 and
+BRENDA benchmark sequences on 22~June~2026).
+% CONFIRM: access dates (from fetch-output file timestamps); add canonical vs. isoform
+% handling, failed-mapping count, and dedup policy.
+
+Sign conventions were normalized across sources at load time, because the sources do not
+agree: for \ddg{} we adopt the convention that negative values denote stabilization, and
+each source was checked against that convention rather than assumed to follow it.
+% CONFIRM: state per-source sign handling explicitly (at least one source required
+% inversion at load time); reviewers commonly ask for this.
+
+\subsection{Label Definition for Stage 1}
+\label{sec:stage1-labels}
+
+BRENDA reports heterogeneous temperature-stability evidence, not a uniform \Tm{} column.
+Positive (thermostable) proteins were therefore defined as those with a derived
+stable-temperature ceiling $\geq 60\,^{\circ}$C and negative proteins as those
+$\leq 45\,^{\circ}$C. Proteins falling in the intervening 45--60\,$^{\circ}$C band were
+treated as ambiguous and excluded from classification rather than assigned to either class,
+so that the reported classification metrics are not inflated by forcing a decision on
+genuinely borderline cases.
+
+For the regression analysis we distinguish two kinds of reported value: a directly measured
+melting temperature, and a stability ceiling inferred from inactivation experiments or
+qualitative stability evidence. Both are retained, but they are reported separately
+(Section~\ref{sec:stage1-reg}) because they are not equally reliable targets.
+
+\subsection{Leakage Auditing}
+\label{sec:leakage}
+
+Every candidate training record was audited against the independent benchmark proteins
+using (i) an exact-key and mutation-level overlap check and (ii) a sequence-homology search
+with MMseqs2 \citep{steinegger2017mmseqs2}. Searches were run with
+\texttt{mmseqs easy-search} at maximum sensitivity ($-s\ 7.5$, $-e\ 1000$,
+\texttt{-{}-max-seqs 500}), and a training record was flagged as leakage when it matched a
+benchmark protein at $\geq$30\% sequence identity over $\geq$50\% query coverage (applied
+bidirectionally).
+
+Four independent exact keys were used, so that a record could be caught by any of them:
+UniProt accession plus mutation; a hash of the wild-type sequence; PDB identifier plus
+chain plus mutation; and PDB identifier plus mutation. Per-key counts are given in
+Table~\ref{tab:leakage}.
+
+\subsection{Feature Representation}
+
+Proteins and mutations were represented using ESM-2 protein-language-model embeddings
+\citep{lin2023esm2}. Per-residue representations were taken from the final layer of
+\texttt{esm2\_t30\_150M\_UR50D} (640 dimensions) and mean-pooled over the sequence.
+Sequences longer than the model's 1022-residue context limit were truncated.
+
+For the Stage~1 whole-protein model the feature vector was the mean-pooled embedding
+together with the log sequence length. For the Stage~2 mutation model the features combined
+the wild-type and mutant mean-pooled embeddings and their difference
+($[\mathbf{e}_{wt},\ \mathbf{e}_{mut},\ \mathbf{e}_{mut}-\mathbf{e}_{wt}]$) with an ESM-2
+log-likelihood-ratio score for the substitution. These embedding features were reduced by
+principal component analysis to 256 dimensions before the boosting models.
+
+Embeddings were precomputed once and cached, so that the language model was evaluated a
+single time per sequence rather than once per training epoch.
+% CONFIRM: final feature set and PCA dimensionality (GPU job runs build_features.py
+% --pca 256); embedding model esm2_t30_150M_UR50D (some earlier scripts use
+% esm2_t12_35M); do not carry features from the 19,071-mutation model.
+
+We note a known limitation of this representation: mean-pooling over the sequence
+attenuates mutation-site detail, since a single substitution changes only one of several
+hundred pooled positions. The explicit difference vector and the log-likelihood-ratio score
+partially compensate, but a per-residue or attention-pooled representation is a natural
+avenue for improvement (Section~\ref{sec:future}).
+
+\subsection{Models and Hyperparameters}
+
+Each stage used an ensemble that averaged the predictions of its base models, all with a
+fixed random seed of 42. Stage~1 (\Tm) combined Extra Trees and Random Forest, XGBoost
+\citep{chen2016xgboost}, LightGBM \citep{ke2017lightgbm}, and CatBoost
+\citep{prokhorenkova2018catboost}. Stage~2 (\ddg) combined Random Forest, Extra Trees, a
+multilayer perceptron, XGBoost, LightGBM, and CatBoost. Random Forest, Extra Trees, and the
+multilayer perceptron were implemented in scikit-learn \citep{pedregosa2011sklearn}. The
+ensemble prediction was the unweighted mean of the base-model outputs. Complete
+hyperparameter settings are given in Appendix~\ref{app:hyper}, Table~\ref{tab:hyper}.
+
+\subsection{Training Infrastructure}
+
+GPU components were trained on the National Research Platform (Nautilus) Kubernetes cluster
+using the \texttt{pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime} container on the
+\texttt{large-gpu} partition, with code, data, and the embedding cache held on a persistent
+volume. Sequence-homology auditing used MMseqs2 release~18-8cc5c.
+
+\subsection{Evaluation and Statistical Analysis}
+
+Models were trained on a protein-grouped training/validation split (grouped so that no
+protein spanned both partitions; seed 42) and evaluated on the held-out, leakage-audited
+BRENDA and S669 benchmarks. Classification was summarized by ROC AUC, average precision,
+precision, recall, F1, and accuracy across decision thresholds; regression by Pearson and
+Spearman correlation and RMSE.
+
+Confidence intervals were estimated by bootstrapping the test items with replacement
+(2{,}000 resamples; percentile 95\% CI; seed 0), reusing the saved per-item predictions
+without retraining.
+
+For \ddg, negative values denote stabilization; a variant is predicted stabilizing when its
+predicted \ddg{} falls below the decision threshold. Thresholds were swept across the full
+range of observed predictions to characterize the precision--recall trade-off rather than
+to select an operating point on the benchmark: 1{,}122 distinct thresholds for Stage~1 and
+669 for Stage~2 (Appendix~\ref{app:sweeps}).
+% CONFIRM: thresholds were fixed before evaluation.
+
+Software versions are listed in Appendix~\ref{app:software}, Table~\ref{tab:software}.
+% CONFIRM: these versions were reproduced from the training container (original run
+% unpinned); confirm with a pinned re-run.
+
+%=================================================================
+\section{Results}
+%=================================================================
+
+\subsection{Dataset Composition}
+
+After harmonization, the multi-source staging table comprised 1{,}001{,}888 mutation and
+stability records drawn from seven public sources (Table~\ref{tab:data}, Panel~A). Because
+the framework treats temperature stability and folding stability as distinct problems,
+records were routed by measurement type (Table~\ref{tab:data}, Panel~B): 29{,}654
+melting-temperature (\Tm) records were assigned to Stage~1 and 508{,}693 folding
+free-energy change (\ddg) records to Stage~2. Abundance-proxy (457{,}943) and \dtm{}
+(5{,}598) records were retained in the table but were not used for model training in this
+study.
+
+The composition is markedly imbalanced by source: two datasets (Domainome and the
+Tsuboyama mega-scale set) supply 81\% of all records, while the three classical curated
+thermodynamic databases (ThermoMutDB, FireProtDB, and ProDDG/S2648) together supply about
+2\%. The large sources are also the ones furthest from the measurement of interest---the
+Domainome records are an abundance-based proxy rather than a direct thermodynamic
+measurement, which is why they were excluded from training here.
+
+\begin{table}[H]
+\caption{Composition of the assembled dataset and allocation by measurement type. Exact
+record counts; both panels sum to 1{,}001{,}888.}
+\label{tab:data}
+\begin{tabular}{lr}
+\toprule
+\multicolumn{2}{l}{\textit{Panel A --- Rows by source dataset}}\\
+\midrule
+\textbf{Source dataset} & \textbf{Rows}\\
+\midrule
+Domainome (aPCA abundance)              & 457{,}943\\
+Tsuboyama \textit{et al.} 2023 (mega-scale)     & 357{,}155\\
+Tsuboyama \textit{et al.} 2023 (double mutants) & 138{,}275\\
+Meltome Atlas                           & 27{,}884\\
+ThermoMutDB                             & 11{,}520\\
+FireProtDB                              & 6{,}549\\
+ProDDG/S2648                            & 2{,}562\\
+\midrule
+\textbf{Total}                          & \textbf{1{,}001{,}888}\\
+\bottomrule
+\end{tabular}
+
+\vspace{8pt}
+\begin{tabular}{lrl}
+\toprule
+\multicolumn{3}{l}{\textit{Panel B --- Rows by measurement type and model allocation}}\\
+\midrule
+\textbf{Measurement type} & \textbf{Rows} & \textbf{Used to train}\\
+\midrule
+\ddg{} (mutation)     & 508{,}693 & Stage 2\\
+Abundance (proxy)     & 457{,}943 & Not used in this study\\
+\Tm{} (whole protein) & 29{,}654  & Stage 1\\
+\dtm{}                & 5{,}598   & Not used in this study\\
+\midrule
+\textbf{Total}        & \textbf{1{,}001{,}888} & ---\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Leakage Audit}
+\label{sec:res-leakage}
+
+From 1{,}135{,}644 stability-relevant candidate records, the audit removed 2{,}627 exact
+duplicate measurements and 132{,}205 records that matched the S669 test set. Of the
+test-set matches, 131{,}536 were flagged by sequence homology and the remainder by exact
+keys, with 131{,}479 of the homology matches invisible to every exact key
+(Table~\ref{tab:leakage}). This left 1{,}001{,}888 training-eligible records.
+
+The asymmetry is the central observation: the four exact keys together caught 669 records,
+while homology search caught 131{,}536---roughly 197 times as many. A pipeline that filtered
+only on exact identity would have retained more than 131{,}000 contaminated records, or
+about 13\% of the final training table. Because stability is conserved within protein
+families, those records would have allowed the model to encounter close relatives of the
+test proteins during training, and any resulting benchmark score would overstate
+generalization by an unknown but potentially large margin.
+
+\begin{table}[H]
+\caption{Leakage audit against the S669 benchmark. Exact keys are applied independently, so
+a record may be caught by more than one; the final row reports homology matches that no
+exact key caught. Starting pool: 1{,}135{,}644 candidate records; 2{,}627 exact duplicate
+measurements were removed separately.}
+\label{tab:leakage}
+\begin{tabular}{lr}
+\toprule
+\textbf{Detection route} & \textbf{Records flagged}\\
+\midrule
+Exact key: UniProt accession $+$ mutation      & 300\\
+Exact key: wild-type sequence hash             & 232\\
+Exact key: PDB $+$ chain $+$ mutation          & 70\\
+Exact key: PDB $+$ mutation                    & 67\\
+\midrule
+Sequence homology (MMseqs2, $\geq$30\% id, $\geq$50\% cov) & 131{,}536\\
+\midrule
+\textbf{Total records matching S669}           & \textbf{132{,}205}\\
+\quad of which detectable \textit{only} by homology & 131{,}479\\
+\midrule
+\textbf{Training-eligible records remaining}   & \textbf{1{,}001{,}888}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Internal Validation Versus Independent Testing}
+\label{sec:internal-external}
+
+During development, the Stage~1 temperature model achieved an internal held-out
+root-mean-square error (RMSE) of approximately 6.5\,$^{\circ}$C and a validation Pearson
+correlation of approximately 0.80. On the independent BRENDA benchmark the same model
+obtained a Pearson correlation of 0.54---a drop of roughly 0.26 in correlation
+(Figure~\ref{fig:intext}).
+
+We report both figures deliberately. The internal number describes performance on data
+drawn from the training distribution and characterizes model fitting only; it is not
+evidence of generalization. Had we reported the internal validation alone, as is common,
+the framework would have appeared substantially stronger than the independent evaluation
+supports. Stage~2 internal validation is not reported here because a comparable
+development-split figure was not retained for that stage.
+
+\begin{figure}[H]
+\includegraphics[width=0.72\linewidth]{internal_vs_external.pdf}
+\caption{Internal (development) validation compared with independent-benchmark performance.
+Stage~1 Pearson correlation falls from approximately 0.80 on the internal held-out split to
+0.54 on the independent BRENDA benchmark. Stage~2 is shown with its independent S669
+correlation (0.39); a comparable internal figure was not retained for that stage.}
+\label{fig:intext}
+\end{figure}
+
+\subsection{Stage 1: Classification on BRENDA}
+
+Independent evaluation used a curated BRENDA whole-protein temperature-stability benchmark
+\citep{chang2021brenda}, labeled as described in Section~\ref{sec:stage1-labels}. During
+curation, 412 records were removed from a pre-curation labeled set of 2{,}446 to yield
+2{,}034 proteins; a further 471 ambiguous cases in the 45--60\,$^{\circ}$C band were
+excluded, leaving 1{,}563 proteins (979 positive, 584 negative) for classification.
+
+On this independent set the classifier reached a ROC AUC of 0.732 (95\% CI 0.708--0.755).
+The distribution of predicted \Tm{} separates the two classes only partially
+(Figure~\ref{fig:s1diag}, left): both classes concentrate between 45 and 60\,$^{\circ}$C,
+and the separation that does exist comes largely from a distinct high-\Tm{} mode near
+70--85\,$^{\circ}$C that contains almost exclusively positive proteins. At the best-F1
+threshold of 46\,$^{\circ}$C the model recovers 953 of 979 positives but also calls 503 of
+584 negatives positive (Figure~\ref{fig:s1diag}, right), giving precision 0.65, recall 0.97,
+and F1 0.78.
+
+\begin{figure}[H]
+\includegraphics[width=\linewidth]{stage1_diagnostics.pdf}
+\caption{Stage~1 classifier diagnostics on the independent BRENDA benchmark
+($n=1{,}563$). \textbf{Left:} distribution of predicted \Tm{} by true label; the dashed
+line marks the best-F1 threshold (46\,$^{\circ}$C). The classes overlap heavily below
+60\,$^{\circ}$C, with a largely positive high-\Tm{} mode near 70--85\,$^{\circ}$C.
+\textbf{Right:} confusion matrix at that threshold (best F1 $=0.78$).}
+\label{fig:s1diag}
+\end{figure}
+
+\subsection{Stage 1: Threshold Behaviour}
+\label{sec:stage1-thresh}
+
+Classification performance depended strongly on the decision threshold
+(Table~\ref{tab:stage1}, Panel~A; Figure~\ref{fig:precision}a). As the temperature cutoff
+was made more stringent, precision increased while recall fell---from 0.65 (recall 0.98) at
+the most permissive cutoff to 0.93 (recall 0.39) and 0.98 (recall 0.32) at the strictest
+cutoffs. The full sweep across 1{,}122 distinct thresholds is summarized in
+Appendix~\ref{app:sweeps}, Table~\ref{tab:sweep1}.
+
+We emphasize that precision at a strict threshold is not an experimental success rate: the
+0.93 precision corresponds to only 39\% recall, so the strict-threshold regime identifies a
+small, high-confidence set of candidates while missing most true positives. At the
+60\,$^{\circ}$C threshold the individual models differ modestly, with Extra Trees the most
+precise (0.963) and CatBoost the most sensitive (recall 0.400); the ensemble sits between
+them (Table~\ref{tab:stage1}, Panel~B).
+
+\begin{table}[H]
+\caption{Stage 1 melting-temperature model: classification on the independent BRENDA
+benchmark (1{,}563 enzymes; 979 positive, 584 negative). Positive class $=$ thermostable.
+ROC AUC $=0.732$ (95\% CI 0.708--0.755); average precision $=0.844$ against a
+positive-class baseline of 0.63. Precision is reported with recall, F1, and accuracy so
+that it is not read as overall reliability.}
+\label{tab:stage1}
+\begin{tabular}{lcccc}
+\toprule
+\multicolumn{5}{l}{\textit{Panel A --- Decision-threshold analysis}}\\
+\midrule
+\textbf{Threshold} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} & \textbf{Accuracy}\\
+\midrule
+46\,$^{\circ}$C & 0.65 & 0.98 & 0.78 & 0.66\\
+50\,$^{\circ}$C & 0.71 & 0.77 & 0.74 & 0.66\\
+52\,$^{\circ}$C & 0.77 & 0.63 & 0.69 & 0.65\\
+60\,$^{\circ}$C & 0.93 & 0.39 & 0.55 & 0.60\\
+66\,$^{\circ}$C & 0.98 & 0.32 & 0.49 & 0.58\\
+\bottomrule
+\end{tabular}
+
+\vspace{8pt}
+\begin{tabular}{lccc}
+\toprule
+\multicolumn{4}{l}{\textit{Panel B --- Per-model performance at the 60\,$^{\circ}$C threshold}}\\
+\midrule
+\textbf{Model} & \textbf{Precision} & \textbf{Recall} & \textbf{F1}\\
+\midrule
+Extra Trees   & 0.963 & 0.369 & 0.533\\
+Random Forest & 0.948 & 0.355 & 0.517\\
+LightGBM      & 0.933 & 0.395 & 0.555\\
+CatBoost      & 0.927 & 0.400 & 0.559\\
+XGBoost       & 0.917 & 0.394 & 0.551\\
+Ensemble      & 0.945 & 0.388 & 0.550\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Stage 1: Regression Against Measured Temperature}
+\label{sec:stage1-reg}
+
+Evaluated as a regressor against the reported stable temperature across all 2{,}034 curated
+proteins, the model obtained a Pearson correlation of 0.54 (95\% CI 0.50--0.57). Restricted
+to the 325 proteins whose reported value is a directly measured melting temperature, rather
+than a ceiling inferred from inactivation or qualitative evidence, the correlation rose to
+0.60 (Figure~\ref{fig:s1scatter}).
+
+The scatter also exposes a systematic compression: predictions concentrate in a
+45--60\,$^{\circ}$C band regardless of the measured value, so proteins with measured
+stability above roughly 80\,$^{\circ}$C are consistently under-predicted, and those below
+about 35\,$^{\circ}$C are over-predicted. The model is therefore better at ranking proteins
+than at recovering absolute temperatures, which is consistent with its intended use as a
+screen and is the reason we report classification behaviour as the primary Stage~1 result.
+
+\begin{figure}[H]
+\includegraphics[width=0.75\linewidth]{stage1_tm_scatter.pdf}
+\caption{Stage~1 predicted versus measured thermostability on the curated BRENDA set
+($n=2{,}034$). Grey points ($n=1{,}709$) are proteins whose label is a stability ceiling
+inferred from inactivation or qualitative evidence; teal points ($n=325$) are proteins with
+a directly measured \Tm. Pearson $r=0.54$ over all points and $r=0.60$ over the measured-\Tm{}
+subset. The dashed line is the identity. Predictions are compressed toward
+45--60\,$^{\circ}$C relative to the measured range.}
+\label{fig:s1scatter}
+\end{figure}
+
+\subsection{Stage 2: Regression on S669}
+
+Independent folding-stability performance was assessed on the S669 benchmark of 669 single
+mutations (168 stabilizing, 501 non-stabilizing reference cases)
+\citep{pancotti2022s669}. Across 2{,}000 bootstrap resamples, the ensemble achieved a
+Pearson correlation of 0.390 (95\% CI 0.32--0.46), RMSE 1.509\kcal, and a ROC AUC of 0.669
+(95\% CI 0.62--0.72) for stabilizing/non-stabilizing classification (Table~\ref{tab:stage2},
+Panels~A--B).
+
+A notable feature of the per-model breakdown is that the ensemble did \emph{not} produce the
+best regression metrics: Extra Trees alone reached Pearson 0.436 and RMSE 1.481, ahead of
+the ensemble's 0.390 and 1.509 (Figure~\ref{fig:s2models}). Unweighted averaging pulled the
+strongest single model toward weaker members---the multilayer perceptron, at Pearson 0.298,
+was the weakest---so the ensemble is more conservative but not more accurate on this
+benchmark. We report the ensemble as the primary model because it was fixed in advance,
+but we note that a weighted or selected ensemble is an obvious improvement and that
+choosing Extra Trees post hoc on the basis of test performance would itself be a form of
+benchmark overfitting.
+
+\begin{figure}[H]
+\includegraphics[width=\linewidth]{stage2_model_comparison.pdf}
+\caption{Stage~2 per-model regression performance on the independent S669 benchmark
+($n=669$). \textbf{Left:} Pearson correlation (higher is better). \textbf{Right:} RMSE in
+\kcal{} (lower is better). The unweighted ensemble (highlighted) ranks second on both
+metrics, behind Extra Trees.}
+\label{fig:s2models}
+\end{figure}
+
+\begin{table}[H]
+\caption{Stage 2 mutation-level \ddg{} model: regression and classification on the
+independent S669 benchmark (669 mutations; 168 stabilizing, 501 non-stabilizing reference
+cases). Ensemble ROC AUC $=0.669$ (95\% CI 0.62--0.72); average precision $=0.453$ against a
+positive-class baseline of 0.25; ensemble regression Pearson $=0.390$ (95\% CI 0.32--0.46);
+2{,}000 bootstrap resamples.}
+\label{tab:stage2}
+\begin{tabular}{lccc}
+\toprule
+\multicolumn{4}{l}{\textit{Panel A --- Regression (predicted vs.\ experimental \ddg)}}\\
+\midrule
+\textbf{Model} & \textbf{Pearson} & \textbf{Spearman} & \textbf{RMSE (\kcal)}\\
+\midrule
+Extra Trees           & 0.436 & 0.461 & 1.481\\
+XGBoost               & 0.382 & 0.413 & 1.514\\
+Random Forest         & 0.369 & 0.396 & 1.523\\
+LightGBM              & 0.330 & 0.364 & 1.549\\
+CatBoost              & 0.324 & 0.362 & 1.557\\
+Multilayer perceptron & 0.298 & 0.338 & 1.612\\
+Ensemble              & 0.390 & 0.414 & 1.509\\
+\bottomrule
+\end{tabular}
+
+\vspace{8pt}
+\begin{tabular}{lcccc}
+\toprule
+\multicolumn{5}{l}{\textit{Panel B --- Ensemble classification across decision thresholds}}\\
+\midrule
+\textbf{Threshold} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} & \textbf{Accuracy}\\
+\midrule
+0.00\kcal    & 0.81 & 0.10 & 0.18 & 0.77\\
+$+$0.25\kcal & 0.51 & 0.26 & 0.35 & 0.75\\
+$+$0.50\kcal & 0.38 & 0.46 & 0.42 & 0.67\\
+$+$1.00\kcal & 0.31 & 0.80 & 0.45 & 0.51\\
+\bottomrule
+\end{tabular}
+
+\vspace{8pt}
+\begin{tabular}{lcc}
+\toprule
+\multicolumn{3}{l}{\textit{Panel C --- Per-model performance at the strict (0.00\kcal) threshold}}\\
+\midrule
+\textbf{Model} & \textbf{Precision} & \textbf{Recall}\\
+\midrule
+Random Forest         & 0.900 & 0.107\\
+Extra Trees           & 0.786 & 0.065\\
+XGBoost               & 0.735 & 0.149\\
+LightGBM              & 0.625 & 0.119\\
+CatBoost              & 0.429 & 0.107\\
+Multilayer perceptron & 0.415 & 0.202\\
+Ensemble              & 0.810 & 0.101\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Stage 2: Classification Behaviour}
+\label{sec:stage2-class}
+
+As in Stage~1, precision and recall traded off with threshold stringency
+(Table~\ref{tab:stage2}, Panels~B--C; Figure~\ref{fig:precision}b). At the strict
+0.00\kcal{} threshold the ensemble reached precision 0.81 at only 10\% recall---18 true
+stabilizing mutations recovered out of 168, with 4 false positives. The best-F1 operating
+point lies far to the permissive side, at $+1.16$\kcal, where recall rises to 0.89 but
+precision falls to 0.31 (F1 $=0.46$; Figure~\ref{fig:s2diag}).
+
+The predicted-score distributions show why (Figure~\ref{fig:s2diag}, left): stabilizing and
+destabilizing mutations overlap across almost the entire predicted range, with the
+stabilizing distribution shifted only modestly toward lower predicted \ddg. The model
+therefore operates as a high-precision, low-recall filter at strict cutoffs: the top-ranked
+candidates are enriched for true stabilizers, but the majority of stabilizing mutations are
+not recovered. We report this low recall explicitly rather than obscuring it, because it
+defines the model's intended use as a candidate-prioritization filter.
+
+\begin{figure}[H]
+\includegraphics[width=\linewidth]{stage2_diagnostics.pdf}
+\caption{Stage~2 classifier diagnostics on the independent S669 benchmark ($n=669$).
+\textbf{Left:} distribution of predicted \ddg{} by true label; the dashed line marks the
+best-F1 threshold ($+1.16$\kcal). The two classes overlap across most of the predicted
+range. \textbf{Right:} confusion matrix at that threshold (best F1 $=0.46$).}
+\label{fig:s2diag}
+\end{figure}
+
+\subsection{Precision--Recall Behaviour and Average Precision}
+
+Because both benchmarks are class-imbalanced, we also report average precision, which
+summarizes the precision--recall curve without reference to a chosen threshold
+(Figure~\ref{fig:pr}). Stage~1 attained an average precision of 0.844 against a
+positive-class baseline of 0.63, and Stage~2 attained 0.453 against a baseline of 0.25.
+
+Both stages therefore improve on their respective baselines---by 0.21 and 0.20 in absolute
+terms---but the shapes differ. The Stage~1 curve holds precision above 0.95 out to roughly
+30\% recall before declining smoothly, whereas the Stage~2 curve is unstable at low recall
+and falls below 0.6 precision by 20\% recall. The Stage~2 ranking is informative at the very
+top of the list and degrades quickly thereafter, which is consistent with the
+threshold analysis in Section~\ref{sec:stage2-class}.
+
+\begin{figure}[H]
+\includegraphics[width=0.72\linewidth]{precision_recall_curve.pdf}
+\caption{Precision--recall curves for both stages on their independent benchmarks. Stage~1
+(BRENDA): average precision $=0.844$ against a positive-class baseline of 0.63. Stage~2
+(S669): average precision $=0.453$ against a baseline of 0.25. Dotted lines mark the
+respective baselines, i.e.\ the precision of a random classifier at that class prevalence.}
+\label{fig:pr}
+\end{figure}
+
+\begin{figure}[H]
+\includegraphics[width=\linewidth]{precision_vs_threshold.pdf}
+\caption{Precision--recall trade-off as a function of decision threshold.
+(\textbf{a})~Stage~1 (BRENDA): precision rises from 0.65 to 0.98 as the temperature cutoff
+tightens from 46 to 66\,$^{\circ}$C, while recall falls from 0.98 to 0.32.
+(\textbf{b})~Stage~2 (S669): the ensemble reaches precision 0.81 at the strict
+0.00\kcal{} threshold, at 10\% recall. Precision at a strict threshold is not an
+experimental success rate.}
+\label{fig:precision}
+\end{figure}
+
+\subsection{Cross-Stage Comparison}
+
+Stage~1 achieved a higher independent ROC AUC (0.732) than Stage~2 (0.669;
+Figure~\ref{fig:roc}). However, the two stages were trained and evaluated on different
+datasets, prediction targets (temperature stability vs.\ folding \ddg), class labels, and
+sample sizes (1{,}563 vs.\ 669 records). The comparison is therefore descriptive only: it
+is not a controlled head-to-head evaluation, and no statistical significance test was
+performed between the two stages. The bootstrap intervals do not overlap
+(0.708--0.755 vs.\ 0.62--0.72), but because the two quantities are computed on different
+data with different targets, that separation should not be read as a significance test.
+
+\begin{figure}[H]
+\includegraphics[width=\linewidth]{roc_curve.pdf}
+\caption{Independent-benchmark ROC curves for the two-stage framework. (\textbf{a})~Stage~1
+BRENDA temperature screening, ROC AUC 0.732 (95\% CI 0.708--0.755) on 1{,}563 proteins.
+(\textbf{b})~Stage~2 S669 mutation prioritization, ROC AUC 0.669 (95\% CI 0.62--0.72) on
+669 mutations. Dashed line: random classifier (AUC $=0.5$). Positive class: BRENDA $=$
+thermostable; S669 $=$ stabilizing.}
+\label{fig:roc}
+\end{figure}
+
+\subsection{Illustrative Application to a PET Hydrolase}
+\label{sec:ispetase}
+
+To illustrate how Stage~1 is applied to a target of interest, we ran the whole-protein model
+on the \textit{Ideonella sakaiensis} PET hydrolase (IsPETase; UniProt A0A0K8P6T7,
+\texttt{PETH\_PISS1}, 290 residues) \citep{yoshida2016}. This accession does not appear in
+the Stage~1 training table, the S669 benchmark, or the curated BRENDA benchmark, so the
+prediction is genuinely out of sample.
+
+The three Stage~1 base models produced closely agreeing estimates---LightGBM
+55.2\,$^{\circ}$C, XGBoost 55.8\,$^{\circ}$C, CatBoost 55.6\,$^{\circ}$C---for an ensemble
+prediction of 55.5\,$^{\circ}$C (Table~\ref{tab:ispetase}). Under the labeling scheme of
+Section~\ref{sec:stage1-labels} this places IsPETase in the ambiguous 45--60\,$^{\circ}$C
+band rather than in the thermostable class, i.e.\ the model does not nominate the wild-type
+enzyme as a thermostable scaffold.
+
+Two cautions apply. First, agreement among base models reflects only their mutual
+consistency, not accuracy; Section~\ref{sec:stage1-reg} showed that Stage~1 predictions are
+compressed toward this same 45--60\,$^{\circ}$C band, so a prediction inside that band
+carries little discriminative information. Second, a single protein cannot validate a
+model. This example demonstrates the intended usage pattern; it is not evidence of accuracy
+on PET hydrolases, for which no leakage-audited benchmark of comparable size currently
+exists.
+\todo{a cited experimental \Tm{} for wild-type IsPETase, with reference, so the predicted
+55.5\,$^{\circ}$C can be compared against measurement rather than left unanchored}
+
+\begin{table}[H]
+\caption{Stage 1 whole-protein prediction for IsPETase (UniProt A0A0K8P6T7, 290 residues).
+The accession is absent from the Stage~1 training table, S669, and the curated BRENDA
+benchmark.}
+\label{tab:ispetase}
+\begin{tabular}{lc}
+\toprule
+\textbf{Model} & \textbf{Predicted \Tm{} ($^{\circ}$C)}\\
+\midrule
+LightGBM  & 55.2\\
+XGBoost   & 55.8\\
+CatBoost  & 55.6\\
+\midrule
+\textbf{Ensemble} & \textbf{55.5}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%=================================================================
+\section{Discussion}
+%=================================================================
+
+\subsection{Interpreting Moderate Performance}
+
+The two-stage framework provides a moderate, leakage-controlled route from whole-protein
+screening to mutation-level optimization. Stage~1's independent ROC AUC of 0.732 indicates
+useful but imperfect discrimination of thermostable proteins, and its precision--recall
+trade-off means the operating point should be chosen to match the intended use (broad
+recall for discovery vs.\ high precision for shortlisting).
+
+Stage~2's independent performance (Pearson 0.390; RMSE 1.509\kcal; ROC AUC 0.669) is best
+described as moderate, with pronounced high-precision/low-recall behaviour at strict \ddg{}
+thresholds. This makes the model a candidate-prioritization filter rather than a
+comprehensive predictor of every stabilizing mutation. An RMSE of roughly 1.5\kcal{} is
+comparable in magnitude to the effect size of many individually stabilizing mutations,
+which is a direct statement of the method's resolution limit: it can enrich a shortlist but
+cannot reliably resolve small differences between candidates.
+
+\subsection{Leakage as the Dominant Methodological Risk}
+
+The central methodological contribution is explicit leakage auditing. Removing
+approximately 132{,}000 records---the great majority (131{,}479) detectable only through
+sequence homology---shows that homology-level contamination, not duplicate records, is the
+dominant risk to honest benchmarking in this setting. Exact-key filtering alone would have
+caught fewer than 700 of these records.
+
+This has a practical implication beyond our own results: stability benchmarks that report
+only exact-match de-duplication cannot be assumed leakage-free, and the gap between the two
+filtering levels is large enough that it could plausibly account for differences between
+published methods. A residual homology risk remains in our own pipeline---the 30\% identity
+and 50\% coverage thresholds are conventional but arbitrary, and remote homology below that
+cutoff is not removed---and is acknowledged rather than dismissed.
+
+The internal-versus-independent comparison in Section~\ref{sec:internal-external} makes the
+same point from another direction. A development split that respects protein grouping but
+draws from the same distribution reported Pearson $\approx$0.80 for Stage~1, against 0.54
+on the independent benchmark.
+
+\subsection{Precision Is Not an Experimental Success Rate}
+
+We caution that benchmark precision may not transfer unchanged to PET-degrading enzymes,
+which are under-represented in these general stability sets. In particular, a benchmark
+precision value such as 0.93 should not be equated with a 93\% experimental success rate; it
+is measured at a chosen threshold on curated data, not in the laboratory, and it is
+accompanied in our own results by a recall of 0.39.
+
+Reporting precision without its matching recall is the most common way this class of model
+is oversold, which is why every precision figure in this paper is stated together with
+recall, F1, and accuracy, and why the complete threshold sweeps are provided in
+Appendix~\ref{app:sweeps}.
+
+\subsection{Why the Ensemble Does Not Dominate}
+
+The Stage~2 result in which Extra Trees outperforms the unweighted ensemble
+(Pearson 0.436 vs.\ 0.390) is worth stating plainly rather than omitting. Unweighted
+averaging assumes roughly comparable base-model quality; here the spread was wide
+(0.298--0.436), so averaging diluted the strongest member. A validation-weighted ensemble
+would likely recover the difference, but weights would have to be fitted on a held-out
+split that is not the benchmark, and we did not do so in this study. Selecting Extra Trees
+on the basis of its S669 performance would convert an independent benchmark into a model
+selection set, which is precisely the practice this paper argues against.
+
+\subsection{Comparison with Prior Work}
+
+Comparisons with prior \Tm{} or \ddg{} predictors are only meaningful when the benchmark,
+sign convention, data split, and metric are matched; on S669, a broad set of stability
+predictors has been benchmarked under matched conditions \citep{pancotti2022s669}. We
+therefore restrict quantitative comparison to genuinely comparable settings and avoid
+implying superiority across incomparable evaluations. In particular, we make no claim of
+state-of-the-art performance: our Stage~2 correlation is moderate, and the contribution we
+claim is the leakage-audited evaluation protocol and the two-stage separation of targets,
+not a new accuracy record.
+
+\subsection{Limitations}
+
+Limitations include the moderate correlation on S669, the low recall at high-precision
+operating points, the sequence-based (rather than structure-based) scope, residual homology
+risk below the 30\% identity threshold, and the fact that both benchmarks are general
+stability sets rather than PET-hydrolase-specific assays.
+
+The PET-hydrolase illustration in Section~\ref{sec:ispetase} is a single out-of-sample
+prediction and carries no validation weight; no leakage-audited PET-hydrolase benchmark of
+comparable size to BRENDA or S669 currently exists, which is the main obstacle to
+evaluating the framework on its intended application domain.
+
+The feature representation mean-pools ESM-2 embeddings over the whole sequence, which
+attenuates mutation-site signal for Stage~2. Mutations are scored independently, so
+epistatic interactions between simultaneous substitutions are not modelled, and multi-mutant
+design is outside the framework's current scope. The framework predicts thermodynamic
+stability rather than catalytic activity---a stabilized variant may have reduced turnover.
+Stage~1 labels derive from heterogeneous BRENDA evidence, only 325 of 2{,}034 curated
+proteins carry a directly measured \Tm, and predictions are compressed toward the
+45--60\,$^{\circ}$C band. Finally, the software environment was reconstructed from the
+training container rather than pinned at run time (Appendix~\ref{app:software}).
+
+\subsection{Future Directions}
+\label{sec:future}
+
+Future work should include PET-enzyme-specific evaluation on a leakage-audited benchmark;
+per-residue or attention-pooled embeddings to preserve mutation-site detail; a
+validation-weighted rather than unweighted ensemble; incorporation of a pH-optimum analysis
+once a confirmed training run is available; modelling of epistatic interactions to support
+multi-mutant design; and, ultimately, experimental validation before any deployment claim.
+
+%=================================================================
+\section{Conclusions}
+%=================================================================
+
+We present a two-stage, leakage-audited machine learning framework that separates
+whole-protein temperature screening from mutation-level folding-stability optimization,
+trained on a harmonized 1{,}001{,}888-record table assembled from seven public sources. On
+independent, leakage-audited benchmarks the framework reached ROC AUC 0.732 (95\% CI
+0.708--0.755) with average precision 0.844 on BRENDA, and ROC AUC 0.669 (95\% CI 0.62--0.72)
+with average precision 0.453 and Pearson 0.390 (95\% CI 0.32--0.46) on S669.
+
+Explicit homology-level auditing removed approximately 132{,}000 records that exact-match
+filtering alone would have retained---roughly 197 times as many as the four exact keys
+combined---indicating that homology leakage is the dominant contamination risk in this
+setting. The gap between internal validation (Pearson $\approx$0.80) and independent
+testing (0.54) for Stage~1 quantifies the optimism that an internal split alone would have
+reported.
+
+These results describe a moderate, leakage-controlled screen-then-optimize framework
+suitable for prioritizing candidates for experimental testing. They do not constitute a
+validated industrial solution, and experimental validation remains necessary before any
+deployment claim.
+
+%=================================================================
+\appendix
+\section{Software Environment}
+\label{app:software}
+
+Table~\ref{tab:software} lists the pinned environment. These versions were reproduced on
+2026-07-25 from the training container using the same install line as the training jobs.
+The original training jobs installed these packages unpinned, so patch versions may have
+drifted; the metrics should be confirmed against a pinned re-run before these are cited as
+definitive.
+
+\begin{table}[H]
+\caption{Pinned software environment, reproduced from the training container
+\texttt{pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime}.}
+\label{tab:software}
+\begin{tabular}{ll}
+\toprule
+\textbf{Component} & \textbf{Version}\\
+\midrule
+Python              & 3.10.13\\
+PyTorch             & 2.1.0 (CUDA 12.1)\\
+fair-esm            & 2.0.0\\
+scikit-learn        & 1.7.2\\
+XGBoost             & 3.2.0\\
+LightGBM            & 4.7.0\\
+CatBoost            & 1.2.10\\
+NumPy               & 1.26.0\\
+pandas              & 2.3.3\\
+joblib              & 1.5.3\\
+SciPy               & 1.15.3\\
+MMseqs2             & release 18-8cc5c\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Model Hyperparameters}
+\label{app:hyper}
+
+\begin{table}[H]
+\caption{Base-model hyperparameters for both stages. All models used random seed 42; the
+ensemble prediction is the unweighted mean of the listed base models.}
+\label{tab:hyper}
+\begin{tabular}{lll}
+\toprule
+\textbf{Stage} & \textbf{Model} & \textbf{Settings}\\
+\midrule
+\multirow{5}{*}{Stage 1 (\Tm)}
+ & Extra Trees   & 400 trees, max depth 25\\
+ & Random Forest & 400 trees, max depth 25\\
+ & XGBoost       & 600 rounds, depth 6, learning rate 0.03\\
+ & LightGBM      & 800 rounds, learning rate 0.03\\
+ & CatBoost      & 800 iterations, depth 8, learning rate 0.03\\
+\midrule
+\multirow{6}{*}{Stage 2 (\ddg)}
+ & Random Forest & 300 trees, max depth 25\\
+ & Extra Trees   & 300 trees, max depth 25\\
+ & Multilayer perceptron & up to 100 iterations\\
+ & XGBoost       & 600 rounds, depth 9, learning rate 0.02, subsample 0.8, GPU hist\\
+ & LightGBM      & default rounds, GPU training\\
+ & CatBoost      & GPU training\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Extended Threshold Sweeps}
+\label{app:sweeps}
+
+The complete sweeps comprise 1{,}122 distinct thresholds for Stage~1 and 669 for Stage~2.
+Tables~\ref{tab:sweep1} and \ref{tab:sweep2} report representative rows spanning the full
+range; counts are exact.
+
+\begin{table}[H]
+\caption{Stage 1 (BRENDA, $n=1{,}563$; 979 positive, 584 negative): extended
+decision-threshold sweep. TP/FP/FN/TN are exact counts at each threshold.}
+\label{tab:sweep1}
+\begin{tabular}{rcccccccc}
+\toprule
+\textbf{Cutoff ($^{\circ}$C)} & \textbf{Prec.} & \textbf{Rec.} & \textbf{F1} & \textbf{Acc.} & \textbf{TP} & \textbf{FP} & \textbf{FN} & \textbf{TN}\\
+\midrule
+41.9 & 0.628 & 1.000 & 0.771 & 0.628 & 979 & 581 & 0   & 3\\
+46.0 & 0.650 & 0.977 & 0.781 & 0.656 & 956 & 514 & 23  & 70\\
+48.0 & 0.678 & 0.898 & 0.772 & 0.669 & 879 & 418 & 100 & 166\\
+50.0 & 0.713 & 0.767 & 0.739 & 0.661 & 751 & 302 & 228 & 282\\
+52.0 & 0.766 & 0.629 & 0.691 & 0.647 & 616 & 188 & 363 & 396\\
+55.0 & 0.838 & 0.522 & 0.643 & 0.637 & 511 & 99  & 468 & 485\\
+58.0 & 0.904 & 0.433 & 0.586 & 0.616 & 424 & 45  & 555 & 539\\
+59.9 & 0.926 & 0.394 & 0.553 & 0.601 & 386 & 31  & 593 & 553\\
+62.0 & 0.951 & 0.376 & 0.539 & 0.597 & 368 & 19  & 611 & 565\\
+65.9 & 0.978 & 0.324 & 0.487 & 0.572 & 317 & 7   & 662 & 577\\
+70.1 & 0.989 & 0.287 & 0.445 & 0.552 & 281 & 3   & 698 & 581\\
+75.0 & 0.982 & 0.169 & 0.288 & 0.477 & 165 & 3   & 814 & 581\\
+80.1 & 0.973 & 0.075 & 0.139 & 0.419 & 73  & 2   & 906 & 582\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\caption{Stage 2 (S669, $n=669$; 168 stabilizing, 501 non-stabilizing): extended
+decision-threshold sweep. A mutation is predicted stabilizing when its predicted \ddg{}
+falls below the cutoff. TP/FP/FN/TN are exact counts.}
+\label{tab:sweep2}
+\begin{tabular}{rcccccccc}
+\toprule
+\textbf{Cutoff (\kcal)} & \textbf{Prec.} & \textbf{Rec.} & \textbf{F1} & \textbf{Acc.} & \textbf{TP} & \textbf{FP} & \textbf{FN} & \textbf{TN}\\
+\midrule
+$-0.52$ & 1.000 & 0.012 & 0.024 & 0.752 & 2   & 0   & 166 & 501\\
+$-0.25$ & 0.889 & 0.048 & 0.090 & 0.759 & 8   & 1   & 160 & 500\\
+$+0.00$ & 0.818 & 0.107 & 0.189 & 0.770 & 18  & 4   & 150 & 497\\
+$+0.25$ & 0.500 & 0.262 & 0.344 & 0.749 & 44  & 44  & 124 & 457\\
+$+0.50$ & 0.375 & 0.464 & 0.415 & 0.671 & 78  & 130 & 90  & 371\\
+$+0.75$ & 0.331 & 0.655 & 0.440 & 0.581 & 110 & 222 & 58  & 279\\
+$+1.00$ & 0.311 & 0.798 & 0.447 & 0.505 & 134 & 297 & 34  & 204\\
+$+1.16$ & 0.311 & 0.887 & 0.461 & 0.478 & 149 & 330 & 19  & 171\\
+$+1.50$ & 0.278 & 0.917 & 0.427 & 0.381 & 154 & 400 & 14  & 101\\
+$+2.00$ & 0.259 & 0.994 & 0.411 & 0.286 & 167 & 477 & 1   & 24\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%=================================================================
+\authorcontributions{(Provisional --- authors to confirm.) A.I.\ contributed to
+conceptualization, software, data curation, formal analysis, investigation, methodology,
+visualization, and writing of the original draft. J.P.\ contributed to conceptualization,
+supervision, validation, and writing (review and editing). Ab.I.\ contributed to
+investigation, writing of the original draft, and writing (review and editing). All authors
+reviewed and approved the final manuscript.}
+% CONFIRM/ADJUST the CRediT roles above and the author order before submission.
+
+\funding{No specific grant funding was received for this work; computational resources were
+provided by the National Research Platform (Nautilus).}
+% CONFIRM funding status with all authors (change if a grant supported the work).
+
+\dataavailability{The processed training table, leakage-audited benchmark datasets, saved
+predictions, split identifiers, leakage-audit outputs, and trained model artifacts
+generated in this study are available through Zenodo
+(\url{https://doi.org/10.5281/zenodo.21257369}); source datasets are cited above. Source
+code for data assembly, leakage auditing, model training, evaluation, threshold analysis,
+bootstrap confidence-interval estimation, and figure generation is available at
+\url{https://github.com/AyushIyer31/PET-Lab} and archived on Zenodo at
+\url{https://doi.org/10.5281/zenodo.21519961} (release v1.0.0).}
+% ACTION before submission: make the Zenodo record open (or provide reviewer access) and
+% apply a data license such as CC BY 4.0 instead of the current GPL-3.0; confirm the
+% deposit contains all listed artifacts with a README/data dictionary. CONFIRM the archived
+% commit (497c4f5) is the exact code that produced the results.
+
+\acknowledgments{The authors thank the National Research Platform (Nautilus) for providing
+computational resources. Nautilus is supported by the Pacific Research Platform (NSF
+award~1541349), CHASE-CI (NSF award~1730158), and Towards a National Research Platform (NSF
+award~1826967), with additional funding from the University of California Office of the
+President.}
+% CONFIRM: verify these NRP/NSF award numbers are current for your usage, and add any
+% individual (non-author) acknowledgements with their consent.
+
+\conflictsofinterest{The authors declare no conflicts of interest.}
+% CONFIRM with all authors before submission.
+
+% Large-language-model use: a large language model (Anthropic Claude) was used to assist
+% with drafting, formatting, and reference preparation; all content was reviewed and
+% verified by the authors, who take full responsibility for it.
+% CONFIRM wording against the journal's current LLM-use policy and place it in the section
+% the journal requires.
+
+%=================================================================
+\begin{thebibliography}{999}
+
+\bibitem[OECD(2022)]{oecd2022plastics}
+OECD. \textit{Global Plastics Outlook: Economic Drivers, Environmental Impacts and Policy
+Options}; OECD Publishing: Paris, \textbf{2022}. doi:10.1787/de747aef-en.
+
+\bibitem[Yoshida et al.(2016)]{yoshida2016}
+Yoshida, S.; Hiraga, K.; Takehana, T.; Taniguchi, I.; Yamaji, H.; Maeda, Y.; Toyohara, K.;
+Miyamoto, K.; Kimura, Y.; Oda, K. A bacterium that degrades and assimilates
+poly(ethylene terephthalate). \textit{Science} \textbf{2016}, \textit{351}, 1196--1199.
+doi:10.1126/science.aad6359.
+
+\bibitem[Tournier et al.(2020)]{tournier2020}
+Tournier, V.; Topham, C.M.; Gilles, A.; David, B.; Folgoas, C.; Moya-Leclair, E.; Kamionka,
+E.; Desrousseaux, M.-L.; Texier, H.; Gavalda, S.; et al. An engineered PET depolymerase to
+break down and recycle plastic bottles. \textit{Nature} \textbf{2020}, \textit{580},
+216--219. doi:10.1038/s41586-020-2149-4.
+
+\bibitem[Lu et al.(2022)]{lu2022}
+Lu, H.; Diaz, D.J.; Czarnecki, N.J.; Zhu, C.; Kim, W.; Shroff, R.; Acosta, D.J.; Alexander,
+B.R.; Cole, H.O.; Zhang, Y.; et al. Machine learning-aided engineering of hydrolases for
+PET depolymerization. \textit{Nature} \textbf{2022}, \textit{604}, 662--667.
+doi:10.1038/s41586-022-04599-z.
+
+\bibitem[Tsuboyama et al.(2023)]{tsuboyama2023}
+Tsuboyama, K.; Dauparas, J.; Chen, J.; Laine, E.; Mohseni Behbahani, Y.; Weinstein, J.J.;
+Mangan, N.M.; Ovchinnikov, S.; Rocklin, G.J. Mega-scale experimental analysis of protein
+folding stability in biology and design. \textit{Nature} \textbf{2023}, \textit{620},
+434--444. doi:10.1038/s41586-023-06328-6.
+
+\bibitem[Jarzab et al.(2020)]{jarzab2020meltome}
+Jarzab, A.; Kurzawa, N.; Hopf, T.; Moerch, M.; Zecha, J.; Leijten, N.; Bian, Y.; Musiol, E.;
+Maschberger, M.; Stoehr, G.; et al. Meltome atlas---thermal proteome stability across the
+tree of life. \textit{Nature Methods} \textbf{2020}, \textit{17}, 495--503.
+doi:10.1038/s41592-020-0801-4.
+
+\bibitem[Xavier et al.(2021)]{xavier2021thermomutdb}
+Xavier, J.S.; Nguyen, T.-B.; Karmarkar, M.; Portelli, S.; Rezende, P.M.; Velloso, J.P.L.;
+Ascher, D.B.; Pires, D.E.V. ThermoMutDB: a thermodynamic database for missense mutations.
+\textit{Nucleic Acids Research} \textbf{2021}, \textit{49}, D475--D479.
+doi:10.1093/nar/gkaa925.
+
+\bibitem[Stourac et al.(2021)]{stourac2021fireprotdb}
+Stourac, J.; Dubrava, J.; Musil, M.; Horackova, J.; Damborsky, J.; Mazurenko, S.; Bednar, D.
+FireProtDB: database of manually curated protein stability data. \textit{Nucleic Acids
+Research} \textbf{2021}, \textit{49}, D319--D324. doi:10.1093/nar/gkaa981.
+
+\bibitem[Beltran et al.(2025)]{beltran2025domainome}
+Beltran, A.; Jiang, X.; Shen, Y.; Lehner, B. Site-saturation mutagenesis of 500 human
+protein domains. \textit{Nature} \textbf{2025}. doi:10.1038/s41586-024-08370-4.
+% VERIFY volume/pages at proof stage.
+
+\bibitem[Pancotti et al.(2022)]{pancotti2022s669}
+Pancotti, C.; Benevenuta, S.; Birolo, G.; Alberini, V.; Repetto, V.; Sanavia, T.; Capriotti,
+E.; Fariselli, P. Predicting protein stability changes upon single-point mutation: a
+thorough comparison of the available tools on a new dataset. \textit{Briefings in
+Bioinformatics} \textbf{2022}, \textit{23}, bbab555. doi:10.1093/bib/bbab555.
+
+\bibitem[Dehouck et al.(2009)]{dehouck2009s2648}
+Dehouck, Y.; Grosfils, A.; Folch, B.; Gilis, D.; Bogaerts, P.; Rooman, M. Fast and accurate
+predictions of protein stability changes upon mutations using statistical potentials and
+neural networks: PoPMuSiC-2.0. \textit{Bioinformatics} \textbf{2009}, \textit{25},
+2537--2543. doi:10.1093/bioinformatics/btp445.
+% Source of the S2648 dataset; VERIFY that this is the ProDDG/S2648 provenance used.
+
+\bibitem[Chang et al.(2021)]{chang2021brenda}
+Chang, A.; Jeske, L.; Ulbrich, S.; Hofmann, J.; Koblitz, J.; Schomburg, I.; Neumann-Schaal,
+M.; Jahn, D.; Schomburg, D. BRENDA, the ELIXIR core data resource in 2021: new developments
+and updates. \textit{Nucleic Acids Research} \textbf{2021}, \textit{49}, D498--D508.
+doi:10.1093/nar/gkaa1025.
+
+\bibitem[Steinegger and S\"{o}ding(2017)]{steinegger2017mmseqs2}
+Steinegger, M.; S\"{o}ding, J. MMseqs2 enables sensitive protein sequence searching for the
+analysis of massive data sets. \textit{Nature Biotechnology} \textbf{2017}, \textit{35},
+1026--1028. doi:10.1038/nbt.3988.
+
+\bibitem[Lin et al.(2023)]{lin2023esm2}
+Lin, Z.; Akin, H.; Rao, R.; Hie, B.; Zhu, Z.; Lu, W.; Smetanin, N.; Verkuil, R.; Kabeli, O.;
+Shmueli, Y.; et al. Evolutionary-scale prediction of atomic-level protein structure with a
+language model. \textit{Science} \textbf{2023}, \textit{379}, 1123--1130.
+doi:10.1126/science.ade2574.
+
+\bibitem[Pedregosa et al.(2011)]{pedregosa2011sklearn}
+Pedregosa, F.; Varoquaux, G.; Gramfort, A.; Michel, V.; Thirion, B.; Grisel, O.; Blondel, M.;
+Prettenhofer, P.; Weiss, R.; Dubourg, V.; et al. Scikit-learn: Machine learning in Python.
+\textit{Journal of Machine Learning Research} \textbf{2011}, \textit{12}, 2825--2830.
+
+\bibitem[Chen and Guestrin(2016)]{chen2016xgboost}
+Chen, T.; Guestrin, C. XGBoost: A scalable tree boosting system. In \textit{Proceedings of
+the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining},
+\textbf{2016}; pp. 785--794. doi:10.1145/2939672.2939785.
+
+\bibitem[Ke et al.(2017)]{ke2017lightgbm}
+Ke, G.; Meng, Q.; Finley, T.; Wang, T.; Chen, W.; Ma, W.; Ye, Q.; Liu, T.-Y. LightGBM: A
+highly efficient gradient boosting decision tree. In \textit{Advances in Neural Information
+Processing Systems}, \textbf{2017}; Volume 30.
+
+\bibitem[Prokhorenkova et al.(2018)]{prokhorenkova2018catboost}
+Prokhorenkova, L.; Gusev, G.; Vorobev, A.; Dorogush, A.V.; Gulin, A. CatBoost: unbiased
+boosting with categorical features. In \textit{Advances in Neural Information Processing
+Systems}, \textbf{2018}; Volume 31.
+
+\end{thebibliography}
+
+\end{document}

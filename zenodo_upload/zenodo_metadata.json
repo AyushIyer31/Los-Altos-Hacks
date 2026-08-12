@@ -1,0 +1,20 @@
+{
+  "title": "PET-Lab: Condition-Aware Machine-Learning Models and Datasets for Engineering Thermostable PET-Degrading Enzymes",
+  "upload_type": "dataset",
+  "description": "Trained models and leakage-audited datasets from the PET-Lab project: a two-model ML pipeline (ESM-2 based) for engineering thermostable PET-degrading enzymes. Includes the trained ddG mutation model, cached ESM-2 embeddings, and homology-clean pH-optimum train/test datasets (BRENDA + UniProt). Leakage standard: mmseqs2, >=30% identity / >=50% coverage, bidirectional.",
+  "access_right": "open",
+  "license": "cc-by-4.0",
+  "keywords": [
+    "PETase", "protein stability", "enzyme engineering", "ESM-2",
+    "machine learning", "thermostability", "plastic recycling",
+    "ddG", "melting temperature", "pH optimum"
+  ],
+  "creators": [
+    {"name": "Iyer, Ayush", "affiliation": "University of California, Santa Cruz", "orcid": "FILL_ORCID"}
+  ],
+  "related_identifiers": [
+    {"relation": "isSupplementTo", "identifier": "https://github.com/AyushIyer31/PET-Lab", "scheme": "url"},
+    {"relation": "references", "identifier": "10.1038/s41586-023-06328-6", "scheme": "doi"}
+  ],
+  "notes": "FILL: complete creators list, affiliations, and ORCIDs before publishing."
+}

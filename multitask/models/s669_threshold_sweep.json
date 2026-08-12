@@ -1,0 +1,137 @@
+{
+  "auc": 0.669,
+  "best": {
+    "thr": 1.0,
+    "precision": 0.311,
+    "recall": 0.798,
+    "f1": 0.447,
+    "accuracy": 0.505,
+    "tp": 134,
+    "fp": 297,
+    "fn": 34,
+    "tn": 204
+  },
+  "sweep": [
+    {
+      "thr": -1.5,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "accuracy": 0.749,
+      "tp": 0,
+      "fp": 0,
+      "fn": 168,
+      "tn": 501
+    },
+    {
+      "thr": -1.25,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "accuracy": 0.749,
+      "tp": 0,
+      "fp": 0,
+      "fn": 168,
+      "tn": 501
+    },
+    {
+      "thr": -1.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "accuracy": 0.749,
+      "tp": 0,
+      "fp": 0,
+      "fn": 168,
+      "tn": 501
+    },
+    {
+      "thr": -0.75,
+      "precision": 1.0,
+      "recall": 0.006,
+      "f1": 0.012,
+      "accuracy": 0.75,
+      "tp": 1,
+      "fp": 0,
+      "fn": 167,
+      "tn": 501
+    },
+    {
+      "thr": -0.5,
+      "precision": 1.0,
+      "recall": 0.012,
+      "f1": 0.024,
+      "accuracy": 0.752,
+      "tp": 2,
+      "fp": 0,
+      "fn": 166,
+      "tn": 501
+    },
+    {
+      "thr": -0.25,
+      "precision": 0.889,
+      "recall": 0.048,
+      "f1": 0.09,
+      "accuracy": 0.759,
+      "tp": 8,
+      "fp": 1,
+      "fn": 160,
+      "tn": 500
+    },
+    {
+      "thr": 0.0,
+      "precision": 0.81,
+      "recall": 0.101,
+      "f1": 0.18,
+      "accuracy": 0.768,
+      "tp": 17,
+      "fp": 4,
+      "fn": 151,
+      "tn": 497
+    },
+    {
+      "thr": 0.25,
+      "precision": 0.506,
+      "recall": 0.262,
+      "f1": 0.345,
+      "accuracy": 0.75,
+      "tp": 44,
+      "fp": 43,
+      "fn": 124,
+      "tn": 458
+    },
+    {
+      "thr": 0.5,
+      "precision": 0.375,
+      "recall": 0.464,
+      "f1": 0.415,
+      "accuracy": 0.671,
+      "tp": 78,
+      "fp": 130,
+      "fn": 90,
+      "tn": 371
+    },
+    {
+      "thr": 0.75,
+      "precision": 0.331,
+      "recall": 0.655,
+      "f1": 0.44,
+      "accuracy": 0.581,
+      "tp": 110,
+      "fp": 222,
+      "fn": 58,
+      "tn": 279
+    },
+    {
+      "thr": 1.0,
+      "precision": 0.311,
+      "recall": 0.798,
+      "f1": 0.447,
+      "accuracy": 0.505,
+      "tp": 134,
+      "fp": 297,
+      "fn": 34,
+      "tn": 204
+    }
+  ]
+}
