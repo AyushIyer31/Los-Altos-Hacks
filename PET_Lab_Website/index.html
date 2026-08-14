@@ -1972,6 +1972,15 @@ body[data-theme="dark"] #scoringTags span:nth-child(4) { color:#b9a2df !importan
 }
 .achievement-icon { width:30px; height:30px; margin-bottom:18px; color:var(--primary); font-size:0; }
 .achievement-icon svg { width:100%; height:100%; display:block; }
+.achievement-logos { display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding-top:18px; margin-top:4px; }
+.achievement-logos img { height:58px; width:auto; display:block; }
+.achievement-logos.logos-wordmarks { gap:14px 16px; }
+.achievement-logos.logos-wordmarks img { height:24px; }
+.achievement-logos span {
+  font-size:10px; font-weight:700; letter-spacing:.09em; text-transform:uppercase;
+  color:var(--primary); border:1px solid var(--line); border-radius:4px; padding:5px 9px;
+  background:var(--panel); white-space:nowrap;
+}
 .achievement-card h3 {
   font-family:'Source Serif 4',Georgia,serif;
   letter-spacing:-.028em;
@@ -2609,6 +2618,12 @@ body[data-theme="dark"] .site-footer { background:#090c0a; }
         <h3>4 Universities Reached</h3>
         <p class="achievement-value">UCLA, UCSC, Santa Clara, NYU</p>
         <p class="achievement-desc">Research has been presented or discussed at major institutions across the United States.</p>
+        <div class="achievement-logos logos-wordmarks" aria-label="Institutions reached">
+          <img src="images/uni-ucla.png" alt="UCLA" width="180" height="96" loading="lazy">
+          <img src="images/uni-ucsc.png" alt="UC Santa Cruz" width="211" height="96" loading="lazy">
+          <img src="images/uni-scu.png" alt="Santa Clara University" width="387" height="96" loading="lazy">
+          <img src="images/uni-nyu.png" alt="New York University" width="372" height="96" loading="lazy">
+        </div>
       </div>
 
       <div class="achievement-card rank-2">
@@ -2617,34 +2632,27 @@ body[data-theme="dark"] .site-footer { background:#090c0a; }
         <h3>Municipal Government Agreement</h3>
         <p class="achievement-value">Babolsar collaboration</p>
         <p class="achievement-desc">PET Lab has a written and signed agreement with the municipal government of Babolsar for collaboration related to a filtration project.</p>
+        <div class="achievement-logos"><img src="images/babolsar-municipality.png" alt="Babolsar Municipality" width="256" height="256" loading="lazy"></div>
       </div>
 
       <div class="achievement-card rank-3">
         <div class="achievement-rank">3</div>
         <div class="achievement-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4.2h8v4.6a4 4 0 0 1-8 0z"/><path d="M8 5.6H5.6A2.4 2.4 0 0 0 8 8"/><path d="M16 5.6h2.4A2.4 2.4 0 0 1 16 8"/><path d="M12 12.8v3.4"/><path d="M9.2 20.2h5.6l-.7-4h-4.2z"/></svg></div>
-        <h3>Top 5% at UCLA</h3>
+        <h3>Top 5% at UCLA Program</h3>
         <p class="achievement-value">Out of 300+ participants</p>
         <p class="achievement-desc">PET Lab's research was presented at UCLA and ranked within the top 5% among more than 300 participants.</p>
       </div>
 
       <div class="achievement-card rank-4">
         <div class="achievement-rank">4</div>
-        <div class="achievement-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.4"/><path d="M3.6 12h16.8"/><path d="M12 3.6c2.4 2.7 3.6 5.6 3.6 8.4S14.4 17.7 12 20.4C9.6 17.7 8.4 14.8 8.4 12S9.6 6.3 12 3.6z"/></svg></div>
-        <h3>5+ Major Academic Venues</h3>
-        <p class="achievement-value">Universities & conferences</p>
-        <p class="achievement-desc">PET Lab research has been presented across universities and major scientific conferences.</p>
-      </div>
-
-      <div class="achievement-card rank-5">
-        <div class="achievement-rank">5</div>
         <div class="achievement-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.2" y="4" width="17.6" height="11.6" rx="1.2"/><path d="M12 15.6v4.4"/><path d="M8.4 20h7.2"/><path d="M7 12.4l3-3.2 2.6 2.4 4-4.4"/></svg></div>
         <h3>ISMB Presentation</h3>
         <p class="achievement-value">International conference</p>
         <p class="achievement-desc">PET Lab presented its work at ISMB, a major international computational biology and bioinformatics conference.</p>
       </div>
 
-      <div class="achievement-card rank-6">
-        <div class="achievement-rank">6</div>
+      <div class="achievement-card rank-5">
+        <div class="achievement-rank">5</div>
         <div class="achievement-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.4" y="5.2" width="17.2" height="15.4" rx="1.6"/><path d="M3.4 9.8h17.2"/><path d="M8 3.2v4M16 3.2v4"/><path d="M8 13.4h2.4M13.6 13.4H16M8 17h2.4M13.6 17H16"/></svg></div>
         <h3>Asilomar Bioelectronics 2026</h3>
         <p class="achievement-value">Conference acceptance</p>
